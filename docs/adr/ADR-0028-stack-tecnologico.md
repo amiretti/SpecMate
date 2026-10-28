@@ -1,6 +1,6 @@
 # ADR-0028 — Stack tecnológico del MVP
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-10-28, Andy)
 - **Fecha:** 2026-10-28
 - **Reemplaza:** — (concreta la sección *Stack y dependencias* de la constitución)
 - **Afecta a:** `packages/daemon`, `packages/extension`, CI, constitución (stack, licencias y excepciones)

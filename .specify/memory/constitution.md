@@ -63,17 +63,23 @@ original se conserva literal y se delega por referencia, nunca parafraseado.
 
 | Área | Elección | Skill de stack |
 |---|---|---|
-| Daemon | Node.js LTS + TypeScript; SQLite por proyecto (driver a decidir en E1) | — |
-| Extensión | TypeScript sobre la API de extensiones de VS Code | — |
+| Runtime | Node.js 24 LTS, la misma línea que el extension host de VS Code (ADR-0028) | — |
+| Lenguaje | TypeScript 7, `strict`, ESM, solo sintaxis borrable (sin `enum`, `namespace` ni decoradores) | — |
+| Monorepo y build | npm workspaces · esbuild para empaquetar · `tsc --noEmit` para tipos | — |
+| Calidad | Biome (lint y formato) · Vitest · `@vscode/test-cli` para la extensión | — |
+| IPC daemon ↔ extensión | JSON-RPC 2.0 sobre named pipe (`vscode-jsonrpc`) | — |
+| MCP y validación | `@modelcontextprotocol/sdk` · Zod 4 | — |
+| Event store | `node:sqlite` (incluido en Node) detrás del puerto `EventStore` | — |
 | Agentes | Claude Agent SDK (TypeScript); Codex app-server desde F2 | — |
-| Monorepo | npm workspaces (sin herramientas extra que instalar en Windows) | — |
-| Tests | Vitest (propuesta, se confirma en E1) | — |
-| SDD | Spec Kit + preset `workspace-sdd` | `spec`, `tasking` |
+| Webviews | Preact + `@vscode-elements/elements` | — |
+| Empaquetado y CI | `@vscode/vsce` (VSIX) · GitHub Actions en windows-latest y ubuntu-latest | — |
+| SDD | Spec Kit + preset `workspace-sdd` (ruta SDD, ADR-0027) | `spec`, `tasking`, `feature-doc` |
 | Memoria del proyecto | Engram (Gentleman Programming, MIT) | `close-story` |
 | Plataforma principal | Windows 10/11 sin GPU; macOS y Linux como secundarias | — |
 
 **Dependencias vedadas:** Electron y forks de VS Code (ADR-025); dependencias con licencia copyleft fuerte (GPL, AGPL) en lo que se distribuye (con motivo).
-**Licencias permitidas:** MIT, Apache-2.0, BSD-2/3, ISC. Toda dependencia nueva se verifica antes de agregarse.
+**Licencias permitidas:** MIT, Apache-2.0, BSD-2/3, ISC. Toda dependencia nueva se verifica antes de agregarse. Sin módulos nativos propios salvo ADR.
+**Excepción de licencia:** `@anthropic-ai/claude-agent-sdk` (propietaria de Anthropic), aceptada como runtime de agentes; su redistribución a terceros se revisa en E12 (ADR-0028).
 
 ## Barandas
 
@@ -100,6 +106,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 |---|---|---|---|
 | 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
+| 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
 
 ## Gobierno
 
@@ -107,4 +114,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 1.0.0 | **Ratificada**: 2026-10-28 por Andy | **Última enmienda**: 2026-10-28
+**Versión**: 1.1.0 | **Ratificada**: 2026-10-28 por Andy | **Última enmienda**: 2026-10-28

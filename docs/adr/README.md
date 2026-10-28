@@ -15,4 +15,4 @@ vigentes más importantes:
 | 025 | Núcleo en un daemon local; interfaz como extensión de VS Code |
 | 026 | Terminal, edición y diffs los pone el editor anfitrión |
 | [027](ADR-0027-flujo-proporcional.md) | Flujo proporcional: ODD por defecto, SDD cuando el riesgo lo pide |
-| [028](ADR-0028-stack-tecnologico.md) | Stack tecnológico del MVP (propuesta) |
+| [028](ADR-0028-stack-tecnologico.md) | Stack tecnológico del MVP |
