@@ -17,7 +17,9 @@ Datos verificados el 2026-10-28:
 - VS Code fija **Node 24.22.1** para su extension host (`.nvmrc` de `microsoft/vscode`,
   versión 1.145). Node 24 está en mantenimiento LTS hasta el 30/04/2028; Node 26 pasa a
   LTS alrededor de esta fecha.
-- `node:sqlite` llegó a *release candidate* en Node 25.7; en Node 24 no es estable.
+- `node:sqlite` viene incluido en Node: llegó a *release candidate* en Node 25.7, y en
+  **Node 24.22.1 funciona sin flag y sin advertencia** (probado el 2026-10-28). Node 24
+  está en mantenimiento: su API ya no cambia.
 - `@anthropic-ai/claude-agent-sdk` 0.3.x pide Node ≥ 18.14, trae binarios por
   plataforma (incluido `win32-x64`) y tiene **licencia propietaria de Anthropic**, fuera
   de la lista de licencias permitidas.
@@ -38,7 +40,7 @@ Datos verificados el 2026-10-28:
 | IPC daemon ↔ extensión | **JSON-RPC 2.0 sobre named pipe** con `vscode-jsonrpc` | Mismo protocolo que LSP, probado en VS Code, sin puertos de red |
 | MCP de control y conectores | `@modelcontextprotocol/sdk` | SDK oficial de MCP |
 | Validación de mensajes | **Zod 4** | Lo usa el SDK de MCP; un solo validador |
-| Event store | **SQLite con `better-sqlite3`**, detrás de un puerto `EventStore` | Estable y con binarios para Node 24 en Windows; se cambia a `node:sqlite` cuando sea estable en un LTS sin tocar el dominio |
+| Event store | **SQLite incluido en Node (`node:sqlite`)**, detrás de un puerto `EventStore` | Cero dependencias y cero binarios nativos; transacciones atómicas para gates y estados de tareas; el puerto aísla un cambio de API |
 | Agentes | `@anthropic-ai/claude-agent-sdk`; Codex app-server desde F2 | ADR-002 |
 | Webviews | **Preact** + `@vscode-elements/elements` | API de React en pocos KB, con el aspecto nativo de VS Code |
 | Empaquetado | `@vscode/vsce` para el VSIX; el daemon como script Node en el MVP | Ejecutable único (Node SEA) recién para terceros (E12) |
@@ -57,7 +59,10 @@ para terceros se revisa en E12, junto con la consulta de US-02.
 
 | Alternativa | Por qué no |
 |---|---|
-| `node:sqlite` ya | En Node 24 no es estable; un cambio de API rompería el event store, que es zona crítica |
+| `better-sqlite3` | Módulo nativo: baja un binario precompilado al instalar (falla detrás de proxies o sin la combinación justa de Node y plataforma, y entonces hay que compilar con herramientas de C++), y choca de ABI si el daemon corre con el Node de Electron. Fricción de instalación para cada PC del equipo a cambio de nada que necesitemos |
+| Archivos JSONL de solo agregado | Sin transacciones: la decisión de un gate y el cambio de estado de la tarea tienen que ser atómicos (zona crítica); las consultas de la bandeja, los no leídos y las métricas habría que programarlas a mano. Se usa como formato de exportación y auditoría, no como almacén |
+| SQLite en WebAssembly (`sql.js`, `wa-sqlite`) | Pensados para el navegador: `sql.js` mantiene la base en memoria y reescribe el archivo entero para persistir, inaceptable para un log que crece |
+| libSQL, LMDB, PGlite | Los dos primeros también son nativos; PGlite (Postgres en WebAssembly) pesa varios MB y es mucho más de lo que hace falta |
 | pnpm o Bun | Otra herramienta para instalar en cada PC del equipo; Bun además no es el runtime de VS Code |
 | ESLint + Prettier | Dos herramientas y más configuración para el mismo resultado |
 | Jest | Más lento y con soporte de ESM y TypeScript menos directo que Vitest |
@@ -69,8 +74,11 @@ para terceros se revisa en E12, junto con la consulta de US-02.
 **Positivas:** un solo runtime y un solo lenguaje; herramientas rápidas; nada que
 escuche en la red; el event store se puede cambiar de driver sin tocar el dominio.
 
-**Negativas (costo asumido):** `better-sqlite3` es un módulo nativo: si falta el binario
-precompilado para la combinación de Node y plataforma, hay que compilarlo. TypeScript 7
+**Negativas (costo asumido):** `node:sqlite` no está marcado como estable en Node 24:
+si el daemon pasa a Node 26 puede haber algún cambio de API (el puerto `EventStore` lo
+contiene a un archivo). La API es síncrona y bloquea el hilo durante cada escritura;
+con un solo escritor y el volumen del daemon es despreciable, y si no lo fuera se mueve
+a un worker thread. TypeScript 7
 es reciente y algunas herramientas del ecosistema pueden quedar atrás. La excepción de
 licencia del Agent SDK ata el producto a los términos de Anthropic.
 
@@ -78,5 +86,5 @@ licencia del Agent SDK ata el producto a los términos de Anthropic.
 --noEmit` en el pipeline; `npm audit` y verificación de licencias antes de agregar una
 dependencia (`project-guard` §6).
 
-**Revisar cuando:** VS Code pase a Node 26; `node:sqlite` sea estable en un LTS; US-02
+**Revisar cuando:** VS Code pase a Node 26 (validar `node:sqlite` en esa versión); US-02
 dé su veredicto sobre distribución.
