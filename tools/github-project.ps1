@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Configura los campos de un GitHub Project y los completa desde los issues del repo.
 
@@ -21,6 +21,12 @@ param(
   [Parameter(Mandatory)] [string] $Repo
 )
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1: la salida de gh es UTF-8; sin esto, la ñ y los acentos se rompen.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+# Nombre del campo sin caracteres no ASCII en el código fuente (evita depender de la codificación del archivo).
+$SizeName = "Tama$([char]0x00F1)o"
+
 
 function Get-Fields {
   (gh project field-list $Number --owner $Owner --format json --limit 50 | ConvertFrom-Json).fields
@@ -36,12 +42,12 @@ function Ensure-SingleSelect([string] $Name, [string[]] $Options) {
   }
 }
 
-Ensure-SingleSelect 'Tamaño' @('S', 'M', 'L')
+Ensure-SingleSelect $SizeName @('S', 'M', 'L')
 Ensure-SingleSelect 'Etapa' @('MVP', 'post-MVP')
 
 $projectId = (gh project view $Number --owner $Owner --format json | ConvertFrom-Json).id
 $fields = Get-Fields
-$size   = $fields | Where-Object { $_.name -eq 'Tamaño' }
+$size   = $fields | Where-Object { $_.name -eq $SizeName }
 $stage  = $fields | Where-Object { $_.name -eq 'Etapa' }
 $status = $fields | Where-Object { $_.name -eq 'Status' }
 $backlog = $status.options | Where-Object { $_.name -eq 'Backlog' }
@@ -59,7 +65,7 @@ foreach ($item in $items) {
   $issue = gh issue view $num --repo $Repo --json labels,body | ConvertFrom-Json
   $labels = $issue.labels.name
 
-  if ($issue.body -match '\*\*Tamaño:\*\*\s*([SML])\b') { Set-Option $item $size $Matches[1] }
+  if ($issue.body -match ('\*\*' + $SizeName + ':\*\*\s*([SML])\b')) { Set-Option $item $size $Matches[1] }
 
   if ($labels -contains 'post-MVP') { Set-Option $item $stage 'post-MVP' }
   elseif ($labels -contains 'MVP' -or $labels -contains 'historia') { Set-Option $item $stage 'MVP' }
