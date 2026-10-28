@@ -1,0 +1,68 @@
+schema_version: "1.0"
+
+preset:
+  id: "workspace-sdd"
+  name: "Workspace SDD (es, multi-agente)"
+  version: "0.2.0"
+  description: "Compone sobre el core: plantillas en español, reglas de costo y despacho multi-agente"
+  author: "Harvi"
+  repository: "<completar>"
+  license: "MIT"
+
+requires:
+  # Fijar la versión probada: los nombres de comando cambiaron entre versiones
+  speckit_version: ">=0.6.0"
+
+# Principio: componer, no bifurcar. Los comandos del core se ENVUELVEN (wrap) con
+# nuestras reglas; solo se reemplaza lo que es formato (plantillas) e implement.
+provides:
+  templates:
+    # ── Plantillas: formato propio (replace) ─────────────────────────────
+    - type: "template"
+      name: "spec-template"
+      file: "templates/spec-template.md"
+      description: "Spec en español, §1–§7, IDs US/AC/FR/SC compatibles con analyze"
+      replaces: "spec-template"
+
+    - type: "template"
+      name: "tasks-template"
+      file: "templates/tasks-template.md"
+      description: "Tareas con [P], [US#], AC que cierra, nivel de modelo y estimación"
+      replaces: "tasks-template"
+
+    - type: "template"
+      name: "constitution-template"
+      file: "templates/constitution-template.md"
+      description: "Constitución con nuestros principios por defecto; única fuente de principios"
+      replaces: "constitution-template"
+
+    # ── Comandos del core, envueltos (wrap) ──────────────────────────────
+    - type: "command"
+      name: "speckit.specify"
+      file: "commands/speckit.specify.md"
+      description: "Core specify + ticket, análisis funcional, fuentes caras, topes y gate"
+      strategy: "wrap"
+
+    - type: "command"
+      name: "speckit.plan"
+      file: "commands/speckit.plan.md"
+      description: "Core plan + artefactos condicionales, RFC/ADR y zona crítica"
+      strategy: "wrap"
+
+    - type: "command"
+      name: "speckit.tasks"
+      file: "commands/speckit.tasks.md"
+      description: "Core tasks + nivel de modelo, estimación y AC por tarea"
+      strategy: "wrap"
+
+    # ── Única bifurcación: el modelo de ejecución es multi-agente ────────
+    - type: "command"
+      name: "speckit.implement"
+      file: "commands/speckit.implement.md"
+      description: "Delega en el lead: despacho en paralelo por worktree"
+      replaces: "speckit.implement"
+
+tags:
+  - "es"
+  - "multi-agent"
+  - "cost-aware"

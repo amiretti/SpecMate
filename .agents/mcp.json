@@ -1,0 +1,158 @@
+{
+  "$comment": "Catálogo de conectores MCP. Fuente canónica: el proyector genera el formato de cada runtime. enabled: si se proyecta. main: si va a la sesión principal (.mcp.json); si no, se define SOLO dentro de los roles que lo piden (campo mcp: del rol), para que sus herramientas no pesen en el contexto de la sesión principal. purpose: para qué sirve (lo leen los agentes). risk: bajo (sin costo extra ni datos sensibles) | alto (cobra, toca datos de producción o pasa por un tercero). requires: variables de entorno que tienen que existir. Secretos: siempre por variable de entorno, nunca acá. Activar: node tools/mcp.mjs enable <nombre>.",
+  "mcpServers": {
+    "github": {
+      "purpose": "Issues, PRs, repos y acciones de GitHub",
+      "risk": "bajo",
+      "enabled": true,
+      "main": true,
+      "requires": [
+        "GITHUB_TOKEN"
+      ],
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_TOKEN}"
+      }
+    },
+    "memory": {
+      "$comment": "Engram (Gentleman Programming, MIT). Una base por proyecto. Agentes: solo lectura (search + context, ~420 tokens/turno). Las escrituras las hace el lead por CLI (`engram save`) al cerrar historia o sesión.",
+      "purpose": "Memoria del proyecto (Engram): decisiones, trampas y patrones de historias anteriores",
+      "risk": "bajo",
+      "enabled": true,
+      "main": true,
+      "command": "engram",
+      "args": [
+        "mcp",
+        "--tools=mem_search,mem_context"
+      ],
+      "env": {
+        "ENGRAM_DATA_DIR": "${workspaceRoot}/.workspace/engram"
+      }
+    },
+    "jira": {
+      "$comment": "Atlassian Rovo MCP oficial: Jira y Confluence. OAuth por navegador. Con API token (headless) usar https://mcp.atlassian.com/v1/mcp; el admin de la organización tiene que habilitarlo.",
+      "purpose": "Tickets de Jira y páginas de Confluence",
+      "risk": "bajo",
+      "enabled": false,
+      "main": true,
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v1/mcp/authv2"
+    },
+    "linear": {
+      "$comment": "MCP remoto oficial de Linear (OAuth).",
+      "purpose": "Tickets de Linear",
+      "risk": "bajo",
+      "enabled": false,
+      "main": true,
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "azure-devops": {
+      "$comment": "MCP oficial de Microsoft. Remoto: requiere organización con Entra ID. Si no, el local (Node 20) con la org como argumento.",
+      "purpose": "Work items, repos, pipelines y test plans de Azure DevOps",
+      "risk": "bajo",
+      "enabled": false,
+      "main": true,
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure-devops/mcp",
+        "<organización>"
+      ]
+    },
+    "context7": {
+      "$comment": "Documentación vigente y versionada de librerías. Evita que el agente invente APIs viejas: menos retrabajo. Clave opcional (más límite): agregar headers.Authorization = Bearer ${CONTEXT7_API_KEY}.",
+      "purpose": "Documentación vigente de librerías, por versión",
+      "risk": "bajo",
+      "enabled": true,
+      "main": false,
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "microsoft-learn": {
+      "$comment": "Documentación oficial de Microsoft (.NET, Azure, C#). Gratis y sin autenticación. Activar en proyectos .NET o Azure.",
+      "purpose": "Documentación oficial de .NET, Azure y C#",
+      "risk": "bajo",
+      "enabled": false,
+      "main": false,
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "playwright": {
+      "$comment": "Navegador para verificar UI y AC e2e. CARO en tokens: cada snapshot entra al contexto. Preferí el CLI de Playwright con su skill (README). Versión fijada: actualizar a conciencia.",
+      "purpose": "Navegar la app, reproducir flujos y verificar UI y AC e2e (caro en tokens: preferí el CLI)",
+      "risk": "bajo",
+      "enabled": false,
+      "main": false,
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.76",
+        "--headless",
+        "--isolated"
+      ]
+    },
+    "firecrawl": {
+      "$comment": "Scraping y búsqueda web a markdown limpio, para sitios con mucho JavaScript donde WebFetch falla. OAuth por navegador; tiene uso gratis diario limitado. Con clave: https://mcp.firecrawl.dev/v2/mcp + Bearer ${FIRECRAWL_API_KEY}.",
+      "purpose": "Leer sitios con mucho JavaScript como markdown limpio",
+      "risk": "bajo",
+      "enabled": false,
+      "main": false,
+      "type": "http",
+      "url": "https://mcp.firecrawl.dev/v2/mcp-oauth"
+    },
+    "perplexity": {
+      "$comment": "Investigación con citas (perplexity_search, _ask, _research, _reason). Se cobra por llamada a la API de Perplexity: usar WebSearch primero; esto solo para investigación profunda (research.md, RFC).",
+      "purpose": "Investigación web profunda con citas (se cobra por llamada)",
+      "risk": "alto",
+      "enabled": false,
+      "main": false,
+      "requires": [
+        "PERPLEXITY_API_KEY"
+      ],
+      "type": "http",
+      "url": "https://api.perplexity.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PERPLEXITY_API_KEY}"
+      }
+    },
+    "posthog": {
+      "$comment": "Analítica de producto y feature flags. Solo lectura y herramientas acotadas por URL (features + readonly). Para escribir flags, sacar readonly=true a conciencia.",
+      "purpose": "Analítica de producto, funnels y feature flags (datos reales de usuarios)",
+      "risk": "alto",
+      "enabled": false,
+      "main": false,
+      "type": "http",
+      "url": "https://mcp.posthog.com/mcp?features=insights,dashboards,flags&readonly=true"
+    },
+    "figma": {
+      "$comment": "Diseños de Figma (MCP remoto oficial, OAuth). Fuente cara: el preset ya pide avisar el costo antes de abrirla.",
+      "purpose": "Diseños de Figma (fuente cara)",
+      "risk": "alto",
+      "enabled": false,
+      "main": false,
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "sentry": {
+      "$comment": "Errores de producción para analizar bugs con evidencia. OAuth por navegador.",
+      "purpose": "Errores y trazas de producción",
+      "risk": "alto",
+      "enabled": false,
+      "main": false,
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
+    },
+    "composio": {
+      "$comment": "Pasarela a cientos de apps (Notion, Slack, Google Drive…) por OAuth. TERCERO EN EL MEDIO: tus tokens y datos de esas apps pasan por Composio. Solo para fuentes sin conector oficial. Activarlo es una decisión humana (piso: conector externo).",
+      "purpose": "Pasarela a apps sin conector oficial (Notion, Slack, Drive…), con un tercero en el medio",
+      "risk": "alto",
+      "enabled": false,
+      "main": false,
+      "external": true,
+      "type": "http",
+      "url": "https://connect.composio.dev/mcp"
+    }
+  }
+}

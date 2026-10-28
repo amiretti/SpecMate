@@ -1,0 +1,40 @@
+{
+  "$comment": "Runtimes, suscripciones y ruteo (ADR-020). Lo único vendor-específico del kit. Completar los <...>. Los secretos nunca van acá: cada runtime usa su login oficial.",
+  "runtimes": {
+    "claude": {
+      "capabilities": {
+        "read": ["Read", "Grep", "Glob"],
+        "write": ["Write", "Edit"],
+        "execute": ["Bash"],
+        "skills": ["Skill"],
+        "delegate": ["Agent", "SendMessage"],
+        "network": ["WebFetch", "WebSearch"],
+        "git-commit": [],
+        "git-push": []
+      }
+    },
+    "codex": {
+      "capabilities": "<completar al implementar el adaptador de Codex>"
+    }
+  },
+  "subscriptions": {
+    "claude-max": {
+      "runtime": "claude",
+      "auth": "subscription",
+      "tiers": { "rápido": "haiku", "estándar": "sonnet", "máximo": "opus" }
+    },
+    "chatgpt-pro": {
+      "$comment": "Opcional. Borrala si no tenés ChatGPT; el router usa solo las que existan.",
+      "runtime": "codex",
+      "auth": "subscription",
+      "tiers": { "rápido": "<completar>", "estándar": "<completar>", "máximo": "<completar>" }
+    }
+  },
+  "routing": {
+    "chief": "claude-max",
+    "teams": ["claude-max", "chatgpt-pro"],
+    "review": "other",
+    "stopAt": 0.85,
+    "maxParallelTeams": "auto"
+  }
+}

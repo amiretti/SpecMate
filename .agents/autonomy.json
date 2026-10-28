@@ -1,0 +1,72 @@
+{
+  "$comment": "Nivel de autonomía del proyecto (ADR-014). 0 paso-a-paso · 1 supervisado · 2 por-hitos · 3 plan-y-pr · 4 autónomo. Se puede sobrescribir por historia desde la UI. El piso (PR, push, destructivos, zona crítica, seguridad Crítico/Alto, ADR, consumo > 90%, desvío > 2x) frena en cualquier nivel.",
+  "level": 1,
+  "levels": {
+    "0": {
+      "name": "paso-a-paso",
+      "gates": [
+        "each-action",
+        "spec",
+        "plan",
+        "diff",
+        "pr"
+      ]
+    },
+    "1": {
+      "name": "supervisado",
+      "gates": [
+        "spec",
+        "plan",
+        "diff",
+        "pr"
+      ]
+    },
+    "2": {
+      "name": "por-hitos",
+      "gates": [
+        "spec",
+        "plan",
+        "pr"
+      ]
+    },
+    "3": {
+      "name": "plan-y-pr",
+      "gates": [
+        "plan",
+        "pr"
+      ]
+    },
+    "4": {
+      "name": "autonomo",
+      "gates": [
+        "pr"
+      ]
+    }
+  },
+  "floor": {
+    "always": [
+      "pr",
+      "push",
+      "destructive-command",
+      "outside-worktree",
+      "adr-conflict",
+      "security-critical-high",
+      "source-contradiction",
+      "secret-detected",
+      "external-skill-install",
+      "high-risk-mcp-grant"
+    ],
+    "skillInstall": {
+      "curatedLibrary": "auto-at-level-4",
+      "externalCatalog": "always-human"
+    },
+    "criticalZone": "downgrade-to-1",
+    "weeklyUsageAbove": 0.9,
+    "estimateOverrunFactor": 2,
+    "mcpGrant": {
+      "lowRisk": "auto-from-level-2",
+      "highRisk": "always-human",
+      "scope": "story"
+    }
+  }
+}

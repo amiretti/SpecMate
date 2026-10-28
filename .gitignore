@@ -1,0 +1,9 @@
+# Proyecciones generadas por tools/project.mjs: la fuente es .agents/ y AGENTS.md
+.claude/
+CLAUDE.md
+**/CLAUDE.md
+.mcp.json
+.codex/
+
+# Estado local del workspace (eventos, memoria, proyecciones)
+.workspace/
