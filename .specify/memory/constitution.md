@@ -99,6 +99,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | Versión | Fecha | Cambio | ADR |
 |---|---|---|---|
 | 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
+| 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 
 ## Gobierno
 
@@ -106,4 +107,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 0.2.0 (propuesta) | **Ratificada**: pendiente de Andy | **Última enmienda**: 2026-10-28
+**Versión**: 1.0.0 | **Ratificada**: 2026-10-28 por Andy | **Última enmienda**: 2026-10-28
