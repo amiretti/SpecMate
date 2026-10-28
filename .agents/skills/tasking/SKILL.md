@@ -22,12 +22,17 @@ Sos el **lead**: coordinás, verificás y sintetizás. **No implementás.**
   toca una zona crítica y sus gates no corren en el PR, corrélos local.
   **Verde del PR ≠ verificado.**
 
-## 1. Spec aprobada, o no hay tasking
+## 1. Documento aprobado, o no hay tasking
 
-| Lo que llega | Qué hacés |
-|---|---|
-El flujo sigue a Spec Kit (preset `workspace-sdd`, en `.agents/speckit-preset/`). Todo
-vive en `specs/<###>-<slug>/`.
+La ruta la decide el lead con la skill `feature-doc` (ADR-0027). La ruta chica no pasa
+por acá: va directo a un agente con el pedido literal. Todo vive en
+`specs/<###>-<slug>/`.
+
+**Ruta grande:** `feature.md` con `estado: aprobada` → paso 2, con las tareas de su
+`## Tareas`. En `borrador`: pedís aprobación. Sin `feature.md`: lo escribís con la skill
+`feature-doc` y pedís el gate.
+
+**Ruta SDD** (Spec Kit, preset `workspace-sdd`):
 
 | Lo que llega | Qué hacés |
 |---|---|
@@ -47,7 +52,9 @@ Después:
 
 ## 2. Descomposición
 
-Corré `/speckit-tasks`: genera `tasks.md` con tareas de **un entregable**, cada una con
+**Ruta grande:** las tareas ya están en `## Tareas` del `feature.md`; completales nivel,
+ruta (agente o inline) y `verifica:` si falta, y seguí al paso 3. **Ruta SDD:** corré
+`/speckit-tasks`: genera `tasks.md` con tareas de **un entregable**, cada una con
 `[P]` si es paralelizable, `[US#]`, los **AC de §5 que cierra**, su **nivel de modelo** y
 su **estimación**. Revisalo antes de mostrarlo:
 

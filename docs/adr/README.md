@@ -14,3 +14,4 @@ vigentes más importantes:
 | 019 | Un interlocutor propio, con nombre elegido por cada usuario |
 | 025 | Núcleo en un daemon local; interfaz como extensión de VS Code |
 | 026 | Terminal, edición y diffs los pone el editor anfitrión |
+| [027](ADR-0027-flujo-proporcional.md) | Flujo proporcional: ODD por defecto, SDD cuando el riesgo lo pide |

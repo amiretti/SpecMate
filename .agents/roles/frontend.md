@@ -19,6 +19,12 @@ una ADR.**
 
 ## Método (cada tarea)
 
+**Tests primero (constitución, principio IV):** si hay un test ejecutable y un resultado
+esperado claro, escribís primero el test de cada regla pedida y **reportás su fallo
+observado (rojo)** antes de implementar; después verde y refactor. Si no hay test
+posible, decís por qué. Trabajás **por referencia**: leés el `feature.md` (o la spec)
+hasta `## Registro` antes de editar y reportás qué `S#` o AC cubriste.
+
 1. **Leé la spec primero**: requisitos en §3 y criterios en §5 de `spec.md`; diseño técnico en `plan.md`. Implementás ESO.
 2. **Leé las ADR que la spec cita.** Si la spec contradice una ADR, **parás y lo
    reportás**.

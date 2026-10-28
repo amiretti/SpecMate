@@ -18,9 +18,14 @@ estáticos ni CLIs chicos.
 ### III. SOLID
 En código orientado a objetos. Una clase con más de una razón para cambiar se parte.
 
-### IV. Verificable o no está hecho
-Todo AC declara cómo se verifica. Todo bug arreglado lleva primero su test de regresión
-que falla. Test-first donde el proyecto lo declare: la lógica del daemon (estados de tareas, gates, router, presupuesto, checkpoint).
+### IV. Verificable o no está hecho, y el test va primero
+Todo AC declara cómo se verifica. **Tests primero por defecto** cuando hay un test
+ejecutable y un resultado esperado claro: el fallo (rojo) se observa y se reporta antes
+de implementar, después verde y refactor. Todo bug arreglado lleva primero su test de
+regresión que falla. Todo comando u opción existente que un cambio toca lleva un test
+que prueba que su comportamiento anterior se mantiene. Sin test posible, se explica la
+excepción y se corren checks funcionales. Obligatorio sin excepción en la lógica del
+daemon (estados de tareas, gates, router, presupuesto, checkpoint).
 
 ### V. Seguridad en dos capas
 Detección de secretos, SAST y auditoría de dependencias en cada commit (bloqueante ante
@@ -46,6 +51,13 @@ proveedor vive en su adaptador.
 ### IX. El costo es un requisito
 Toda feature que agrega vueltas de modelo, contexto o herramientas declara su impacto
 en tokens en el plan. Lo que se resuelve sin modelo, se resuelve sin modelo (ADR-011).
+
+### X. Proceso proporcional al riesgo
+El proceso se dimensiona por comprensión, riesgo y posibilidad de retomar, nunca por
+cantidad de archivos (ADR-0027). Lo chico no deja artefactos; lo grande deja un solo
+documento por feature; Spec Kit completo queda para reglas de negocio nuevas, clientes
+que aprueban el *qué*, zonas críticas, arquitectura o historias en paralelo. El pedido
+original se conserva literal y se delega por referencia, nunca parafraseado.
 
 ## Stack y dependencias
 
@@ -82,10 +94,16 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | Principio | Dónde | Motivo |
 |---|---|---|
 
+## Enmiendas
+
+| Versión | Fecha | Cambio | ADR |
+|---|---|---|---|
+| 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
+
 ## Gobierno
 
 La constitución se cambia con una enmienda que declara motivo, alcance y versión; si la
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 0.1.0 (propuesta) | **Ratificada**: pendiente de Andy | **Última enmienda**: 2026-10-28
+**Versión**: 0.2.0 (propuesta) | **Ratificada**: pendiente de Andy | **Última enmienda**: 2026-10-28

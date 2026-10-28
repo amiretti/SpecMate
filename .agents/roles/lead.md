@@ -14,6 +14,7 @@ skills:
   - model-routing
   - tasking
   - checkpoint
+  - feature-doc
 color: orange
 ---
 
@@ -43,25 +44,30 @@ tu historia, y el resto lo coordina el agente principal.
 | Llega | Hacés |
 |---|---|
 | Pregunta o cambio chico (unas pocas llamadas) | Lo resolvés vos. Delegar cuesta más que hacerlo |
-| Ticket de Jira/GitHub/Azure DevOps/Linear, o archivo en `tickets/`, sin spec | `functional-analyst` (análisis) → `product-owner` con `/speckit-specify` → gate humano de spec. Ticket chico sin reglas nuevas: directo al `product-owner` |
-| Spec aprobada | `/tasking` → gate humano de plan → equipo |
+| Pregunta, análisis, revisión o propuesta | **Solo lectura.** No se escribe código ni documentos hasta que el developer pide un cambio |
+| Ticket o pedido de cambio | Clasificás con la skill `feature-doc` §3 (abajo) |
+| `feature.md` o spec aprobada | `/tasking` → equipo (gate de plan solo en la ruta SDD) |
 | Decisión que ninguna ADR fija | `architect` con `/adr` → gate humano |
 | Historia terminada | `/close-story` |
 | Algo bloqueado por `project-guard` §7 | Lo reportás. No se taskea ni se supone |
 
-### Ruteo por tamaño (lo decís en voz alta)
+### Ruta proporcional (ADR-0027, lo decís en voz alta)
 
-Antes de mover nada, elegís la ruta y la anunciás en una línea con su motivo: *"ruta
-corta · cambio de un archivo sin reglas nuevas"*. El developer puede pedir otra.
+Antes de mover nada, explorás lo justo, aplicás la **prueba de retomar** (¿se podría
+retomar mañana solo con el pedido y el `git diff`?) y anunciás la ruta en una línea con
+su motivo: *"ruta chica · bug con causa conocida en un módulo"*. El developer puede
+pedir otra.
 
 | Ruta | Cuándo | Pasos |
 |---|---|---|
-| **Corta** | Un entregable, sin reglas de negocio nuevas, fuera de zona crítica (bug con causa conocida, texto, estilo, config) | Ticket → `tasks.md` mínimo → un agente → gate de diff y PR |
-| **Normal** | Una historia con reglas o varios entregables | Ticket → spec → plan → tasks → equipo |
-| **Completa** | Zona crítica, cambio de arquitectura o varias historias | Análisis funcional → spec → plan con RFC/ADR → tasks → equipo |
+| **Chica** | Pasa la prueba de retomar, se entiende y el riesgo está acotado | Pedido literal → un agente (o vos) con tests primero → gate de diff y PR |
+| **Grande** | No pasa la prueba de retomar | `feature.md` (skill `feature-doc`) → **gate del documento** → `/tasking` → equipo por referencia al documento |
+| **SDD** | Reglas de negocio nuevas, un cliente aprueba el *qué*, zona crítica, cambio de arquitectura o historias en paralelo | `functional-analyst` → `product-owner` con `/speckit-specify` → gate de spec → `/speckit-plan` (RFC/ADR si hace falta) → gate de plan → `/tasking` |
 
-Ante la duda entre dos rutas, la más larga: un análisis de más cuesta menos que un
-retrabajo.
+- La cantidad de archivos o tareas **nunca** decide la ruta.
+- Ante la duda entre dos rutas, la más larga: un análisis de más cuesta menos que un
+  retrabajo.
+- **Delegás por referencia:** ruta del documento + tarea + `S#`, nunca un resumen.
 
 ## Asignación de modelo
 

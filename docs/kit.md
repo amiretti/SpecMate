@@ -18,7 +18,7 @@ AGENTS.md                  # instrucciones del proyecto (estándar abierto AGENT
 │   ├── backend.md · frontend.md
 │   ├── qa.md · security.md
 │   └── scrum-master.md
-├── skills/                # 12 skills, estándar abierto Agent Skills (SKILL.md)
+├── skills/                # 13 skills, estándar abierto Agent Skills (SKILL.md)
 │   ├── terse/             # MANDAMIENTOS DE COSTO (todos los roles la cargan)
 │   ├── model-routing/     # qué nivel de modelo para qué tarea
 │   ├── project-guard/     # lo operativo del proyecto (repo, gates, zonas críticas, bloqueos)
@@ -26,7 +26,8 @@ AGENTS.md                  # instrucciones del proyecto (estándar abierto AGENT
 │   ├── onboarding/        # primer arranque: se presenta y te pregunta su nombre
 │   ├── chief-report/      # mensajes del agente principal, ≤ 6 líneas (celular)
 │   ├── profile/           # perfil del developer: se actualiza solo al cierre
-│   └── connectors/        # qué conectores hay y cómo pedir uno (se pide, no se activa)
+│   ├── connectors/        # qué conectores hay y cómo pedir uno (se pide, no se activa)
+│   └── feature-doc/       # flujo proporcional: ruta chica, grande o SDD, y el feature.md
 ├── speckit-preset/        # preset "workspace-sdd" de Spec Kit: compone sobre el core
 │   ├── templates/         # spec · tasks · constitution (formato propio, replace)
 │   └── commands/          # specify · plan · tasks (wrap del core) · implement (→ lead, replace)
@@ -178,7 +179,24 @@ que sea parte de la fuente neutral (licencia Apache-2.0).
 definidos en un agente igual que en `.mcp.json` (afecta a `perplexity`). Si no, usá el
 login OAuth de Perplexity o pasalo a la sesión principal.
 
-## Spec-driven development con Spec Kit
+## Flujo proporcional: ODD por defecto, SDD cuando el riesgo lo pide
+
+Decisión en [ADR-0027](adr/ADR-0027-flujo-proporcional.md); procedimiento en la skill
+`feature-doc`. El lead clasifica cada pedido con la **prueba de retomar** (¿se puede
+retomar mañana solo con el pedido y el `git diff`?):
+
+| Ruta | Cuándo | Qué se escribe |
+|---|---|---|
+| **Chica** | Pasa la prueba, se entiende y el riesgo está acotado | Nada: pedido literal, tests primero, gate de diff y PR |
+| **Grande** | No pasa la prueba de retomar | Un `specs/<###>-<slug>/feature.md` (specs citadas literal, tareas, registro) con un único gate |
+| **SDD** | Reglas de negocio nuevas, cliente que aprueba el *qué*, zona crítica, arquitectura o historias en paralelo | Spec Kit completo (abajo) |
+
+En las tres: preguntas y propuestas son de solo lectura hasta que pedís un cambio; el
+pedido original va literal; los agentes trabajan por referencia al documento; tests
+primero con el rojo observado; commits por unidad de trabajo (unas 400 líneas como
+guía), lo de alto riesgo en un commit propio.
+
+## Spec-driven development con Spec Kit (ruta SDD)
 
 El SDD sigue a [Spec Kit](https://github.com/github/spec-kit) con el preset propio
 `workspace-sdd`. Todo lo de una historia vive en `specs/<###>-<slug>/`:

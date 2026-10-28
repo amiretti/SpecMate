@@ -40,4 +40,7 @@ tools/                # proyector, configuración de usuario y conectores
   POSIX en el código del producto.
 - Ramas `###-slug`; commits `<type>: <desc>`; PR con `Closes #n`.
 - Build: `npm run build --workspaces` · Tests: `npm test --workspaces`.
-- El producto se construye con su propio flujo: ticket → spec → plan → tareas → PR.
+- El producto se construye con su propio flujo, **proporcional al riesgo** (ADR-0027,
+  skill `feature-doc`): chico sin artefactos, grande con un `feature.md`, SDD con Spec
+  Kit solo cuando el riesgo lo pide. Tests primero, pedido literal, delegación por
+  referencia.

@@ -12,9 +12,10 @@ bajo control. Local, en VS Code, con tu propia suscripción.
 - **Un solo interlocutor.** Le hablás a tu agente, con el nombre que le pongas. Él arma
   el equipo (analista, product owner, arquitecto, backend, frontend, QA, seguridad) y te
   trae las decisiones listas para aprobar.
-- **Del ticket al merge con proceso.** Desarrollo guiado por especificación con
-  [Spec Kit](https://github.com/github/spec-kit): análisis, spec, plan, tareas,
-  implementación en worktrees y PR.
+- **Del ticket al merge con proceso, proporcional al riesgo.** Lo chico va directo con
+  tests primero; lo grande, con un solo documento por feature; y lo que necesita
+  aprobar el *qué* antes del *cómo* (reglas de negocio, clientes, zonas críticas), con
+  [Spec Kit](https://github.com/github/spec-kit).
 - **Vos decidís cuánto intervenir.** Cinco niveles de autonomía, con un piso que ninguno
   saltea: push, PR, secretos y comandos destructivos siempre pasan por vos.
 - **El costo como requisito.** Modelo justo para cada tarea, estimación antes de

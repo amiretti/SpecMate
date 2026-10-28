@@ -38,7 +38,7 @@ Timebox: dos semanas part-time. Entregable: un informe por incógnita en `docs/s
 
 ## Épicas
 
-E0 Spike · E1 Daemon núcleo · E2 Extensión de VS Code · E3 Flujo SDD de punta a punta ·
+E0 Spike · E1 Daemon núcleo · E2 Extensión de VS Code · E3 Flujo proporcional de punta a punta ·
 E4 Agente principal · E5 Costo bajo control · E6 Barandas de seguridad · E7 Instalación
 en el equipo de Harvi. Después del MVP: E8 Codex y varias suscripciones · E9 Equipos en
 paralelo · E10 Celular · E11 Equipo humano · E12 Producto para terceros.

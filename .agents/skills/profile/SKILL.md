@@ -26,7 +26,7 @@ algo que repitió), nunca tus suposiciones:
 
 - Cómo quiere que le hables y le reportes (largo, formato, idioma, registro).
 - Su vocabulario: cómo llama a las cosas del equipo y del trabajo.
-- Decisiones que repite ("siempre ruta normal en pagos", "PR chicos").
+- Decisiones que repite ("siempre ruta SDD en pagos", "PR chicos").
 - Qué aprueba rápido y qué revisa con lupa.
 
 ## Qué no entra
