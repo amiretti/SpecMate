@@ -44,7 +44,7 @@ claude                          # abre el agente principal; la primera vez te pi
 Spec Kit ya está inicializado con el preset (`.specify/`). En una PC nueva, las skills de
 Spec Kit para Claude se regeneran con
 `specify init --here --force --integration claude --script ps --preset ./.agents/speckit-preset`.
-Detalle del kit: [docs/kit.md](docs/kit.md).
+Detalle del kit: [docs/kit.md](docs/kit.md). Arquitectura y MVP: [docs/](docs/README.md).
 
 ## Licencia
 

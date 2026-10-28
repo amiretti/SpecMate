@@ -26,6 +26,16 @@ por proyecto y barandas de seguridad.
 | Cortes de cuota sin checkpoint | 0 |
 | Lo vuelven a usar sin que nadie se los pida | sí |
 
+## Spike de la fase 0
+
+| Incógnita | Experimento | Cuenta como sí | Si la respuesta es no |
+| --- | --- | --- | --- |
+| **¿Se puede distribuir con la suscripción de Claude de cada usuario?** | Leer los términos vigentes de Anthropic y consultar a soporte con el caso concreto | Respuesta escrita que lo permita, o términos que lo dejen claro | El MVP sigue igual (uso propio); para terceros, API keys como camino principal |
+| **¿Cuántas sesiones concurrentes admite una suscripción?** | Lanzar 1, 2 y 3 sesiones del Agent SDK en paralelo con la misma cuenta | Dos sesiones sin errores y consumo legible por sesión | El paralelismo de la fase 3 requiere dos suscripciones o API keys |
+| **¿Funciona daemon + extensión de punta a punta en Windows?** | Prueba mínima: named pipe con token, sesión del Agent SDK, tarea en un worktree, salida en vivo y diff nativo | La tarea corre, la salida se ve en vivo y el diff abre en VS Code | Se revisa ADR-025 antes de seguir |
+
+Timebox: dos semanas part-time. Entregable: un informe por incógnita en `docs/spike/`.
+
 ## Épicas
 
 E0 Spike · E1 Daemon núcleo · E2 Extensión de VS Code · E3 Flujo SDD de punta a punta ·
@@ -33,4 +43,10 @@ E4 Agente principal · E5 Costo bajo control · E6 Barandas de seguridad · E7 I
 en el equipo de Harvi. Después del MVP: E8 Codex y varias suscripciones · E9 Equipos en
 paralelo · E10 Celular · E11 Equipo humano · E12 Producto para terceros.
 
-El detalle de cada una vive en su issue.
+El detalle de cada una vive en [su issue](https://github.com/amiretti/SpecMate/issues?q=label%3Aépica).
+
+![Orden de las épicas del MVP](architecture/img/orden-epicas.png)
+
+Una épica en curso a la vez: el paralelismo lo ponen los agentes dentro de cada
+historia. E3 se construye con el propio producto; E6 va antes de usarlo en proyectos
+reales de Harvi.
