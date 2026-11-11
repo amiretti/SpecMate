@@ -1,9 +1,10 @@
 # SpecMate
 
-Workspace local de agentes de IA: el developer le habla a un solo agente y este lleva
-cada ticket hasta el merge con un equipo de agentes, specs (Spec Kit), gates de
-aprobación y el costo bajo control. Núcleo en un daemon local; interfaz como extensión
-de VS Code (ADR-025, ADR-026).
+De la carpeta del cliente a la web publicada: SpecMate genera sitios estáticos para
+negocios (one page, landing o pocas páginas) desde el material del cliente, su URL de
+Google Maps y referencias online, con datos verificados, tests, controles de seguridad
+que bloquean la publicación y un diseño propio (ADR-0029, ADR-0030). Es un CLI más
+agentes de Claude Code.
 
 Este archivo es para cualquier agente que trabaje en este repositorio, sea cual sea el
 proveedor (estándar abierto AGENTS.md). Cada paquete tiene su propio `AGENTS.md` con su
@@ -24,8 +25,8 @@ lenguaje y sus invariantes.
 ## Estructura
 
 ```
-packages/daemon/      # núcleo local: orquestación, event store, gates, presupuesto
-packages/extension/   # extensión de VS Code: chat, agentes, bandeja de gates, consumo
+packages/cli/         # CLI: new, brief, verify, publish
+templates/site/       # plantilla de cada sitio de cliente (Astro, CSP, tests)
 .agents/              # roles, skills, conectores y ruteo (fuente neutral)
 .specify/             # Spec Kit: constitución, plantillas y scripts
 specs/                # una carpeta por historia
@@ -35,11 +36,11 @@ tools/                # proyector, configuración de usuario y conectores
 
 ## Convenciones
 
-- TypeScript estricto en los dos paquetes. Node.js LTS.
+- TypeScript estricto. Node.js 24 LTS.
 - Windows es la plataforma principal: rutas con `path`, nada de supuestos de shell
   POSIX en el código del producto.
 - Ramas `###-slug`; commits `<type>: <desc>`; PR con `Closes #n`.
-- Build: `npm run build --workspaces` · Tests: `npm test --workspaces`.
+- Build: `npm run build` · Tests: `npm test`.
 - El producto se construye con su propio flujo, **proporcional al riesgo** (ADR-0027,
   skill `feature-doc`): chico sin artefactos, grande con un `feature.md`, SDD con Spec
   Kit solo cuando el riesgo lo pide. Tests primero, pedido literal, delegación por

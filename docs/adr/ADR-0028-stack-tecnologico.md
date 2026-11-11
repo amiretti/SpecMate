@@ -1,6 +1,6 @@
 # ADR-0028 — Stack tecnológico del MVP
 
-- **Estado:** Aceptada (2026-10-28, Andy)
+- **Estado:** Aceptada (2026-10-28, Andy) · en parte reemplazada por [ADR-0029](ADR-0029-pivot-sitios-para-negocios.md): dejan de aplicar JSON-RPC, `node:sqlite`, Preact, vscode-elements y vsce
 - **Fecha:** 2026-10-28
 - **Reemplaza:** — (concreta la sección *Stack y dependencias* de la constitución)
 - **Afecta a:** `packages/daemon`, `packages/extension`, CI, constitución (stack, licencias y excepciones)

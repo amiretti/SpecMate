@@ -1,0 +1,9 @@
+{
+  "name": "@specmate/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "specmate": "./dist/index.js"
+  }
+}

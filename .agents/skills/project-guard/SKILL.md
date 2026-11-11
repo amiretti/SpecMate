@@ -49,24 +49,26 @@ En la constitución (*Barandas*). No las dupliques acá.
 
 | Zona | Por qué es crítica | Cobertura mínima |
 |---|---|---|
-| Gates y piso de autonomía (`packages/daemon`) | Un gate que se saltea deja pasar un push o un secreto sin que nadie lo vea | 100 % de ramas + test por cada regla del piso |
-| Autenticación local del daemon (pipe, token) | Otro proceso de la PC podría manejar a los agentes | test de integración que rechaza sin token |
-| Presupuesto, cuota y checkpoint | Un error corta el trabajo a mitad o quema la cuota semanal | 95 % + casos de borde de ventanas |
-| Manejo de credenciales y del login de cada proveedor | Fuga de credenciales o violación de los términos del proveedor | revisión `security` bloqueante |
+| Controles de `specmate verify` (ADR-0030) | Un control que pasa en verde sin medir publica un sitio inseguro o roto con el sello de Harvi | 100 % de ramas + un sitio de prueba que falla cada control a propósito |
+| Esquema del brief | Un dato sin fuente o sin confirmar llega al sitio publicado (principio XI) | 100 % de ramas + test por cada campo publicable |
+| `specmate publish` | Publicar sin aprobación o con controles en rojo | test que prueba que no publica sin `verify` en verde ni sin confirmación |
+| Plantilla del sitio: CSP, `_headers`, escape de contenido | Inyección de código o recursos ajenos en el sitio del cliente | test sobre `dist/` de la plantilla + revisión `security` |
+| Credenciales (API de Places, Cloudflare, proveedores de IA) | Fuga de claves o cargos en la cuenta de Harvi | revisión `security` bloqueante; nunca en el repo del sitio |
 
 ## 6. Gates
 
 Todavía no hay CI: hasta que exista, **todos estos son reglas de proceso, no
-mecanismos**. Se configuran en US-01 y E6.
+mecanismos**. Se configuran en E1 y E5.
 
 | Gate | Comando | Dónde corre |
 |---|---|---|
-| Build | `npm run build --workspaces` | PR (a configurar) |
-| Unitarios | `npm test --workspaces` | PR (a configurar) |
-| Tipos y lint | `npm run lint --workspaces` | PR (a configurar) |
+| Build | `npm run build` | PR (a configurar) |
+| Unitarios | `npm test` | PR (a configurar) |
+| Tipos y lint | `npm run lint` | PR (a configurar) |
+| Verificación de un sitio | `specmate verify` (E5) | antes de publicar, bloqueante |
 | Proyección al día | `node tools/project.mjs claude --check` | al abrir sesión |
-| Secretos | a definir en E6 (ej: gitleaks) | **pre-commit**, bloqueante |
-| SAST | a definir en E6 | pre-commit |
+| Secretos | secretlint (ADR-0030) | **pre-commit**, bloqueante |
+| SAST | a definir en E5 | pre-commit |
 | Auditoría de dependencias | `npm audit --omit=dev` | pre-commit y PR |
 
 Sin branch protection en `main`, *"ningún PR se mergea en rojo"* es una regla de
@@ -76,8 +78,9 @@ proceso.
 
 | Bloqueo | Qué frena | Se levanta cuando |
 |---|---|---|
-| Spike E0 abierto | Todo código de producto fuera de las pruebas del spike | Cierra US-05 |
-| Consulta sobre suscripciones (US-02) | Cualquier trabajo para terceros (E12) | Hay veredicto en US-02 |
+| Spike E0 abierto | Todo código de producto fuera del primer sitio del spike | Cierra el informe del spike |
+| Constitución 2.0.0 sin ratificar | Implementar contra el stack nuevo | Andy la ratifica |
+| ADR-0030 en propuesta | La plantilla del sitio (E1) | Andy la acepta |
 
 Una historia que toca algo bloqueado **no se taskea ni se supone: se reporta.**
 

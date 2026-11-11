@@ -61,7 +61,7 @@ anterior queda en `~/.workspace/profile.history/`. Comandos: `profile-show`,
 **Con un solo equipo, el agente principal y el lead son la misma sesión:** el proyector
 fusiona `chief.md` con `lead.md` (`fuses: lead`), con las herramientas de los dos y el
 nivel del lead, porque es quien orquesta y verifica. Cuando haya equipos en paralelo
-(fase 3), el daemon los separa.
+se separan; desde ADR-0029 eso no tiene fecha.
 
 ## Formato de un rol
 
@@ -164,8 +164,7 @@ revoca. Lo ideal es concederlo al taskear, antes del primer spawn: a mitad de ta
 obliga a relanzar al agente.
 
 **Hoy es una regla, no una barrera.** Nada impide técnicamente que un subagente con
-`Bash` corra `tools/mcp.mjs`; el daemon lo va a imponer (solo él escribe el catálogo y
-las concesiones). Hasta entonces, si querés blindarlo, negá ese comando en los permisos
+`Bash` corra `tools/mcp.mjs`. Si querés blindarlo, negá ese comando en los permisos
 de Claude Code y dejá que lo corras vos.
 
 **Playwright: CLI antes que MCP.** El CLI escribe los snapshots a disco y le devuelve al

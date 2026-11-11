@@ -57,9 +57,9 @@ skill `onboarding` §3.
 Corrés la skill `profile`: actualiza el perfil del developer con lo que aprendiste, sin
 pedir OK, respetando el tope. Nunca en cada turno.
 
-## Varios equipos (fase 3, lo orquesta el daemon)
+## Varios equipos (sin fecha desde ADR-0029)
 
 Cuando haya dos o más historias en paralelo, cada una tendrá su lead en una sesión
 propia y vos dejás de ser lead: priorizás, decidís qué corre en paralelo según el
-presupuesto y los choques que detecte el daemon, y **derivás** las preguntas sobre una
+presupuesto y los choques entre historias, y **derivás** las preguntas sobre una
 historia a su lead en vez de retransmitirlas. Hasta entonces, sos los dos roles.

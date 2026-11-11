@@ -1,7 +1,7 @@
 {
   "name": "specmate",
   "private": true,
-  "description": "Tu compañero de desarrollo con IA: un agente que lleva cada ticket hasta el merge con un equipo de agentes, specs, gates y el costo bajo control.",
+  "description": "De la carpeta del cliente a la web publicada: sitios estáticos para negocios, seguros, con tests y diseño propio.",
   "workspaces": [
     "packages/*"
   ],
