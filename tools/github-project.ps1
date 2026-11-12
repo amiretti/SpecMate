@@ -3,6 +3,8 @@
   Configura los campos de un GitHub Project y los completa desde los issues del repo.
 
 .DESCRIPTION
+  - Agrega al Project los issues abiertos del repo que falten y archiva los items de
+    issues cerrados (con -SkipArchive no archiva nada).
   - Crea los campos Tamaño (S, M, L) y Etapa (MVP, post-MVP) si no existen.
   - Para cada issue del Project:
       Tamaño  <- la línea "**Tamaño:** X" del cuerpo del issue (si hay)
@@ -13,12 +15,13 @@
 
 .EXAMPLE
   gh auth refresh -s project
-  .\tools\github-project.ps1 -Number 1 -Owner amiretti -Repo amiretti/SpecMate
+  .\tools\github-project.ps1 -Number 4 -Owner amiretti -Repo amiretti/SpecMate
 #>
 param(
   [Parameter(Mandatory)] [int] $Number,
   [Parameter(Mandatory)] [string] $Owner,
-  [Parameter(Mandatory)] [string] $Repo
+  [Parameter(Mandatory)] [string] $Repo,
+  [switch] $SkipArchive
 )
 $ErrorActionPreference = 'Stop'
 # Windows PowerShell 5.1: la salida de gh es UTF-8; sin esto, la ñ y los acentos se rompen.
@@ -46,6 +49,26 @@ Ensure-SingleSelect $SizeName @('S', 'M', 'L')
 Ensure-SingleSelect 'Etapa' @('MVP', 'post-MVP')
 
 $projectId = (gh project view $Number --owner $Owner --format json | ConvertFrom-Json).id
+
+# Sincronizar items: issues abiertos que faltan, adentro; issues cerrados, archivados.
+$current = (gh project item-list $Number --owner $Owner --format json --limit 500 | ConvertFrom-Json).items
+$inProject = @($current | ForEach-Object { $_.content.number } | Where-Object { $_ })
+$open = gh issue list --repo $Repo --state open --limit 500 --json number,url | ConvertFrom-Json
+foreach ($i in $open) {
+  if ($inProject -notcontains $i.number) {
+    gh project item-add $Number --owner $Owner --url $i.url | Out-Null
+    Write-Host "#$($i.number) agregado"
+  }
+}
+if (-not $SkipArchive) {
+  $closed = @((gh issue list --repo $Repo --state closed --limit 500 --json number | ConvertFrom-Json).number)
+  foreach ($item in $current) {
+    if ($item.content.number -and ($closed -contains $item.content.number)) {
+      gh project item-archive $Number --owner $Owner --id $item.id | Out-Null
+      Write-Host "#$($item.content.number) archivado (cerrado)"
+    }
+  }
+}
 $fields = Get-Fields
 $size   = $fields | Where-Object { $_.name -eq $SizeName }
 $stage  = $fields | Where-Object { $_.name -eq 'Etapa' }

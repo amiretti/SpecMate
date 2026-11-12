@@ -18,7 +18,7 @@ está desactualizado: reportalo.
 |---|---|
 | Repositorio | `amiretti/SpecMate` (público, sin licencia: todos los derechos reservados) |
 | Rama base | `main` |
-| Tablero | GitHub Issues del repo: épicas con la etiqueta `épica`, historias con `historia` |
+| Tablero | [GitHub Project 4 "SpecMate"](https://github.com/users/amiretti/projects/4), con los issues del repo: épicas con la etiqueta `épica`, historias con `historia`. Se sincroniza con `tools/github-project.ps1 -Number 4 -Owner amiretti -Repo amiretti/SpecMate` (la API de Projects no está disponible desde las sesiones en la nube) |
 | Convención de cierre de issue | `Closes #n` en el cuerpo del PR |
 | Convención de rama | `###-slug` (la de Spec Kit) |
 | Convención de commit | `<type>: <desc>` (feat, fix, docs, chore, refactor, test) |
