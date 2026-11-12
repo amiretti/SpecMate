@@ -1,0 +1,92 @@
+---
+import { Picture } from 'astro:assets';
+import vidriera from '../assets/vidriera.jpg';
+import { business } from '../data/example-business';
+import Base from '../layouts/Base.astro';
+
+// Phone link text must not wrap mid-number: non-breaking spaces (U+00A0) and hyphens (U+2011).
+const noBreak = (text: string) => text.replaceAll(' ', '\u00A0').replaceAll('-', '\u2011');
+const whatsappText = encodeURIComponent(`Hola, quiero hacer un pedido a ${business.name}.`);
+---
+
+<Base title={business.name} description={business.tagline}>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">{business.name}</a>
+      <nav aria-label="Secciones">
+        <ul>
+          <li><a href="#nosotros">Nosotros</a></li>
+          <li><a href="#horarios">Horarios</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section aria-labelledby="titulo">
+      <div class="container hero-grid">
+        <div>
+          <h1 id="titulo">{business.name}</h1>
+          <p>{business.tagline}</p>
+          <p class="notice">Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.</p>
+        </div>
+        <Picture
+          class="hero-image"
+          src={vidriera}
+          alt={business.image.alt}
+          formats={['avif', 'webp']}
+          widths={[480, 800, 1200]}
+          sizes="(min-width: 48rem) 50vw, 100vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+    </section>
+
+    <section id="nosotros" aria-labelledby="titulo-nosotros">
+      <div class="container">
+        <h2 id="titulo-nosotros">Nosotros</h2>
+        <p>{business.about}</p>
+      </div>
+    </section>
+
+    <section id="horarios" aria-labelledby="titulo-horarios">
+      <div class="container">
+        <h2 id="titulo-horarios">Horarios</h2>
+        <dl class="hours">
+          {
+            business.hours.map((h) => (
+              <>
+                <dt>{h.days}</dt>
+                <dd>{h.time}</dd>
+              </>
+            ))
+          }
+        </dl>
+        <p>{business.address}</p>
+      </div>
+    </section>
+
+    <section id="contacto" aria-labelledby="titulo-contacto">
+      <div class="container">
+        <h2 id="titulo-contacto">Contacto</h2>
+        <ul class="contact-list">
+          <li><a class="button" href={`tel:${business.phoneE164}`}>{noBreak(`Llamar al ${business.phoneDisplay}`)}</a></li>
+          <li>
+            <a class="button" href={`https://wa.me/${business.whatsapp}?text=${whatsappText}`} rel="noopener noreferrer"
+              >Escribir por WhatsApp</a
+            >
+          </li>
+          <li><a class="button" href={`mailto:${business.email}`}>Enviar un correo a {business.email}</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>{business.name} · negocio ficticio de ejemplo</p>
+    </div>
+  </footer>
+</Base>

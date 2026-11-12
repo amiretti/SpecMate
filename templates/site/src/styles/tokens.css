@@ -1,0 +1,44 @@
+/*
+ * Example design tokens for the template. In a client site this file is generated from
+ * the client's tokens.json (ADR-0030); components only read these custom properties.
+ */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #fffaf2;
+  --color-surface: #f4e9d8;
+  --color-text: #1f1a14;
+  --color-text-muted: #4a3f33;
+  --color-accent: #7a3e0c;
+  --color-on-accent: #ffffff;
+  --color-focus: #1d4ed8;
+
+  --font-body: "Inter Variable", system-ui, sans-serif;
+  --font-size-base: 1.125rem;
+  --font-size-small: 1rem;
+  --font-size-h1: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  --font-size-h2: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --line-height: 1.6;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+
+  --radius: 0.5rem;
+  --content-width: 68rem;
+  --focus-width: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1612;
+    --color-surface: #2a231c;
+    --color-text: #f3ead9;
+    --color-text-muted: #d6c8b2;
+    --color-accent: #f0b06e;
+    --color-on-accent: #1a1612;
+    --color-focus: #93c5fd;
+  }
+}
