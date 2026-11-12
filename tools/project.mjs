@@ -131,6 +131,12 @@ for (const [name, r] of roles) {
   emit(`.claude/agents/${r.file}`, `---\n${out.join("\n")}\n---\n<!-- ${GEN} .agents/roles/${r.file} -->${r.body}`);
 }
 
+// Archivos de una carpeta, recursivo, como rutas relativas con "/" (las skills traen subcarpetas).
+function filesUnder(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? filesUnder(path.join(dir, e.name)).map((f) => `${e.name}/${f}`) : [e.name]);
+}
+
 // Lo que quedó de una proyección vieja (un rol o una skill que ya no existe) y nadie editó, se borra.
 function prune(dir, keep) {
   const abs = path.join(root, dir);
@@ -138,7 +144,7 @@ function prune(dir, keep) {
   for (const e of fs.readdirSync(abs)) {
     if (keep.has(e)) continue;
     const files = fs.statSync(path.join(abs, e)).isDirectory()
-      ? fs.readdirSync(path.join(abs, e)).map((f) => path.join(dir, e, f)) : [path.join(dir, e)];
+      ? filesUnder(path.join(abs, e)).map((f) => path.join(dir, e, f)) : [path.join(dir, e)];
     if (!files.some((rel) => rel in manifest)) continue; // no lo generó el proyector (por ejemplo, las skills de Spec Kit)
     const ours = files.every((rel) => manifest[rel] === hash(fs.readFileSync(path.join(root, rel), "utf8")));
     if (!ours) { report.skipped.push(`${dir}/${e} (sobra, pero fue editado: borralo a mano)`); continue; }
@@ -159,7 +165,7 @@ emit(".claude/settings.json", JSON.stringify(settings, null, 2) + "\n");
 // 2. Skills -> .claude/skills/  (metadata del estándar -> campos propios de Claude)
 for (const name of fs.readdirSync(path.join(src, "skills"))) {
   const dir = path.join(src, "skills", name);
-  for (const file of fs.readdirSync(dir)) {
+  for (const file of filesUnder(dir)) {
     const txt = readText(path.join(dir, file));
     if (file !== "SKILL.md") {
       emit(`.claude/skills/${name}/${file}`, txt);
