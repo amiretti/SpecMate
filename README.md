@@ -149,8 +149,21 @@ SpecMate se construye con su propio kit de agentes, hoy sobre Claude Code.
 ```bash
 npm install
 node tools/project.mjs claude   # genera la configuración de Claude Code desde .agents/
-claude
+claude                          # abre el lead, el agente principal
 ```
+
+El kit es chico a propósito: el **lead** trabaja inline y delega solo cuando puede
+nombrar el motivo.
+
+| Rol | Qué hace |
+|---|---|
+| `lead` | Clasifica cada pedido (chico, grande o SDD), trabaja, verifica y es el único que toca git |
+| `developer` | El CLI y las herramientas, en TypeScript |
+| `frontend` | La plantilla del sitio y la biblioteca de secciones, en Astro |
+| `qa` | Verificador independiente: suite completa y controles de `verify` |
+| `security` | Revisión de los sitios publicados y de la herramienta |
+
+Detalle en [docs/kit.md](docs/kit.md).
 
 | Comando | Qué hace |
 |---|---|
@@ -171,9 +184,9 @@ claude
 | Documento | Qué tiene |
 |---|---|
 | [docs/mvp.md](docs/mvp.md) | Brief del MVP, flujo, métricas, spike y épicas |
-| [docs/adr/](docs/adr/) | Decisiones de arquitectura; el pivot es la [ADR-0029](docs/adr/ADR-0029-pivot-sitios-para-negocios.md) |
+| [docs/adr/](docs/adr/) | Decisiones de arquitectura. Las del producto actual: [0029](docs/adr/ADR-0029-pivot-sitios-para-negocios.md) (pivot), [0030](docs/adr/ADR-0030-stack-y-barandas-de-los-sitios.md) (stack y controles), [0031](docs/adr/ADR-0031-relevamiento-guiado.md) (relevamiento) y [0032](docs/adr/ADR-0032-opciones-combinables.md) (opciones combinables) |
 | [Constitución](.specify/memory/constitution.md) | Principios, stack y barandas |
-| [docs/kit.md](docs/kit.md) | Cómo funciona el kit de agentes |
+| [docs/kit.md](docs/kit.md) | El kit de agentes con el que se construye SpecMate |
 | [AGENTS.md](AGENTS.md) | Instrucciones para cualquier agente que trabaje en el repo |
 
 ## Licencia

@@ -87,5 +87,6 @@ re-auditoría · E9 Edición por el cliente · E10 Producto para otras agencias 
 
 El detalle de cada una vive en [su issue](https://github.com/amiretti/SpecMate/issues?q=label%3Aépica+is%3Aopen).
 
-Una épica en curso a la vez. E1 va antes que todo lo demás porque fija lo que
-`verify` controla; E6 usa el producto en clientes reales y mide.
+Una épica en curso a la vez, en este orden: E1 → E2 → E4 → E3 → E5 → E6. E1 va primero
+porque fija lo que `verify` controla; E4 va antes que E3 porque las opciones se arman
+con la biblioteca de secciones; E6 usa el producto en clientes reales y mide.

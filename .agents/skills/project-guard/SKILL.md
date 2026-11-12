@@ -29,7 +29,7 @@ está desactualizado: reportalo.
 |---|---|
 | **Principios, stack y barandas** | `.specify/memory/constitution.md` |
 | Alcance y anti-alcance del MVP | issue de cada épica y `docs/mvp.md` |
-| Todo lo de una historia | `specs/<###>-<slug>/`: `analysis.md`, `spec.md`, `test-plan.md`, `plan.md`, `tasks.md` |
+| Todo lo de una historia grande o SDD | `specs/<###>-<slug>/`: `feature.md` (ruta grande) o `spec.md`, `plan.md` y `tasks.md` (ruta SDD) |
 | Fases y grafo de dependencias | `specs/README.md` |
 | Decisiones de arquitectura | `docs/adr/ADR-NNNN-*.md` |
 | Invariantes de cada paquete | `packages/<paquete>/AGENTS.md` |

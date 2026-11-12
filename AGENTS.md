@@ -31,7 +31,7 @@ templates/site/       # plantilla de cada sitio de cliente (Astro, CSP, tests)
 .specify/             # Spec Kit: constitución, plantillas y scripts
 specs/                # una carpeta por historia
 docs/adr/             # decisiones de arquitectura
-tools/                # proyector, configuración de usuario y conectores
+tools/                # proyector a cada proveedor, conectores y GitHub Project
 ```
 
 ## Convenciones
