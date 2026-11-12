@@ -20,3 +20,4 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [032](ADR-0032-opciones-combinables.md) | Opciones combinables: tres sitios completos armados con partes intercambiables |
 | [033](ADR-0033-loops-acotados.md) | Todo loop es acotado: meta verificable, tope, estancamiento y salida al humano |
 | [034](ADR-0034-clean-architecture-con-alcance-explicito.md) | Clean Architecture por defecto en el código de SpecMate, con exclusiones explícitas |
+| [035](ADR-0035-ajustes-a-adr-0030-tras-la-plantilla.md) | Ajustes a ADR-0030 tras la plantilla: licencias, JSON-LD, negocios sin dirección y hosting (Propuesta) |
