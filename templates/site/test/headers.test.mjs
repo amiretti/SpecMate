@@ -19,6 +19,14 @@ describe('header checker', () => {
     assert.deepEqual(checkHeaders(GOOD), []);
   });
 
+  it("accepts img-src and font-src with 'self' and an allow-listed https origin", () => {
+    const policy = GOOD.replace(
+      "connect-src 'none'",
+      "img-src 'self' https://cdn.cliente.example; font-src 'self'; connect-src 'none'",
+    );
+    assert.deepEqual(checkHeaders(policy), []);
+  });
+
   const broken = {
     'unsafe-inline': GOOD.replace("default-src 'self'", "default-src 'self' 'unsafe-inline'"),
     'unsafe-eval': GOOD.replace("object-src 'none'", "object-src 'none'; script-src 'self' 'unsafe-eval'"),
@@ -44,6 +52,15 @@ describe('header checker', () => {
         ['*', 'data:', 'blob:', 'https:', 'http:', "'unsafe-hashes'", "'wasm-unsafe-eval'"].map((src) => [
           `${d} with ${src}`,
           GOOD.replace(new RegExp(`${d} '(self|none)'`), (m) => `${m} ${src}`),
+        ]),
+      ),
+    ),
+    // Security review: img-src and font-src take no wildcard, data:, blob: or bare scheme either.
+    ...Object.fromEntries(
+      ['img-src', 'font-src'].flatMap((d) =>
+        ['*', 'data:', 'blob:', 'https:', 'http:', 'HTTPS:'].map((src) => [
+          `${d} with ${src}`,
+          GOOD.replace("connect-src 'none'", `${d} 'self' ${src}; connect-src 'none'`),
         ]),
       ),
     ),

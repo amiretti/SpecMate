@@ -77,6 +77,8 @@ function record(value: unknown, path: string): Rec {
 function text(parent: Rec, key: string, path: string): string {
   const value = parent[key];
   if (typeof value !== 'string' || value.trim() === '') fail(path, 'must be a non-empty string');
+  // A lone surrogate would later fail URL encoding without naming the field.
+  if (!value.isWellFormed()) fail(path, 'must be well-formed text (it holds a lone surrogate)');
   return value.trim();
 }
 
@@ -105,7 +107,10 @@ function required(item: Rec, path: string): void {
 
 const digits = (value: string) => value.replace(/\D/g, '');
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-const EMAIL = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+// Strict on purpose (security review): no ?, #, %, &, quotes, whitespace or control chars, which would add
+// headers to a mailto: URL or break out of an attribute. Plain ASCII local part and a dotted host name.
+const EMAIL =
+  /^[A-Za-z0-9._+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
 
 function siteUrl(value: unknown): string {
   if (typeof value !== 'string' || value.trim() === '') fail('site.url', 'is required (absolute https URL)');
@@ -118,6 +123,8 @@ function siteUrl(value: unknown): string {
   if (url.protocol !== 'https:') fail('site.url', `must use https, got ${JSON.stringify(value)}`);
   if (url.search || url.hash || url.username || url.password)
     fail('site.url', 'must not carry a query, fragment or credentials');
+  // pageUrl resolves every page from the origin: a path here would be silently dropped.
+  if (url.pathname !== '/') fail('site.url', `must be the site origin, without a path (got ${url.pathname})`);
   return url.href.replace(/\/+$/, '');
 }
 
@@ -129,6 +136,7 @@ function httpsUrl(value: unknown, path: string): string {
     url = undefined;
   }
   if (url?.protocol !== 'https:') fail(path, `must be an https URL, got ${JSON.stringify(value)}`);
+  if (url.username || url.password) fail(path, 'must not carry credentials');
   return url.href;
 }
 

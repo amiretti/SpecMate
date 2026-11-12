@@ -30,6 +30,24 @@ describe('scanner detects set:html', () => {
   it('flags unescapeHTML', () => {
     assert.ok(findSetHtml("import { unescapeHTML } from 'astro/runtime/server/index.js';").length > 0);
   });
+  // Security review: the same raw-HTML path without the words set:html (ADR-0036 bypasses).
+  it('flags markHTMLString', () => {
+    assert.ok(findSetHtml('const x = markHTMLString(data.raw);').length > 0);
+  });
+  it('flags HTMLString and HTMLBytes', () => {
+    assert.ok(findSetHtml('const x = new HTMLString(raw);').length > 0);
+    assert.ok(findSetHtml('const x = new HTMLBytes(bytes);').length > 0);
+  });
+  it('flags any import from astro/runtime/server', () => {
+    assert.ok(findSetHtml("import * as rt from 'astro/runtime/server/index.js';").length > 0);
+    assert.ok(findSetHtml('const rt = await import("astro/runtime/server");').length > 0);
+  });
+  it('flags a computed set: spread key', () => {
+    assert.ok(findSetHtml("<div {...{ ['set:' + 'html']: x }} />").length > 0);
+    // Built by concatenation so this test source holds no template placeholder of its own.
+    assert.ok(findSetHtml(`<div {...{ [${'`'}set:$${'{kind}'}${'`'}]: x }} />`).length > 0);
+    assert.ok(findSetHtml('<div {...{ [key]: x }} />').length > 0);
+  });
   it('does not flag set:text', () => {
     assert.deepEqual(findSetHtml('<p set:text={x} />'), []);
   });

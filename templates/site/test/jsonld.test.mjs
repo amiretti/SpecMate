@@ -97,6 +97,17 @@ describe('set:html allow-list (ADR-0036)', () => {
     'unescapeHTML in the component': [component(`${ok}\nunescapeHTML(x)`)],
     'a local stand-in for the serializer': [component(`${ok}\nconst serializeJsonLd = (x) => x;`)],
     'no import of the serializer': [component(ok.replace("from '../lib/jsonld.ts'", "from './fake.ts'"))],
+    'markHTMLString in another file': [{ rel: 'pages/index.astro', text: '{markHTMLString(x)}' }],
+    'new HTMLString in another file': [{ rel: 'layouts/Base.astro', text: '{new HTMLString(x)}' }],
+    'a computed set: key in another file': [{ rel: 'pages/index.astro', text: "<p {...{ ['set:' + 'html']: x }} />" }],
+    'markHTMLString in the component': [
+      component(`${ok}
+{markHTMLString(x)}`),
+    ],
+    'an astro/runtime/server import in the component': [
+      component(`${ok}
+import { HTMLBytes } from 'astro/runtime/server/index.js';`),
+    ],
   };
   for (const [name, files] of Object.entries(rejected)) {
     it(`rejects ${name}`, () => {

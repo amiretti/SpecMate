@@ -68,6 +68,10 @@ function attributes(tag) {
 
 function carriesInlineCode(tag) {
   if (FORBIDDEN_ELEMENT.test(tag)) return true;
+  // <meta http-equiv="refresh"> navigates without any script (security review).
+  if (/^<meta\b/i.test(tag) && attributes(tag).some(({ name, url }) => name === 'http-equiv' && url === 'refresh')) {
+    return true;
+  }
   return attributes(tag).some(
     ({ name, url }) =>
       name.startsWith('on') ||
@@ -91,9 +95,15 @@ export function findInlineCode(html) {
   return hits;
 }
 
-/** Returns each set:html use (attribute or spread key) and each unescapeHTML in source text. */
+// Raw-HTML paths into Astro output: the set:html directive (attribute or spread key); the runtime helpers that
+// mark a string as HTML and any import of that runtime (security review: ADR-0036 bypasses); a quoted "set:"
+// key built at run time; and any computed key inside an attribute spread.
+const RAW_HTML =
+  /set:html|\b(?:unescapeHTML|markHTMLString|HTMLString|HTMLBytes)\b|astro\/runtime\/server|['"`]set:|\.\.\.\s*\{[^}]*\[/g;
+
+/** Returns each raw-HTML path found in source text (see RAW_HTML). */
 export function findSetHtml(source) {
-  return [...source.matchAll(/set:html|\bunescapeHTML\b/g)].map((m) => m[0]);
+  return [...source.matchAll(RAW_HTML)].map((m) => m[0]);
 }
 
 // TODO/XXX are case-sensitive so the Spanish word "todo" does not match.
@@ -154,7 +164,7 @@ const PINNED_CSP = {
   'base-uri': "'self'",
   'frame-ancestors': "'none'",
 };
-const SOURCE_DIRECTIVES = ['default-src', 'script-src', 'style-src'];
+const SOURCE_DIRECTIVES = ['default-src', 'script-src', 'style-src', 'img-src', 'font-src'];
 const FORBIDDEN_SOURCES = new Set(['*', 'data:', 'blob:', 'https:', 'http:', "'unsafe-hashes'", "'wasm-unsafe-eval'"]);
 const WEAK_REFERRER = new Set(['unsafe-url', 'no-referrer-when-downgrade']);
 

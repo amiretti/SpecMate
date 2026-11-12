@@ -45,6 +45,8 @@ describe('scanner detects inline code', () => {
     'javascript: with a tab': '<a href="java\tscript:alert(1)">x</a>',
     'javascript: with an entity tab and leading control char': '<a href="\u0001java&Tab;script:alert(1)">x</a>',
     'unquoted javascript: URL': '<a href=javascript:alert(1)>x</a>',
+    'meta refresh': '<meta http-equiv="refresh" content="0;url=https://evil.example">',
+    'meta refresh in another casing': '<META HTTP-EQUIV=Refresh content="0">',
     'script inside SVG': '<svg xmlns="http://www.w3.org/2000/svg"><script>x()</script></svg>',
   };
   for (const [name, html] of Object.entries(cases)) {
@@ -55,7 +57,7 @@ describe('scanner detects inline code', () => {
 
   it('does not flag clean markup or text that mentions the words', () => {
     const html =
-      '<img alt="Mapa" src="/_astro/a.webp"><a href="https://example.com/data:x">x</a><link rel="stylesheet" href="/_astro/a.css"><p data-online="1">script, style, onload= y onclick son palabras</p><a href="/contacto">Contacto</a>';
+      '<img alt="Mapa" src="/_astro/a.webp"><a href="https://example.com/data:x">x</a><link rel="stylesheet" href="/_astro/a.css"><p data-online="1">script, style, onload= y onclick son palabras</p><a href="/contacto">Contacto</a><meta http-equiv="content-language" content="es">';
     assert.deepEqual(findInlineCode(html), []);
   });
 

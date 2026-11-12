@@ -2,6 +2,8 @@
 // exact opening tag, content that parses as JSON and no "<" inside. splitJsonLd takes those blocks out so the
 // unchanged findInlineCode still flags every other <script>, <style> or on*= (ADR-0035, plan decision 2).
 
+import { findSetHtml } from './scan.mjs';
+
 const SCRIPT_OPEN = /<script\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi;
 const JSON_LD_OPEN = '<script type="application/ld+json">';
 
@@ -58,14 +60,14 @@ const SERIALIZER_IMPORT = "import { serializeJsonLd } from '../lib/jsonld.ts';";
 export function checkSetHtml(files) {
   const problems = [];
   for (const { rel, text } of files) {
-    const uses = [...text.matchAll(/set:html|\bunescapeHTML\b/g)];
+    const uses = findSetHtml(text);
     if (uses.length === 0) continue;
     if (rel !== JSON_LD_COMPONENT) {
       problems.push(`${rel}: set:html is only allowed in ${JSON_LD_COMPONENT}`);
       continue;
     }
     const exact = text.split(JSON_LD_EXPRESSION).length - 1;
-    if (uses.length !== 1 || exact !== 1) {
+    if (uses.length !== 1 || uses[0] !== 'set:html' || exact !== 1) {
       problems.push(`${rel}: set:html must appear once, exactly as ${JSON_LD_EXPRESSION}`);
     }
     // The serializer must be the template's, not a local stand-in with the same name.

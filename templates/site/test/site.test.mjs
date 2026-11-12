@@ -46,6 +46,12 @@ describe('site URL (FR-005)', () => {
   it('must be https', () =>
     throwsNaming((d) => Object.assign(d.site, { url: 'http://horno-azul.example' }), 'site.url'));
   it('must be absolute', () => throwsNaming((d) => Object.assign(d.site, { url: '/inicio' }), 'site.url'));
+  it('must not carry a path that pageUrl would drop', () =>
+    throwsNaming((d) => Object.assign(d.site, { url: 'https://a.example/tienda' }), 'site.url'));
+  it('must not carry credentials', () =>
+    throwsNaming((d) => Object.assign(d.site, { url: 'https://user:pw@a.example' }), 'site.url'));
+  it('must not carry a fragment', () =>
+    throwsNaming((d) => Object.assign(d.site, { url: 'https://a.example/#x' }), 'site.url'));
   it('must not carry a query or fragment', () =>
     throwsNaming((d) => Object.assign(d.site, { url: 'https://a.example/?x=1' }), 'site.url'));
   it('drops the trailing slash', () => {
@@ -85,6 +91,27 @@ describe('required fields fail naming them', () => {
     ['unconfirmed phone', (d) => Object.assign(d.phone, { confirmed: false }), 'phone'],
     ['phone without source', (d) => Object.assign(d.phone, { source: '' }), 'phone.source'],
     ['bad email', (d) => Object.assign(d.email, { address: 'no-at-sign' }), 'email.address'],
+    // Security review: mailto header injection and characters that change a mailto: URL or break attributes.
+    ...[
+      'a@negocio.example?bcc=evil%40attacker.example&subject=%0d%0aX',
+      'a@negocio.example#x',
+      'a%0d@negocio.example',
+      'a&b@negocio.example',
+      'a"b@negocio.example',
+      "a'b@negocio.example",
+      'a b@negocio.example',
+      'a@nego cio.example',
+      'a\u0001b@negocio.example',
+      'a@negocio.example\u0000',
+      'a@negocio?.example',
+      'a@negocio.example&cc=x',
+    ].map((address) => [
+      `email ${JSON.stringify(address)}`,
+      (d) => Object.assign(d.email, { address }),
+      'email.address',
+    ]),
+    ['a lone surrogate in the name', (d) => Object.assign(d, { name: 'Pan \uD800 azul' }), 'name'],
+    ['a lone surrogate in a FAQ answer', (d) => Object.assign(d.faq[0], { answer: 'Sí \uDC00' }), 'faq[0].answer'],
     ['unconfirmed email', (d) => Object.assign(d.email, { confirmed: false }), 'email'],
     ['no hours', (d) => Object.assign(d, { hours: [] }), 'hours'],
     ['unconfirmed hours', (d) => Object.assign(d.hours[0], { confirmed: false }), 'hours[0]'],
@@ -133,6 +160,21 @@ describe('unconfirmed optional data never reaches the site (constitution XI)', (
       parseSite(d).profiles,
       d.profiles.filter((p) => p.confirmed).map((p) => p.url),
     );
+  });
+  it('a profile URL with credentials fails (security review)', () => {
+    throwsNaming(
+      (d) => Object.assign(d.profiles[0], { url: 'https://trusted.example@evil.example/x' }),
+      'profiles[0].url',
+    );
+    throwsNaming(
+      (d) => Object.assign(d.profiles[1], { url: 'https://user:pw@social-dos.example/x' }),
+      'profiles[1].url',
+    );
+  });
+  it('accepts a plain email address', () => {
+    const d = base();
+    d.email.address = 'ventas.norte+web@horno-azul.example';
+    assert.equal(parseSite(d).email, 'ventas.norte+web@horno-azul.example');
   });
   it('a non-https profile fails even if unconfirmed (FR-010)', () => {
     throwsNaming(
