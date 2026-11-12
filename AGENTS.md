@@ -1,8 +1,8 @@
 # SpecMate
 
 De la carpeta del cliente a la web publicada: SpecMate genera sitios estáticos para
-negocios (one page, landing o pocas páginas) desde el material del cliente, su URL de
-Google Maps y referencias online, con datos verificados, tests, controles de seguridad
+negocios (one page, landing o pocas páginas) desde el material del cliente, referencias online
+y, si la tiene, su ficha de Google Maps, con datos verificados, tests, controles de seguridad
 que bloquean la publicación y un diseño propio (ADR-0029, ADR-0030). Es un CLI más
 agentes de Claude Code.
 

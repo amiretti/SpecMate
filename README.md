@@ -3,7 +3,8 @@
 # SpecMate
 
 **De la carpeta del cliente a la web publicada.**
-Le das el material del negocio, su ubicación en Google Maps y un par de referencias, y
+Le das el material del negocio y un par de referencias (más su ficha de Google Maps, si
+la tiene), y
 SpecMate entrega un sitio estático listo para publicar: datos confirmados, diseño
 propio, tests y controles de seguridad que no dejan salir nada en rojo.
 
@@ -46,7 +47,7 @@ publican.
 
 ```mermaid
 flowchart LR
-    In["Carpeta del cliente<br/>+ URL de Maps<br/>+ referencias"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
+    In["Carpeta del cliente<br/>+ referencias<br/>+ Maps, si hay"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
     Rel --> G1{{"Confirmar datos<br/>y dominio"}}
     G1 --> Gen["3 sitios completos<br/>paleta · tipografía · composición"]
     Gen --> Verify["Verificación<br/>de cada opción"]
@@ -58,8 +59,8 @@ flowchart LR
 
 1. **Relevamiento.** Abrís la carpeta del cliente en VS Code y SpecMate **busca antes de
    preguntar**: manual de marca, logo, fotos, textos y precios. Infiere el rubro, el
-   objetivo del sitio y el tono, y solo pregunta lo que falta. Google Maps pre-llena y
-   cruza datos, pero lo que se publica es lo que confirma el cliente, porque sus
+   objetivo del sitio y el tono, y solo pregunta lo que falta. Si el negocio está en Google
+   Maps, Maps pre-llena y cruza datos, pero lo que se publica es lo que confirma el cliente, porque sus
    términos no permiten copiar su contenido.
 2. **Confirmar datos y dominio.** Cada dato aparece con su fuente; nada sigue hasta
    confirmarlo. Es la primera de las dos intervenciones humanas.
