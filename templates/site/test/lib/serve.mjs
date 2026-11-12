@@ -41,7 +41,10 @@ export async function serve(dir) {
     const file = await resolveFile(root, req.url ?? '/');
     const status = file ? 200 : 404;
     const body = await readFile(file ?? path.join(root, '404.html'));
-    res.writeHead(status, { ...headers, 'Content-Type': TYPES[path.extname(file ?? '404.html')] ?? 'application/octet-stream' });
+    res.writeHead(status, {
+      ...headers,
+      'Content-Type': TYPES[path.extname(file ?? '404.html')] ?? 'application/octet-stream',
+    });
     res.end(body);
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));

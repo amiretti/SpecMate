@@ -6,9 +6,9 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import { distDir } from './lib/paths.mjs';
 import { FIXTURES, VARIANTS } from './lib/build.mjs';
 import { checkJsonLd } from './lib/jsonld.mjs';
+import { distDir } from './lib/paths.mjs';
 import { findInlineCode, listFiles } from './lib/scan.mjs';
 
 async function scanDir(dir) {

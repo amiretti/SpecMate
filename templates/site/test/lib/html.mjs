@@ -1,7 +1,8 @@
 // Small readers over built HTML for the SEO, consistency and semantics tests. Regex-based like scan.mjs: the
 // input is Astro output, and a miss makes a test fail, never pass.
-import { decodeEntities } from './scan.mjs';
+
 import { splitJsonLd } from './jsonld.mjs';
+import { decodeEntities } from './scan.mjs';
 
 const TAG_ATTR = /([^\s"'<>/=]+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s"'=<>`]+))?/g;
 
@@ -32,11 +33,7 @@ export const titles = (html) => [...html.matchAll(/<title>([\s\S]*?)<\/title>/gi
 
 /** Normalized text: entities decoded, NBSP and non-breaking hyphens as plain ones, whitespace collapsed. */
 export function normalize(text) {
-  return decodeEntities(text)
-    .replaceAll(' ', ' ')
-    .replaceAll('‑', '-')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return decodeEntities(text).replaceAll(' ', ' ').replaceAll('‑', '-').replace(/\s+/g, ' ').trim();
 }
 
 /** The text a reader gets from the body, without CSS: tags dropped, in source order. */

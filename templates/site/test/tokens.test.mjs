@@ -74,7 +74,9 @@ describe('tokens.json -> CSS custom properties', () => {
     assert.match(next, /--color-accent:\s*#112233;/);
     assert.match(next, /--space-3:\s*2rem;/);
     const before = new Set(declarations(css).map(([k, v]) => `${k}: ${v}`));
-    const added = declarations(next).map(([k, v]) => `${k}: ${v}`).filter((d) => !before.has(d));
+    const added = declarations(next)
+      .map(([k, v]) => `${k}: ${v}`)
+      .filter((d) => !before.has(d));
     assert.deepEqual(added.sort(), ['--color-accent: #112233', '--space-3: 2rem']);
   });
 

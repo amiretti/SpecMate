@@ -43,7 +43,8 @@ describe('example data', () => {
 
 describe('site URL (FR-005)', () => {
   it('is required', () => throwsNaming((d) => delete d.site.url, 'site.url'));
-  it('must be https', () => throwsNaming((d) => Object.assign(d.site, { url: 'http://horno-azul.example' }), 'site.url'));
+  it('must be https', () =>
+    throwsNaming((d) => Object.assign(d.site, { url: 'http://horno-azul.example' }), 'site.url'));
   it('must be absolute', () => throwsNaming((d) => Object.assign(d.site, { url: '/inicio' }), 'site.url'));
   it('must not carry a query or fragment', () =>
     throwsNaming((d) => Object.assign(d.site, { url: 'https://a.example/?x=1' }), 'site.url'));
@@ -65,7 +66,8 @@ describe('AI crawler policy (FR-006)', () => {
     d.site.aiCrawlers = 'block';
     assert.equal(parseSite(d).aiCrawlers, 'block');
   });
-  it('rejects any other value', () => throwsNaming((d) => Object.assign(d.site, { aiCrawlers: 'maybe' }), 'site.aiCrawlers'));
+  it('rejects any other value', () =>
+    throwsNaming((d) => Object.assign(d.site, { aiCrawlers: 'maybe' }), 'site.aiCrawlers'));
 });
 
 describe('required fields fail naming them', () => {
@@ -75,7 +77,11 @@ describe('required fields fail naming them', () => {
     ['missing about', (d) => delete d.about, 'about'],
     ['missing image alt', (d) => Object.assign(d, { image: {} }), 'image.alt'],
     ['bad e164', (d) => Object.assign(d.phone, { e164: '011 1234' }), 'phone.e164'],
-    ['display digits differ from e164', (d) => Object.assign(d.phone, { display: '+54 11 9999-0000' }), 'phone.display'],
+    [
+      'display digits differ from e164',
+      (d) => Object.assign(d.phone, { display: '+54 11 9999-0000' }),
+      'phone.display',
+    ],
     ['unconfirmed phone', (d) => Object.assign(d.phone, { confirmed: false }), 'phone'],
     ['phone without source', (d) => Object.assign(d.phone, { source: '' }), 'phone.source'],
     ['bad email', (d) => Object.assign(d.email, { address: 'no-at-sign' }), 'email.address'],
@@ -129,7 +135,10 @@ describe('unconfirmed optional data never reaches the site (constitution XI)', (
     );
   });
   it('a non-https profile fails even if unconfirmed (FR-010)', () => {
-    throwsNaming((d) => Object.assign(d.profiles[2], { url: 'http://perfil.example/horno', confirmed: false }), 'profiles[2].url');
+    throwsNaming(
+      (d) => Object.assign(d.profiles[2], { url: 'http://perfil.example/horno', confirmed: false }),
+      'profiles[2].url',
+    );
     throwsNaming((d) => Object.assign(d.profiles[0], { url: 'ftp://perfil.example/x' }), 'profiles[0].url');
   });
 });

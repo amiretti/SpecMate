@@ -10,8 +10,8 @@ import { buildRobots } from '../src/lib/robots.ts';
 import { parseSite } from '../src/lib/site.ts';
 import { buildSitemap, contentRoutes } from '../src/lib/sitemap.ts';
 import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
-import { checkJsonLd } from './lib/jsonld.mjs';
 import { element, metas, tags, titles } from './lib/html.mjs';
+import { checkJsonLd } from './lib/jsonld.mjs';
 
 const SITE = 'https://horno-azul.example';
 const groups = (robots) =>
@@ -50,7 +50,10 @@ describe('buildRobots', () => {
     const b = block.split('\n');
     assert.equal(a.length, b.length);
     const changed = a.flatMap((line, i) => (line === b[i] ? [] : [a[i - 1]]));
-    assert.deepEqual(changed, AI_CRAWLERS.map((agent) => `User-agent: ${agent}`));
+    assert.deepEqual(
+      changed,
+      AI_CRAWLERS.map((agent) => `User-agent: ${agent}`),
+    );
   });
 
   it('every other crawler may read the whole site, and the sitemap is absolute', () => {
@@ -124,9 +127,13 @@ for (const [name, target] of Object.entries({ ...VARIANTS, ...FIXTURES })) {
 
     it('404.html has the site frame, a link home, noindex and no JSON-LD nor contact data', async () => {
       const html = await read('404.html');
-      for (const landmark of ['header', 'nav', 'main', 'footer']) assert.ok(element(html, landmark) !== undefined, landmark);
+      for (const landmark of ['header', 'nav', 'main', 'footer'])
+        assert.ok(element(html, landmark) !== undefined, landmark);
       assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
-      assert.ok(tags(html, 'a').some((a) => a.href === '/'), 'link to the home page');
+      assert.ok(
+        tags(html, 'a').some((a) => a.href === '/'),
+        'link to the home page',
+      );
       assert.ok(titles(html)[0]);
       assert.deepEqual(metas(html, 'robots'), ['noindex']);
       assert.deepEqual(checkJsonLd(html, 0).problems, []);

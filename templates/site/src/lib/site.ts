@@ -116,7 +116,8 @@ function siteUrl(value: unknown): string {
     fail('site.url', `must be an absolute https URL, got ${JSON.stringify(value)}`);
   }
   if (url.protocol !== 'https:') fail('site.url', `must use https, got ${JSON.stringify(value)}`);
-  if (url.search || url.hash || url.username || url.password) fail('site.url', 'must not carry a query, fragment or credentials');
+  if (url.search || url.hash || url.username || url.password)
+    fail('site.url', 'must not carry a query, fragment or credentials');
   return url.href.replace(/\/+$/, '');
 }
 

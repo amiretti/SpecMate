@@ -6,12 +6,12 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { serializeJsonLd } from '../src/lib/jsonld.ts';
+import { ADVERSARIAL } from './fixtures/sites/adversarial.mjs';
 import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
 import { titles } from './lib/html.mjs';
 import { checkJsonLd, checkSetHtml, splitJsonLd } from './lib/jsonld.mjs';
 import { srcDir } from './lib/paths.mjs';
 import { findInlineCode, listFiles } from './lib/scan.mjs';
-import { ADVERSARIAL } from './fixtures/sites/adversarial.mjs';
 
 const HOSTILE = ['</script>', '<script>alert(1)</script>', '<!--', '&', '"', '\\', ' ', '</SCRIPT >', '-->'];
 
@@ -54,7 +54,10 @@ describe('JSON-LD block control', () => {
     'a block with an extra attribute': page('<script type="application/ld+json" src="/x.js">{}</script>'),
     'a block with a src only': page('<script src="/x.js"></script>'),
     'an extra inline <script>': page(`${block()}<script>alert(1)</script>`),
-    'an extra <script> after a valid block in the body': page(block()).replace('</body>', '<script>x()</script></body>'),
+    'an extra <script> after a valid block in the body': page(block()).replace(
+      '</body>',
+      '<script>x()</script></body>',
+    ),
     '</script> breaking out of the block': page(block('{"a":"</script><script>alert(1)</script>"}')),
     '<!-- inside the block': page(block('{"a":"<!--"}')),
     'invalid JSON': page(block('{a:1}')),
@@ -76,7 +79,8 @@ describe('JSON-LD block control', () => {
 });
 
 describe('set:html allow-list (ADR-0036)', () => {
-  const ok = "import { serializeJsonLd } from '../lib/jsonld.ts';\n<script type=\"application/ld+json\" set:html={serializeJsonLd(data)} />";
+  const ok =
+    'import { serializeJsonLd } from \'../lib/jsonld.ts\';\n<script type="application/ld+json" set:html={serializeJsonLd(data)} />';
   const component = (text) => ({ rel: 'components/JsonLd.astro', text });
   it('accepts the single allowed use', () => {
     assert.deepEqual(checkSetHtml([component(ok)]), []);
@@ -86,7 +90,9 @@ describe('set:html allow-list (ADR-0036)', () => {
     'spread set:html in another file': [{ rel: 'layouts/Base.astro', text: "<div {...{ 'set:html': x }} />" }],
     'unescapeHTML in another file': [{ rel: 'lib/x.ts', text: 'unescapeHTML(x)' }],
     'another expression in the component': [component(ok.replace('serializeJsonLd(data)', 'data.raw'))],
-    'serializer output concatenated with text': [component(ok.replace('serializeJsonLd(data)}', 'serializeJsonLd(data) + x}'))],
+    'serializer output concatenated with text': [
+      component(ok.replace('serializeJsonLd(data)}', 'serializeJsonLd(data) + x}')),
+    ],
     'a second set:html in the component': [component(`${ok}\n<div set:html={x} />`)],
     'unescapeHTML in the component': [component(`${ok}\nunescapeHTML(x)`)],
     'a local stand-in for the serializer': [component(`${ok}\nconst serializeJsonLd = (x) => x;`)],

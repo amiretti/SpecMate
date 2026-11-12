@@ -4,9 +4,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { hoursText, parseSite } from '../src/lib/site.ts';
+import { CHANGED, PREVIOUS } from './fixtures/sites/changed.mjs';
 import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
 import { digits, element, metas, normalize, schemaOf, tags, titles, visibleText } from './lib/html.mjs';
-import { CHANGED, PREVIOUS } from './fixtures/sites/changed.mjs';
 
 const TARGETS = { ...VARIANTS, ...FIXTURES };
 
@@ -94,7 +94,13 @@ describe('changed values replace the old ones everywhere (AC-4)', () => {
   it('the previous values appear 0 times in the page', async () => {
     const { html } = await home('changed');
     const page = normalize(html);
-    for (const old of [PREVIOUS.name, PREVIOUS.phoneDisplay, PREVIOUS.phoneE164, digits(PREVIOUS.phoneE164), PREVIOUS.hoursText]) {
+    for (const old of [
+      PREVIOUS.name,
+      PREVIOUS.phoneDisplay,
+      PREVIOUS.phoneE164,
+      digits(PREVIOUS.phoneE164),
+      PREVIOUS.hoursText,
+    ]) {
       assert.equal(page.includes(old), false, `"${old}" still in the page`);
     }
     assert.equal(html.includes(`"opens":"${PREVIOUS.opens}"`), false);

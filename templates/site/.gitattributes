@@ -1,0 +1,8 @@
+# The template becomes each client's own repo: keep LF everywhere, also on Windows checkouts
+# (Biome formats with LF; core.autocrlf=true would otherwise turn every file into CRLF).
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.avif binary
+*.webp binary
+*.woff2 binary
