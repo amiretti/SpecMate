@@ -198,6 +198,8 @@ function checkRule(pattern, { headers, detached }, baseline) {
   if (hsts !== undefined || baseline) {
     const maxAge = Number(/max-age=(\d+)/i.exec(hsts ?? '')?.[1] ?? 0);
     if (maxAge < 31536000) problems.push(`${pattern}: HSTS needs max-age >= 31536000`);
+    // ADR-0035: includeSubDomains only once the client confirms every subdomain serves HTTPS.
+    if (/includesubdomains/i.test(hsts ?? '')) problems.push(`${pattern}: HSTS must not set includeSubDomains`);
   }
 
   const nosniff = headers.get('x-content-type-options');

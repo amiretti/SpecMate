@@ -1,8 +1,10 @@
-// Rule (S2, ADR-0030 "Sin inyeccion" 1): set:html is forbidden in src/.
+// Rule (S2, ADR-0030 "Sin inyeccion" 1, narrowed by ADR-0036): set:html is forbidden in src/ except once, in
+// components/JsonLd.astro, fed only by the serializer (allow-list cases in jsonld.test.mjs).
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
+import { checkSetHtml, JSON_LD_COMPONENT } from './lib/jsonld.mjs';
 import { srcDir } from './lib/paths.mjs';
 import { findSetHtml, listFiles } from './lib/scan.mjs';
 
@@ -33,17 +35,33 @@ describe('scanner detects set:html', () => {
   });
 });
 
-describe('src/ has no set:html', () => {
-  it('no source file uses set:html', async () => {
-    const files = await listFiles(srcDir);
-    assert.ok(files.length > 0, 'src/ is empty');
+async function sources() {
+  const files = await listFiles(srcDir);
+  assert.ok(files.length > 0, 'src/ is empty');
+  const out = [];
+  for (const file of files) {
+    if (!SOURCE_FILE.test(file)) continue;
+    out.push({ rel: path.relative(srcDir, file).replaceAll('\\', '/'), text: await readFile(file, 'utf8') });
+  }
+  return out;
+}
+
+describe('src/ has no set:html outside the ADR-0036 allow-list', () => {
+  it('no source file other than components/JsonLd.astro uses set:html (as before ADR-0036)', async () => {
     const hits = [];
-    for (const file of files) {
-      if (!/\.(astro|md|mdx|ts|tsx|js|jsx|mjs)$/.test(file)) continue;
-      for (const hit of findSetHtml(await readFile(file, 'utf8'))) {
-        hits.push(`${path.relative(srcDir, file)}: ${hit}`);
-      }
+    for (const { rel, text } of await sources()) {
+      if (rel === JSON_LD_COMPONENT) continue;
+      for (const hit of findSetHtml(text)) hits.push(`${rel}: ${hit}`);
     }
     assert.deepEqual(hits, []);
+  });
+
+  it('components/JsonLd.astro uses it once, only with the serializer output', async () => {
+    const all = await sources();
+    assert.ok(
+      all.some((s) => s.rel === JSON_LD_COMPONENT),
+      `${JSON_LD_COMPONENT} not found`,
+    );
+    assert.deepEqual(checkSetHtml(all), []);
   });
 });

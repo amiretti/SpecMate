@@ -1,11 +1,11 @@
 // Static-only deploy on Cloudflare Workers (ADR-0030): no Worker script, assets only.
-// dist/_headers applies to every asset response. "none" serves a real 404 for unknown
-// paths instead of index.html with 200 (no soft-404).
+// dist/_headers applies to every asset response. "404-page" answers an unknown path with a real
+// 404 carrying dist/404.html (ADR-0035, FR-007); never index.html with 200 (no soft-404).
 {
   "name": "specmate-spike-plantilla",
   "compatibility_date": "2026-11-12",
   "assets": {
     "directory": "./dist/",
-    "not_found_handling": "none"
+    "not_found_handling": "404-page"
   }
 }

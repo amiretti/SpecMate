@@ -1,92 +1,139 @@
 ---
+// The content page. Reading order (FR-008): who the business is and what it offers, then hours and location,
+// then contact. Every value comes from the validated site data (FR-004).
 import { Picture } from 'astro:assets';
 import vidriera from '../assets/vidriera.jpg';
-import { business } from '../data/example-business';
+import { ogImage } from '../data/og-image.ts';
+import { site } from '../data/site.ts';
 import Base from '../layouts/Base.astro';
+import { buildSchema } from '../lib/schema.ts';
+import { addressText, hoursText, mapsUrl, pageUrl } from '../lib/site.ts';
+
+const schema = buildSchema(site, pageUrl(site, ogImage.src));
 
 // Phone link text must not wrap mid-number: non-breaking spaces (U+00A0) and hyphens (U+2011).
-const noBreak = (text: string) => text.replaceAll(' ', '\u00A0').replaceAll('-', '\u2011');
-const whatsappText = encodeURIComponent(`Hola, quiero hacer un pedido a ${business.name}.`);
+const noBreak = (text: string) => text.replaceAll(' ', ' ').replaceAll('-', '‑');
+const whatsappText = encodeURIComponent(`Hola, quiero hacer un pedido a ${site.name}.`);
+const whatsappNumber = site.phone.e164.replace(/\D/g, '');
 ---
 
-<Base title={business.name} description={business.tagline}>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="/">{business.name}</a>
-      <nav aria-label="Secciones">
-        <ul>
-          <li><a href="#nosotros">Nosotros</a></li>
-          <li><a href="#horarios">Horarios</a></li>
-          <li><a href="#contacto">Contacto</a></li>
-        </ul>
-      </nav>
+<Base title={site.name} description={site.tagline} path="/" jsonLd={schema}>
+  <section aria-labelledby="titulo">
+    <div class="container hero-grid">
+      <div>
+        <h1 id="titulo">{site.name}</h1>
+        <p>{site.tagline}</p>
+        {site.exampleNotice && <p class="notice">{site.exampleNotice}</p>}
+      </div>
+      <Picture
+        class="hero-image"
+        src={vidriera}
+        alt={site.image.alt}
+        formats={['avif', 'webp']}
+        widths={[480, 800, 1200]}
+        sizes="(min-width: 48rem) 50vw, 100vw"
+        loading="eager"
+        fetchpriority="high"
+      />
     </div>
-  </header>
+  </section>
 
-  <main id="contenido">
-    <section aria-labelledby="titulo">
-      <div class="container hero-grid">
-        <div>
-          <h1 id="titulo">{business.name}</h1>
-          <p>{business.tagline}</p>
-          <p class="notice">Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.</p>
-        </div>
-        <Picture
-          class="hero-image"
-          src={vidriera}
-          alt={business.image.alt}
-          formats={['avif', 'webp']}
-          widths={[480, 800, 1200]}
-          sizes="(min-width: 48rem) 50vw, 100vw"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </div>
-    </section>
-
-    <section id="nosotros" aria-labelledby="titulo-nosotros">
-      <div class="container">
-        <h2 id="titulo-nosotros">Nosotros</h2>
-        <p>{business.about}</p>
-      </div>
-    </section>
-
-    <section id="horarios" aria-labelledby="titulo-horarios">
-      <div class="container">
-        <h2 id="titulo-horarios">Horarios</h2>
-        <dl class="hours">
-          {
-            business.hours.map((h) => (
-              <>
-                <dt>{h.days}</dt>
-                <dd>{h.time}</dd>
-              </>
-            ))
-          }
-        </dl>
-        <p>{business.address}</p>
-      </div>
-    </section>
-
-    <section id="contacto" aria-labelledby="titulo-contacto">
-      <div class="container">
-        <h2 id="titulo-contacto">Contacto</h2>
-        <ul class="contact-list">
-          <li><a class="button" href={`tel:${business.phoneE164}`}>{noBreak(`Llamar al ${business.phoneDisplay}`)}</a></li>
-          <li>
-            <a class="button" href={`https://wa.me/${business.whatsapp}?text=${whatsappText}`} rel="noopener noreferrer"
-              >Escribir por WhatsApp</a
-            >
-          </li>
-          <li><a class="button" href={`mailto:${business.email}`}>Enviar un correo a {business.email}</a></li>
-        </ul>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
+  <section id="nosotros" aria-labelledby="titulo-nosotros">
     <div class="container">
-      <p>{business.name} · negocio ficticio de ejemplo</p>
+      <h2 id="titulo-nosotros">Nosotros</h2>
+      <p>{site.about}</p>
     </div>
-  </footer>
+  </section>
+
+  <section id="horarios" aria-labelledby="titulo-horarios">
+    <div class="container">
+      <h2 id="titulo-horarios">Horarios</h2>
+      <dl class="hours">
+        {
+          site.hours.map((h) => (
+            <div class="hours-row">
+              <dt>{h.label}</dt>
+              <dd>{hoursText(h)}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      {
+        site.address && (
+          <>
+            <h3>Dirección</h3>
+            <address>{addressText(site.address)}</address>
+            <p>
+              <a href={mapsUrl(site.address)} rel="noopener noreferrer">
+                Cómo llegar
+              </a>
+            </p>
+          </>
+        )
+      }
+      {
+        site.areaServed.length > 0 && (
+          <>
+            <h3>Zona de atención</h3>
+            <ul>
+              {site.areaServed.map((zone) => (
+                <li>{zone}</li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  <section id="contacto" aria-labelledby="titulo-contacto">
+    <div class="container">
+      <h2 id="titulo-contacto">Contacto</h2>
+      <ul class="contact-list">
+        <li><a class="button" href={`tel:${site.phone.e164}`}>{noBreak(`Llamar al ${site.phone.display}`)}</a></li>
+        {
+          site.phone.whatsapp && (
+            <li>
+              <a class="button" href={`https://wa.me/${whatsappNumber}?text=${whatsappText}`} rel="noopener noreferrer">
+                Escribir por WhatsApp
+              </a>
+            </li>
+          )
+        }
+        <li><a class="button" href={`mailto:${site.email}`}>Enviar un correo a {site.email}</a></li>
+      </ul>
+      {
+        site.profiles.length > 0 && (
+          <>
+            <h3>Perfiles</h3>
+            <ul>
+              {site.profiles.map((url) => (
+                <li>
+                  <a href={url} rel="me noopener noreferrer">
+                    {url.replace(/^https:\/\//, '')}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
+    </div>
+  </section>
+
+  {
+    site.faq.length > 0 && (
+      <section id="preguntas" aria-labelledby="titulo-preguntas">
+        <div class="container">
+          <h2 id="titulo-preguntas">Preguntas frecuentes</h2>
+          {site.faq.map((item) => (
+            <>
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
+            </>
+          ))}
+        </div>
+      </section>
+    )
+  }
 </Base>

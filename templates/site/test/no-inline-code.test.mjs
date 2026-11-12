@@ -1,19 +1,24 @@
-// Rule (S2, ADR-0030 "Sin inyeccion" 2): no inline <script>, <style> or on*= in dist/.
+// Rule (S2, ADR-0030 "Sin inyeccion" 2, adjusted by ADR-0035): no inline <script>, <style> or on*= in dist/,
+// except one <script type="application/ld+json"> data block per content page (0 on the 404) that parses and holds
+// no "<". findInlineCode is unchanged: checkJsonLd takes out only the admitted block before it scans.
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 import { distDir } from './lib/paths.mjs';
+import { FIXTURES, VARIANTS } from './lib/build.mjs';
+import { checkJsonLd } from './lib/jsonld.mjs';
 import { findInlineCode, listFiles } from './lib/scan.mjs';
 
 async function scanDir(dir) {
   const html = (await listFiles(dir)).filter((f) => /.(html|svg)$/i.test(f));
   const hits = [];
   for (const file of html) {
-    for (const hit of findInlineCode(await readFile(file, 'utf8'))) {
-      hits.push(`${path.relative(dir, file)}: ${hit}`);
-    }
+    const rel = path.relative(dir, file).replaceAll('\\', '/');
+    const expected = rel.endsWith('.html') && rel !== '404.html' ? 1 : 0;
+    const { rest, problems } = checkJsonLd(await readFile(file, 'utf8'), expected);
+    for (const hit of [...problems, ...findInlineCode(rest)]) hits.push(`${rel}: ${hit}`);
   }
   return { html, hits };
 }
@@ -57,7 +62,10 @@ describe('scanner detects inline code', () => {
   it('finds inline code in a built directory (temp fixture outside the repo)', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'site-inline-'));
     try {
-      await writeFile(path.join(dir, 'index.html'), '<html><body onload="x()"></body></html>');
+      await writeFile(
+        path.join(dir, 'index.html'),
+        '<html><head><script type="application/ld+json">{}</script></head><body onload="x()"></body></html>',
+      );
       const { hits } = await scanDir(dir);
       assert.equal(hits.length, 1);
     } finally {
@@ -78,9 +86,31 @@ describe('scanner detects inline code', () => {
 });
 
 describe('dist/ has no inline code', () => {
-  it('every HTML file is free of inline script, style and on*=', async () => {
+  it('every HTML file is free of inline script, style and on*= (besides its one JSON-LD block)', async () => {
     const { html, hits } = await scanDir(distDir);
     assert.ok(html.length > 0, 'dist/ has no HTML: run `npm run build` first');
     assert.deepEqual(hits, []);
+  });
+
+  for (const [name, target] of Object.entries({ ...VARIANTS, ...FIXTURES })) {
+    it(`the ${name} build is free of inline code too`, async () => {
+      const { html, hits } = await scanDir(target.out);
+      assert.ok(html.length > 0, `${name} has no HTML: run npm test (pretest builds it)`);
+      assert.deepEqual(hits, []);
+    });
+  }
+
+  it('a built page with two JSON-LD blocks, a content page with none, a 404 with one: each flagged', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'site-inline-jsonld-'));
+    try {
+      const block = '<script type="application/ld+json">{}</script>';
+      await writeFile(path.join(dir, 'index.html'), `<html><head>${block}${block}</head></html>`);
+      await writeFile(path.join(dir, 'otra.html'), '<html><head></head></html>');
+      await writeFile(path.join(dir, '404.html'), `<html><head>${block}</head></html>`);
+      const { hits } = await scanDir(dir);
+      assert.equal(hits.length, 3, hits.join('\n'));
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

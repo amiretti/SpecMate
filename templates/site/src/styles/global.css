@@ -167,3 +167,16 @@ section {
   font-size: var(--font-size-small);
   color: var(--color-text-muted);
 }
+
+.hours-row {
+  display: contents;
+}
+
+h3 {
+  font-size: var(--font-size-base);
+  margin-block: var(--space-3) var(--space-1);
+}
+
+address {
+  font-style: normal;
+}

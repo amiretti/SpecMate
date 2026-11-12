@@ -1,0 +1,21 @@
+---
+// FR-007: the same frame as the site, a title and a link home; no business data beyond the name in the frame,
+// and no JSON-LD (ADR-0035). Served with a real 404 status by Workers ("404-page", wrangler.jsonc).
+import { site } from '../data/site.ts';
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title={`Página no encontrada · ${site.name}`}
+  description={`La página que buscás no existe en el sitio de ${site.name}.`}
+  path="/404.html"
+  noindex
+>
+  <section aria-labelledby="titulo">
+    <div class="container">
+      <h1 id="titulo">Página no encontrada</h1>
+      <p>La dirección que abriste no existe o cambió.</p>
+      <p><a class="button" href="/">Volver al inicio</a></p>
+    </div>
+  </section>
+</Base>
