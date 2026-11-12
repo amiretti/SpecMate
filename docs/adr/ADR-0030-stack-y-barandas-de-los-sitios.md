@@ -1,6 +1,6 @@
 # ADR-0030 — Stack y barandas de los sitios generados
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-11-11, Andy)
 - **Fecha:** 2026-11-11
 - **Reemplaza:** —
 - **Afecta a:** la plantilla de sitio (E1), la verificación (E5), la constitución (stack y barandas)

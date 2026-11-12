@@ -15,6 +15,6 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [027](ADR-0027-flujo-proporcional.md) | Flujo proporcional: ODD por defecto, SDD cuando el riesgo lo pide |
 | [028](ADR-0028-stack-tecnologico.md) | Stack tecnológico del MVP · en parte reemplazada por ADR-0029 |
 | [029](ADR-0029-pivot-sitios-para-negocios.md) | Pivot: de la carpeta del cliente a la web publicada |
-| [030](ADR-0030-stack-y-barandas-de-los-sitios.md) | Stack y barandas de los sitios generados (propuesta) |
-| [031](ADR-0031-relevamiento-guiado.md) | Relevamiento guiado: detectar, inferir y preguntar solo lo que falta (propuesta) |
-| [032](ADR-0032-opciones-combinables.md) | Opciones combinables: tres sitios completos armados con partes intercambiables (propuesta) |
+| [030](ADR-0030-stack-y-barandas-de-los-sitios.md) | Stack y barandas de los sitios generados |
+| [031](ADR-0031-relevamiento-guiado.md) | Relevamiento guiado: detectar, inferir y preguntar solo lo que falta |
+| [032](ADR-0032-opciones-combinables.md) | Opciones combinables: tres sitios completos armados con partes intercambiables |

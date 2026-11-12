@@ -1,6 +1,6 @@
 # ADR-0032 — Opciones combinables: tres sitios completos armados con partes intercambiables
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-11-11, Andy)
 - **Fecha:** 2026-11-11
 - **Reemplaza:** los pasos 8, 9 y 11 de ADR-0031 (paletas, tipografías y bosquejos como gates separados)
 - **Afecta a:** ADR-0031, épicas E3 y E4, `docs/mvp.md`, `templates/site`

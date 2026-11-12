@@ -79,8 +79,6 @@ proceso.
 | Bloqueo | Qué frena | Se levanta cuando |
 |---|---|---|
 | Spike E0 abierto | Todo código de producto fuera del primer sitio del spike | Cierra el informe del spike |
-| Constitución 2.0.0 sin ratificar | Implementar contra el stack nuevo | Andy la ratifica |
-| ADR-0030 en propuesta | La plantilla del sitio (E1) | Andy la acepta |
 
 Una historia que toca algo bloqueado **no se taskea ni se supone: se reporta.**
 

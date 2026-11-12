@@ -4,10 +4,6 @@
 gates, zonas críticas, bloqueos) vive en la skill `project-guard`. Orden de autoridad:
 **constitución y ADR > spec > criterio del implementador.**
 
-> **Enmienda 2.0.0 propuesta (2026-11-11), pendiente de ratificación.** Aplica el pivot
-> de ADR-0029: SpecMate genera sitios estáticos para negocios desde el material del
-> cliente. Hasta que Andy la ratifique, rige la 1.1.0 (historial de git).
-
 ## Principios
 
 ### I. Simplicidad primero
@@ -143,7 +139,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
-| 2.0.0 | 2026-11-11 | **Propuesta.** Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevos principios XI (nada se publica sin fuente) y XII (agnóstico al cliente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029, ADR-0030 |
+| 2.0.0 | 2026-11-11 | Ratificada por Andy. Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevos principios XI (nada se publica sin fuente) y XII (agnóstico al cliente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029 a ADR-0032 |
 
 ## Gobierno
 
@@ -151,4 +147,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 2.0.0, propuesta (vigente: 1.1.0) | **Ratificada**: 1.1.0, 2026-10-28 por Andy | **Última enmienda**: 2026-11-11
+**Versión**: 2.0.0 | **Ratificada**: 2026-11-11 por Andy | **Última enmienda**: 2026-11-11
