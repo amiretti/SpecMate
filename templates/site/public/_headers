@@ -1,0 +1,10 @@
+# Security headers for every route (ADR-0030). Served by Cloudflare from dist/_headers.
+# No 'unsafe-inline' or 'unsafe-eval': the build emits no inline script, style or handler.
+# A third-party origin is added only when the client's brief allow-lists it, with a reason.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
