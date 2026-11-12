@@ -72,6 +72,12 @@ reseña, cifra, logo de cliente ni imagen se inventa. Google Maps pre-llena y cr
 datos, pero no es fuente publicable: sus políticas prohíben guardar su contenido
 (ADR-0029).
 
+### XII. Agnóstico al cliente
+El producto no conoce a ningún cliente. Ningún nombre, dato, material ni regla de un
+cliente real entra en este repo: vive en la carpeta y en el repo del sitio de ese
+cliente. El rubro elige entre opciones genéricas, nunca activa código hecho para un
+negocio. Los tests y ejemplos usan clientes **inventados y marcados como tales**.
+
 ## Stack y dependencias
 
 **La herramienta (este repo):**
@@ -121,6 +127,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | Push, PR, destructivos y **publicar un sitio** solo con aprobación humana | piso de `.agents/autonomy.json` y Gate 3 | ADR-014, ADR-0029 |
 | Ningún sitio se publica con un control de ADR-0030 en rojo | `specmate verify` antes de publicar (E5); hasta entonces `(sin gate)` | ADR-0030 |
 | Ningún dato del negocio se publica sin fuente ni confirmación | esquema Zod del brief (E2); hasta entonces `(sin gate)` | ADR-0029 |
+| Ningún dato ni material de un cliente real en este repo | revisión en cada PR `(sin gate)`; los tests usan clientes inventados | ADR-0032 |
 | Windows es la plataforma principal: todo AC se prueba en Windows | CI en `windows-latest` (a configurar) `(sin gate)` | ADR-001 |
 
 ## Excepciones vigentes
@@ -136,7 +143,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
-| 2.0.0 | 2026-11-11 | **Propuesta.** Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevo principio XI (nada se publica sin fuente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029, ADR-0030 |
+| 2.0.0 | 2026-11-11 | **Propuesta.** Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevos principios XI (nada se publica sin fuente) y XII (agnóstico al cliente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029, ADR-0030 |
 
 ## Gobierno
 

@@ -1,6 +1,6 @@
 # ADR-0031 — Relevamiento guiado: detectar, inferir y preguntar solo lo que falta
 
-- **Estado:** Propuesta
+- **Estado:** Propuesta · los pasos 8, 9 y 11 y los gates de marca y bosquejo los reemplaza [ADR-0032](ADR-0032-opciones-combinables.md): dos intervenciones humanas y tres opciones completas y combinables
 - **Fecha:** 2026-11-11
 - **Reemplaza:** los pasos 1 y 2 del flujo de ADR-0029 (ingesta y dirección de arte en un solo paso)
 - **Afecta a:** épicas E2 a E5, `docs/mvp.md`, README

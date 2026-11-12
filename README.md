@@ -37,7 +37,7 @@ publican.
 | El problema | Lo que hace SpecMate |
 |---|---|
 | El generador inventa horarios, servicios o testimonios | **Nada se publica sin fuente:** cada dato sale del material del cliente y el cliente lo confirma antes de construir |
-| Todos los sitios hechos con IA se parecen | **Diseño propio, elegido de a un paso:** paleta, tipografía y composición, tres opciones cada una, sobre el logo del cliente |
+| Todos los sitios hechos con IA se parecen | **Tres sitios reales para elegir, y mezclables:** el cliente ve su sitio terminado, no un boceto, y puede combinar partes de las tres opciones |
 | "Es seguro" sin nada que lo respalde | **Controles que bloquean:** CSP estricta, nada inline, dependencias auditadas, secretos escaneados. Si algo da rojo, no se publica |
 | Lento en el celular, invisible en Google | **HTML estático:** rendimiento ≥ 90 en Lighthouse, SEO local con `LocalBusiness` y sin JavaScript de más |
 | El sitio queda en una plataforma ajena | **El código es del cliente:** un repo por sitio, hosting en Cloudflare, sin costo mensual de plataforma |
@@ -47,16 +47,13 @@ publican.
 ```mermaid
 flowchart LR
     In["Carpeta del cliente<br/>+ URL de Maps<br/>+ referencias"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
-    Rel --> G1{{"Gate datos"}}
-    G1 --> Marca["3 paletas → 3 tipografías"]
-    Marca --> G2{{"Gate marca"}}
-    G2 --> Bosq["3 bosquejos"]
-    Bosq --> G3{{"Gate bosquejo"}}
-    G3 --> Build["Sitio estático<br/>tests primero"]
-    Build --> Verify["Verificación<br/>automática"]
-    Verify -->|rojo| Build
-    Verify -->|verde| G4{{"Gate vista previa"}}
-    G4 --> Pub([Publicado])
+    Rel --> G1{{"Confirmar datos<br/>y dominio"}}
+    G1 --> Gen["3 sitios completos<br/>paleta · tipografía · composición"]
+    Gen --> Verify["Verificación<br/>de cada opción"]
+    Verify -->|rojo| Gen
+    Verify -->|verde| Elegir{{"El cliente elige"}}
+    Elegir -->|"mix · ajuste · opción nueva"| Gen
+    Elegir -->|"una opción"| Pub([Publicado])
 ```
 
 1. **Relevamiento.** Abrís la carpeta del cliente en VS Code y SpecMate **busca antes de
@@ -64,15 +61,17 @@ flowchart LR
    objetivo del sitio y el tono, y solo pregunta lo que falta. Google Maps pre-llena y
    cruza datos, pero lo que se publica es lo que confirma el cliente, porque sus
    términos no permiten copiar su contenido.
-2. **Gate de datos.** Cada dato aparece con su fuente; nada sigue hasta confirmarlo.
-3. **Marca.** Tres paletas desde el logo (en claro y oscuro, con contraste verificado)
-   y después tres combinaciones tipográficas. Si hay manual de marca, se usa el suyo.
-4. **Bosquejos.** Tres composiciones con la marca ya fijada, en un link para mandarle
-   al cliente.
-5. **Construcción.** Un sitio Astro estático, con tests primero y todo el contenido
-   escapado.
-6. **Verificación.** Corren todos los controles de abajo; uno solo en rojo frena todo.
-7. **Gate de vista previa.** Con tu aprobación, se publica en Cloudflare.
+2. **Confirmar datos y dominio.** Cada dato aparece con su fuente; nada sigue hasta
+   confirmarlo. Es la primera de las dos intervenciones humanas.
+3. **Tres sitios completos.** El sistema elige paleta, tipografía y composición (del
+   manual de marca si existe; si no, del logo, el rubro y el tono) y arma tres sitios
+   reales, distintos a propósito, con secciones de una biblioteca ya verificada.
+4. **Verificación.** Cada opción pasa todos los controles de abajo antes de que el
+   cliente la vea.
+5. **El cliente elige**, mirando sus tres sitios en URLs de prueba. Puede pedir un mix
+   ("la portada de la 2 con los colores de la 3"), un ajuste o una opción nueva: cada
+   pedido es una versión nueva, y el mix sale en minutos porque recombina partes.
+6. **Se publica** exactamente la versión elegida, en Cloudflare.
 
 ## Qué controla antes de publicar
 
@@ -104,18 +103,20 @@ El detalle y el porqué de cada control: [ADR-0030](docs/adr/ADR-0030-stack-y-ba
 | Fase | Qué trae | Épicas |
 |---|---|---|
 | **F0 · Spike** ← *acá estamos* | Un sitio real hecho a mano con el flujo, horas medidas, Places y CSP probados | [E0](https://github.com/amiretti/SpecMate/issues/1) |
-| **F1 · MVP** | Plantilla segura, relevamiento guiado, marca y bosquejos, construcción, verificación y publicación | E1 a E5 |
+| **F1 · MVP** | Plantilla segura, relevamiento guiado, opciones combinables, biblioteca de secciones, verificación y publicación | E1 a E5 |
 | **F2 · Uso real** | Tres clientes de Harvi publicados y medidos | E6 |
 | **Después** | Formulario con backend · mantenimiento y re-auditoría · edición por el cliente · producto para otras agencias · relevamiento hecho por el cliente | E7 a E11 |
 
-**El MVP se mide en sitios reales:** 3 publicados, la mitad de horas que hoy, 0 datos sin
-confirmar y Lighthouse en verde. Detalle en [docs/mvp.md](docs/mvp.md).
+**El MVP se mide en sitios reales:** 3 publicados, ≤ 3 horas de trabajo de Harvi por
+sitio (hoy unas 24), dos intervenciones humanas, 0 datos sin confirmar y Lighthouse en
+verde. Detalle en [docs/mvp.md](docs/mvp.md).
 
 ## Principios
 
 La [constitución](.specify/memory/constitution.md) manda sobre todo lo demás. En corto:
 
 - **Nada se publica sin fuente.**
+- **Agnóstico al cliente:** nada de un cliente vive en este repo.
 - **Verificable o no está hecho.** El test va primero y el rojo se observa.
 - **Lo publicado no ejecuta nada ajeno.**
 - **Simplicidad primero:** HTML estático, sin backend ni CMS hasta que un cliente lo
