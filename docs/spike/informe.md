@@ -11,8 +11,7 @@ plantilla: `templates/site` (commit `b1b7665`).
 
 **Veredicto: sí.** Publicado en https://specmate-spike-plantilla.cuervo-dev.workers.dev
 (Workers con assets estáticos, `wrangler.jsonc`, wrangler 4.161.0), con los headers
-servidos tal como están en `_headers` (verificados con `curl -sI` antes del cambio de
-subdominio de la cuenta; misma versión publicada, re-verificación pendiente).
+servidos tal como están en `_headers` (verificados con `curl -sI` en esta URL).
 
 ### Mediciones (2026-11-12, `dist/` servido en local, sin `_headers`)
 
