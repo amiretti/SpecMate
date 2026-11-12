@@ -6,8 +6,8 @@
 en línea: comercios, profesionales, clubes, mutuales, gastronomía. Lo usa Andy en
 Windows, con su suscripción de Claude.
 
-**Hipótesis:** dada una carpeta con el material del cliente, la URL de Google Maps y
-algunas referencias, SpecMate entrega **tres sitios completos y verificados** para
+**Hipótesis:** dada una carpeta con el material del cliente y algunas referencias (más
+su URL de Google Maps, si la tiene), SpecMate entrega **tres sitios completos y verificados** para
 elegir, con datos confirmados y diseño propio, y la única intervención humana es
 confirmar los datos al principio y elegir al final. Hoy un sitio lleva unas **24 horas
 de desarrollo y una o dos semanas** de idas y vueltas.
@@ -15,7 +15,9 @@ de desarrollo y una o dos semanas** de idas y vueltas.
 **Entra:**
 - one page, landing o sitio de pocas páginas, estático (Astro);
 - contacto por enlaces (teléfono, mail, WhatsApp);
-- botón "Cómo llegar" a Google Maps;
+- botón "Cómo llegar" a Google Maps, solo si el negocio tiene dirección física;
+- negocios sin ficha en Maps y sin dirección física (online, a domicilio): Maps es
+  opcional y la sección de ubicación también;
 - SEO local;
 - publicación en Cloudflare;
 - relevamiento guiado que pregunta solo lo que falta (ADR-0031);
@@ -31,7 +33,7 @@ por el cliente o CMS (E9) · tienda, reservas o pagos · producto para otras age
 
 ```mermaid
 flowchart LR
-    In["Carpeta del cliente<br/>+ URL de Maps<br/>+ referencias"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
+    In["Carpeta del cliente<br/>+ referencias<br/>+ Maps, si hay"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
     Rel --> G1{{"Confirmar datos<br/>y dominio"}}
     G1 --> Gen["3 sitios completos<br/>paleta · tipografía · composición"]
     Gen --> Verify["Verificación<br/>de cada opción"]

@@ -53,6 +53,19 @@ servidos tal como están en `_headers` (verificados con `curl -sI` en esta URL).
    cliente; falta CORP.
 7. **Versiones:** `@astrojs/check` 0.9.12 obliga a TypeScript 6 (no 7).
 
+## Decisiones del developer que piden cambios a las ADR
+
+- **2026-11-12 · Maps opcional y negocios sin dirección física.** "NO va a ser requisito
+  excluyente que el negocio tenga maps o places", incluidos los negocios sin dirección
+  física (solo online, a domicilio). Pide a US-10:
+  - ADR-0030, fila *Mapa*: el botón "Cómo llegar" va solo si hay dirección confirmada.
+  - ADR-0030, fila *SEO local*: sin dirección no hay `LocalBusiness` con `address`; definir
+    el tipo de schema.org (por ejemplo `Organization` u `OnlineBusiness`, o
+    `LocalBusiness` con `areaServed`).
+  - ADR-0029 punto 4 y principio XI: sin cambio de fondo (Maps ya era solo pre-llenado),
+    pero aclarar que su ausencia es un caso normal.
+  - US-07 (Places) mide algo opcional: su veredicto pasa a ser "¿vale la pena cuando existe?".
+
 ### Horas
 
 Máquina: ~30 min de agentes (T1 + corrección, revisión de seguridad y medición).
