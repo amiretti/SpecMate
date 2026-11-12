@@ -78,7 +78,7 @@ proceso.
 
 | Bloqueo | Qué frena | Se levanta cuando |
 |---|---|---|
-| Spike E0 abierto | Todo código de producto fuera del primer sitio del spike | Cierra el informe del spike |
+| Spike E0 abierto | E2, E3 y E4 (relevamiento, opciones y biblioteca de secciones): dependen de las incógnitas 1 a 3. **E1 y E5 quedan liberados** (developer, 2026-11-12): la incógnita 4 ya dio sí | Cierran US-06 y US-08 |
 
 Una historia que toca algo bloqueado **no se taskea ni se supone: se reporta.**
 

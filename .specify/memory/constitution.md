@@ -113,8 +113,10 @@ negocio. Los tests y ejemplos usan clientes **inventados y marcados como tales**
 **Dependencias vedadas:** dependencias con licencia copyleft fuerte (GPL, AGPL) en lo
 que se distribuye. En los sitios: frameworks de SPA, CSS o fuentes por CDN, y scripts
 o iframes de terceros fuera de la lista blanca del brief (ADR-0030).
-**Licencias permitidas:** MIT, Apache-2.0, BSD-2/3, ISC. Toda dependencia nueva se
-verifica antes de agregarse. Sin módulos nativos salvo ADR.
+**Licencias permitidas:** MIT, Apache-2.0, BSD-2/3, ISC. En lo que se publica en un
+sitio, además OFL-1.1 (solo fuentes) y CC0-1.0; en lo que solo corre al construir y no
+se publica, además MPL-2.0, LGPL-3.0 y BlueOak-1.0.0 (ADR-0035). Toda dependencia nueva
+se verifica antes de agregarse. Sin módulos nativos salvo ADR.
 **Excepción de licencia:** `@anthropic-ai/claude-agent-sdk` (propietaria de Anthropic),
 aceptada como runtime de agentes; se revisa si el producto se ofrece a terceros
 (ADR-0028).
@@ -151,6 +153,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
 | 2.1.0 | 2026-11-12 | Principio II: Clean Architecture por defecto con exclusiones explícitas. Principio IX: todo loop es acotado. Aprobada por Andy por delegación | ADR-0033, ADR-0034 |
+| 2.2.0 | 2026-11-12 | Licencias: OFL-1.1 (fuentes) y CC0 en lo publicado; MPL-2.0, LGPL-3.0 y BlueOak en lo que solo corre al construir. Aprobada por Andy al aceptar ADR-0035 | ADR-0035 |
 | 2.0.0 | 2026-11-11 | Ratificada por Andy. Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevos principios XI (nada se publica sin fuente) y XII (agnóstico al cliente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029 a ADR-0032 |
 
 ## Gobierno
@@ -159,4 +162,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 2.1.0 | **Ratificada**: 2026-11-12 por Andy | **Última enmienda**: 2026-11-12
+**Versión**: 2.2.0 | **Ratificada**: 2026-11-12 por Andy | **Última enmienda**: 2026-11-12
