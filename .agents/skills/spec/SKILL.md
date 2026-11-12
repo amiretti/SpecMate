@@ -21,10 +21,9 @@ qué separa una spec buena de una que genera retrabajo.
 
 | Archivo | Quién | Cuándo |
 |---|---|---|
-| `analysis.md` | `functional-analyst` | Antes de la spec (se saltea en tickets chicos) |
-| `spec.md` | `product-owner` | Gate humano de spec |
+| `spec.md` | `lead` (`/speckit-specify`) | Gate humano de spec |
 | `test-plan.md` | `qa` en modo diseño | Antes del gate de spec, si aplica |
-| `plan.md`, `data-model.md`, `contracts/` | `architect` (`/speckit-plan`) | Después de la spec aprobada |
+| `plan.md`, `data-model.md`, `contracts/` | `lead` (`/speckit-plan`) | Después de la spec aprobada |
 | `tasks.md` | `lead` (`/speckit-tasks`) | Gate humano de plan |
 
 ## Las secciones (números fijos, se citan por número)

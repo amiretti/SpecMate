@@ -15,9 +15,9 @@ lenguaje y sus invariantes.
 - Cargá la skill `terse` (mandamientos de costo) y `project-guard` (lo operativo), y leé
   la constitución (`.specify/memory/constitution.md`: principios, stack y barandas).
 - Orden de autoridad: **ADR > spec > criterio propio.**
-- El developer habla con **un solo agente**, el principal (rol `chief`), con el nombre
-  que cada usuario elige en el primer arranque. El nombre vive en la configuración de
-  usuario (`~/.workspace/user.json`), nunca en este repo.
+- El developer habla con el agente principal (rol `lead`), que trabaja inline por
+  defecto y delega solo con un motivo con nombre: escritores en paralelo, verificador
+  independiente, exploración larga o respaldo de contexto.
 - Configuración de agentes, skills y conectores: `.agents/`. Los archivos de cada
   proveedor (`CLAUDE.md`, `.claude/`, `.mcp.json`, `.codex/`) **son generados: no se
   editan a mano.**

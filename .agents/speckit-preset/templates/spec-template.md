@@ -63,4 +63,4 @@ Qué hace el sistema, no cómo (el cómo va en `plan.md`).
 ## §7 Riesgos y decisiones abiertas
 
 - <qué falta decidir · quién lo decide · qué bloquea>
-- Contradicciones entre fuentes: tabla del `product-owner` (fuente A · fuente B · propuesta · por qué)
+- Contradicciones entre fuentes: tabla del `lead` (fuente A · fuente B · propuesta · por qué)

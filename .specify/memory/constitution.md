@@ -120,7 +120,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | Ningún secreto en el repo ni en un sitio publicado | secretlint en pre-commit y en la verificación del sitio (E5); hasta entonces `(sin gate)` | ADR-003, ADR-0030 |
 | La herramienta nunca manipula tokens de suscripción: cada runtime usa su login oficial | revisión del rol `security` `(sin gate automático)` | ADR-003 |
 | Ningún archivo de proveedor (`CLAUDE.md`, `.claude/`, `.mcp.json`) se edita a mano | `tools/project.mjs --check` al abrir sesión | ADR-013 |
-| Push, PR, destructivos y **publicar un sitio** solo con aprobación humana | piso de `.agents/autonomy.json` y Gate 3 | ADR-014, ADR-0029 |
+| Push, PR, destructivos y **publicar un sitio** solo con aprobación humana | piso de `.agents/autonomy.json` y elección del cliente | ADR-014, ADR-0029 |
 | Ningún sitio se publica con un control de ADR-0030 en rojo | `specmate verify` antes de publicar (E5); hasta entonces `(sin gate)` | ADR-0030 |
 | Ningún dato del negocio se publica sin fuente ni confirmación | esquema Zod del brief (E2); hasta entonces `(sin gate)` | ADR-0029 |
 | Ningún dato ni material de un cliente real en este repo | revisión en cada PR `(sin gate)`; los tests usan clientes inventados | ADR-0032 |

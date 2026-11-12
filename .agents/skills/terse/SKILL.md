@@ -23,7 +23,7 @@ Estos mandamientos **no se negocian por prolijidad ni por cortesía.**
    entero. Nunca releer lo que ya está en contexto.
 5. **Una corrida cara, una vez.** La suite completa corre una sola vez, con un dueño.
    Los demás corren solo lo que tocaron.
-6. **Modelo justo.** `model-routing` en cada spawn, modelo explícito, sin herencias.
+6. **Modelo justo.** Nivel explícito en cada spawn (rol `lead`, § Modelo por spawn), sin herencias.
 7. **Continuar > respawnear.** Un ajuste es un mensaje al agente vivo, no un agente nuevo.
 8. **Lo chico no se delega.** Si se resuelve en unas pocas llamadas, lo hace quien lo vio.
 9. **Prompts masticados.** Al delegar: extractos con `§` y líneas, no archivos enteros.

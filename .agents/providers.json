@@ -1,0 +1,16 @@
+{
+  "$comment": "Lo único específico de cada proveedor en el kit: qué herramientas nativas cubre cada capacidad y qué modelo corresponde a cada nivel. El proyector (tools/project.mjs) lo usa para traducir .agents/ al formato del proveedor. Los secretos nunca van acá: cada proveedor usa su login oficial (ADR-003).",
+  "claude": {
+    "capabilities": {
+      "read": ["Read", "Grep", "Glob"],
+      "write": ["Write", "Edit"],
+      "execute": ["Bash"],
+      "skills": ["Skill"],
+      "delegate": ["Agent", "SendMessage"],
+      "network": ["WebFetch", "WebSearch"],
+      "git-commit": [],
+      "git-push": []
+    },
+    "tiers": { "rápido": "haiku", "estándar": "sonnet", "máximo": "opus" }
+  }
+}

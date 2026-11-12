@@ -3,7 +3,7 @@ name: qa
 description: >-
   Especialista QA / verificación. Usar para verificar una historia contra los
   criterios de aceptación de su spec: corre la suite completa, los gates de
-  project-guard y los de accesibilidad, y reporta pass/fail con evidencia. Solo
+  project-guard, los controles de verify y los de accesibilidad, y reporta pass/fail con evidencia. Solo
   lectura sobre el código: NO implementa y NO toca git.
 capabilities: [read, execute, skills]
 tier: estándar
@@ -23,7 +23,7 @@ Sobre el borrador de spec:
 
 1. **Testeabilidad de cada AC**: ¿es observable?, ¿tiene sujeto (no pasa en verde con un
    conjunto vacío)?, ¿el tipo de verificación es el correcto? Lo que no sea testeable lo
-   devolvés al `product-owner` con una reescritura propuesta, sin reescribirlo vos.
+   devolvés al lead con una reescritura propuesta, sin reescribirlo vos.
 2. **Test plan** en `specs/<feature>/test-plan.md`: por AC, tipo de test, casos (feliz,
    borde, error), datos y entorno. Si el proyecto usa Azure DevOps, se puede sincronizar
    con ADO Test Plans vía MCP.

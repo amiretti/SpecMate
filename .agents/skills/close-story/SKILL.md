@@ -82,17 +82,6 @@ hacer en su lugar. Si el mismo pitfall aparece **dos veces**, proponé llevarlo 
 `AGENTS.md` del módulo como regla, con aprobación humana: ahí lo leen todos los agentes
 sin tener que buscarlo.
 
-## 6.2 Conectores concedidos
-
-`node tools/mcp.mjs revoke-story <US-ID>`: las concesiones son por historia y no
-sobreviven al cierre.
-
-## 6.3 Perfil del developer
-
-Corré la skill `profile`: si en la historia aprendiste algo nuevo de **la persona**
-(cómo quiere los reportes, su vocabulario, decisiones que repite), actualizá su perfil.
-Lo del proyecto va a Engram (§6.1), no al perfil.
-
 ## 7. Reporte
 
 Archivos tocados · conteos con su comando · qué cambió de estado y qué issues cerró ·

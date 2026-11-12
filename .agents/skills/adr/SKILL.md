@@ -79,14 +79,14 @@ Archivo: `docs/adr/ADR-NNNN-<slug>.md`, número siguiente al último existente.
 - **Una ADR aceptada no se edita.** Se cambia escribiendo otra que la reemplaza, y la
   vieja pasa a `Reemplazada por ADR-MMMM`.
 - **Un agente nunca pasa una ADR a `Aceptada`.** Eso lo hace el humano.
-- Quién escribe el archivo en `docs/adr/` lo decide el lead. El `architect` redacta el
-  contenido en su reporte.
+- El archivo en `docs/adr/` lo escribe el lead, con estado `Propuesta`, hasta que el
+  humano la acepta.
 
 ## 3.1 RFC con varias perspectivas (solo decisiones caras)
 
 Cuando el plan marca **RFC requerido** y la decisión es cara de revertir, antes de la
-ADR podés pedir una ronda de discusión: 2 o 3 roles (ej: `architect`, `security`,
-`backend`) como subagentes independientes de nivel `rápido` o `estándar`, cada uno con
+ADR podés pedir una ronda de discusión: 2 o 3 roles (ej: `security`, `developer`,
+`frontend`) como subagentes independientes de nivel `rápido` o `estándar`, cada uno con
 la propuesta y la pregunta *"¿qué se rompe con esto y qué harías distinto?"*. Una ronda,
 no un debate: vos sintetizás las objeciones en *Alternativas descartadas* y
 *Consecuencias*. Para cualquier otra decisión es gasto: no la uses.

@@ -8,7 +8,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import os from "node:os";
 
 const [target = "claude", ...flags] = process.argv.slice(2);
 const force = flags.includes("--force");
@@ -23,25 +22,10 @@ if (target !== "claude") {
   process.exit(1);
 }
 
-const runtimes = JSON.parse(fs.readFileSync(path.join(src, "runtimes.json"), "utf8"));
-const rt = runtimes.runtimes?.[target];
-if (!rt) throw new Error(`runtimes.json: falta runtimes.${target}`);
-// Niveles: los de la suscripción del agente principal si corre en este runtime; si no, la primera de este runtime.
-const subs = runtimes.subscriptions ?? {};
-const subName = subs[runtimes.routing?.chief]?.runtime === target
-  ? runtimes.routing.chief
-  : Object.keys(subs).find((k) => subs[k].runtime === target);
-if (!subName) throw new Error(`runtimes.json: ninguna suscripción usa el runtime "${target}"`);
-const tiers = subs[subName].tiers;
-
-// Nombre del agente principal: nivel usuario, nunca en el repo (ADR-019).
-const userHome = process.env.WORKSPACE_HOME || path.join(os.homedir(), ".workspace");
-let agentName = "";
-try { agentName = JSON.parse(fs.readFileSync(path.join(userHome, "user.json"), "utf8")).agentName ?? ""; } catch {}
-const identity = agentName
-  ? `Tu nombre es **${agentName}**. Así te presentás y así te llama el developer.`
-  : "**Todavía no tenés nombre.** Antes de cualquier otra cosa, seguí la skill `onboarding`: presentate y preguntale al developer cómo quiere llamarte.";
-const fill = (txt) => txt.replaceAll("{{identity}}", identity);
+const providers = JSON.parse(fs.readFileSync(path.join(src, "providers.json"), "utf8"));
+const rt = providers[target];
+if (!rt) throw new Error(`providers.json: falta ${target}`);
+const tiers = rt.tiers;
 
 // Catálogo MCP: ${workspaceRoot} -> ruta absoluta del proyecto (Engram exige ENGRAM_DATA_DIR absoluta).
 const rootJson = JSON.stringify(root).slice(1, -1);
@@ -49,9 +33,6 @@ const catalog = JSON.parse(
   fs.readFileSync(path.join(src, "mcp.json"), "utf8").replaceAll("${workspaceRoot}", rootJson)
 ).mcpServers ?? {};
 const META = new Set(["$comment", "enabled", "main", "requires", "external", "purpose", "risk"]);
-// Concesiones por historia (tools/mcp.mjs grant): un rol recibe un conector aunque no lo tenga o esté apagado.
-const grantsPath = path.join(root, ".workspace", "mcp-grants.json");
-const grants = fs.existsSync(grantsPath) ? JSON.parse(fs.readFileSync(grantsPath, "utf8")) : [];
 const cleanServer = (s) => Object.fromEntries(Object.entries(s).filter(([k]) => !META.has(k)));
 const enabledServers = Object.entries(catalog).filter(([, s]) => s.enabled);
 
@@ -123,53 +104,50 @@ for (const f of fs.readdirSync(path.join(src, "roles")).filter((n) => n.endsWith
   const [lines, body] = splitFrontmatter(fs.readFileSync(path.join(src, "roles", f), "utf8"));
   roles.set(f.replace(/\.md$/, ""), { file: f, fm: parseFm(lines), body });
 }
-// Un rol con `fuses: <otro>` absorbe al otro (modo un equipo: el agente principal es también el lead).
-const fused = new Set([...roles.values()].map((r) => scalar(r.fm, "fuses")).filter(Boolean));
+// El agente principal (lead) es la sesión principal: sus conectores van a .mcp.json; los demás, inline en cada rol.
+const MAIN = "lead";
+if (!roles.has(MAIN)) throw new Error(`falta el rol ${MAIN}`);
 
 for (const [name, r] of roles) {
-  if (fused.has(name)) {
-    // Fusionado en otro rol: no se proyecta solo. Si quedó de una proyección vieja y nadie lo editó, se borra.
-    const rel = `.claude/agents/${r.file}`, abs = path.join(root, rel);
-    if (fs.existsSync(abs) && manifest[rel] === hash(fs.readFileSync(abs, "utf8"))) {
-      if (check) { report.stale.push(`${rel} (sobra)`); continue; }
-      fs.rmSync(abs); delete manifest[rel]; report.removed.push(rel);
-    }
-    continue;
-  }
-  const partner = roles.get(scalar(r.fm, "fuses") ?? "");
-  const caps = [...new Set([...list(r.fm, "capabilities"), ...(partner ? list(partner.fm, "capabilities") : [])])];
-  // Fusionado, manda el nivel del rol absorbido: es quien orquesta y verifica.
-  const tier = partner ? scalar(partner.fm, "tier") : scalar(r.fm, "tier");
-  const skills = [...new Set([...list(r.fm, "skills"), ...(partner ? list(partner.fm, "skills") : [])])];
+  const caps = list(r.fm, "capabilities");
+  const skills = list(r.fm, "skills");
   const out = [`name: ${name}`, ...(r.fm.get("description") ?? [])];
-  out.push(`tools: ${toolsFor(r.file, caps).join(", ")}`, `model: ${modelFor(r.file, tier)}`);
+  out.push(`tools: ${toolsFor(r.file, caps).join(", ")}`, `model: ${modelFor(r.file, scalar(r.fm, "tier"))}`);
   if (skills.length) out.push("skills:", ...skills.map((s) => `  - ${s}`));
-  // MCP: los de la sesión principal se referencian; el resto se define inline, solo en este rol.
-  const isMain = Boolean(partner);
-  const wanted = new Set([...list(r.fm, "mcp"), ...(partner ? list(partner.fm, "mcp") : [])]);
-  const granted = new Set(grants.filter((g) => g.role === name || (partner && g.role === scalar(r.fm, "fuses"))).map((g) => g.server));
-  const servers = [
-    ...enabledServers.filter(([n, s]) => wanted.has(n) || (isMain && s.main)),
-    ...Object.entries(catalog).filter(([n]) => granted.has(n) && !(catalog[n].enabled && (wanted.has(n) || (isMain && catalog[n].main)))),
-  ];
+  const isMain = name === MAIN;
+  const wanted = new Set(list(r.fm, "mcp"));
+  const servers = enabledServers.filter(([n, s]) => wanted.has(n) || (isMain && s.main));
   if (servers.length) {
     const inline = (s) => { const c = cleanServer(s); return c.command && !c.type ? { type: "stdio", ...c } : c; };
-    out.push("mcpServers:", ...servers.map(([n, s]) => (s.main && s.enabled ? `  - ${n}` : `  - ${n}: ${JSON.stringify(inline(s))}`)));
+    out.push("mcpServers:", ...servers.map(([n, s]) => (s.main ? `  - ${n}` : `  - ${n}: ${JSON.stringify(inline(s))}`)));
     const toolsLine = out.findIndex((l) => l.startsWith("tools: "));
     out[toolsLine] += ", " + servers.map(([n]) => `mcp__${n}__*`).join(", ");
   }
   if (r.fm.has("color")) out.push(...r.fm.get("color"));
-  const body = partner
-    ? `${r.body}\n---\n\n# Con un solo equipo, también sos el lead\n\n<!-- de .agents/roles/${partner.file} -->${partner.body}`
-    : r.body;
-  emit(`.claude/agents/${r.file}`, fill(`---\n${out.join("\n")}\n---\n<!-- ${GEN} .agents/roles/${r.file} -->${body}`));
+  emit(`.claude/agents/${r.file}`, `---\n${out.join("\n")}\n---\n<!-- ${GEN} .agents/roles/${r.file} -->${r.body}`);
 }
 
-// El agente principal es la sesión principal (claude a secas lo abre).
-const main = [...roles.keys()].find((n) => scalar(roles.get(n).fm, "fuses")) ?? "lead";
+// Lo que quedó de una proyección vieja (un rol o una skill que ya no existe) y nadie editó, se borra.
+function prune(dir, keep) {
+  const abs = path.join(root, dir);
+  if (!fs.existsSync(abs)) return;
+  for (const e of fs.readdirSync(abs)) {
+    if (keep.has(e)) continue;
+    const files = fs.statSync(path.join(abs, e)).isDirectory()
+      ? fs.readdirSync(path.join(abs, e)).map((f) => path.join(dir, e, f)) : [path.join(dir, e)];
+    if (!files.some((rel) => rel in manifest)) continue; // no lo generó el proyector (por ejemplo, las skills de Spec Kit)
+    const ours = files.every((rel) => manifest[rel] === hash(fs.readFileSync(path.join(root, rel), "utf8")));
+    if (!ours) { report.skipped.push(`${dir}/${e} (sobra, pero fue editado: borralo a mano)`); continue; }
+    if (check) { report.stale.push(`${dir}/${e} (sobra)`); continue; }
+    fs.rmSync(path.join(abs, e), { recursive: true }); files.forEach((rel) => delete manifest[rel]); report.removed.push(`${dir}/${e}`);
+  }
+}
+prune(".claude/agents", new Set([...roles.values()].map((r) => r.file)));
+prune(".claude/skills", new Set(fs.readdirSync(path.join(src, "skills"))));
+
 // Al abrir una sesión, avisa si alguien cambió .agents/ y no regeneró (no bloquea).
 const settings = {
-  agent: main,
+  agent: MAIN,
   hooks: { SessionStart: [{ hooks: [{ type: "command", command: "node tools/project.mjs claude --check" }] }] },
 };
 emit(".claude/settings.json", JSON.stringify(settings, null, 2) + "\n");

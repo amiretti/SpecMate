@@ -11,7 +11,7 @@ Formato: `- [ ] T### [P] [US#] <entregable> — <ruta> · cierra: AC-n · nivel:
 - **[P]**: paralelizable. Solo si **no comparte archivos, contrato ni build** con otra
   tarea abierta. Ante la duda, sin [P].
 - **cierra**: los AC de §5 que la tarea deja en verde. Tarea sin AC = scope creep.
-- **nivel**: según `model-routing`. Zona crítica → `máximo`.
+- **nivel**: según el rol `lead` (§ Modelo por spawn). Zona crítica → `máximo`.
 - **verifica**: el comando que prueba la tarea (los tests de lo que toca, un build, un
   lint). **Lo corre el lead, no el agente**: si falla, la tarea no está hecha aunque el
   agente diga que sí. Tarea sin comando posible → `verifica: manual` y qué mirar.

@@ -231,7 +231,7 @@ Every task MUST strictly follow this format:
 - **`[P]`** solo si no comparte archivos, contrato ni build con otra tarea abierta. El
   contrato compartido lo congela una tarea previa, sin `[P]`.
 - **Tests:** según la constitución del proyecto, no según el default opcional del core.
-- **`nivel:`** por `model-routing`: default `estándar`; zona crítica → `máximo`;
+- **`nivel:`** por el rol `lead` (§ Modelo por spawn): default `estándar`; zona crítica → `máximo`;
   `rápido` solo para lo mecánico y verificable por un comando.
 - **`est:`** por tarea, y el total en la cabecera.
 - Última tarea: verificación contra AC y gates (`qa`, una sola corrida completa).
