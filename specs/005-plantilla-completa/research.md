@@ -48,3 +48,15 @@ Fuentes alcanzadas el 2026-11-12 por context7 (documentación oficial indexada).
 ## R8 — Emitir el JSON-LD sin `set:html`
 
 - Una expresión `{json}` dentro de `<script>` en Astro pasa por el escape de HTML (comillas incluidas) y un elemento de texto crudo no las decodifica: el JSON queda roto. El patrón documentado de Astro usa `set:html`, que el control de US-09 prohíbe. El spike T0 lo confirma o lo refuta con un build real. Si se confirma, la salida mínima es una excepción para un solo archivo (`JsonLd.astro`), cuyo único argumento es `serializeJsonLd(...)`, que requiere ADR (ver R1 del plan). Alternativa a evaluar en T0: una integración de Astro que inserte el bloque tras el render, sin `set:html` en el código fuente.
+
+## Verificación de los tokens de crawlers de IA (lead, 2026-11-12)
+
+| Token en `ai-crawlers.ts` | Fuente | Resultado |
+|---|---|---|
+| `GPTBot`, `OAI-SearchBot`, `ChatGPT-User` | https://developers.openai.com/api/docs/bots | Confirmados. `ChatGPT-User` es a pedido del usuario y robots.txt "may not apply" |
+| `ClaudeBot`, `Claude-SearchBot`, `Claude-User` | https://support.claude.com/en/articles/8896518 (citado por terceros; no se abrió la página primaria) | Confirmados por fuentes secundarias |
+| `PerplexityBot`, `Perplexity-User` | https://docs.perplexity.ai/guides/bots | Confirmados. `Perplexity-User` "generally ignores robots.txt rules" |
+| `Google-Extended` | documentación de Google citada en R3 | Confirmado; no gobierna AI Overviews |
+| `CCBot`, `Meta-ExternalAgent`, `Applebot-Extended` | — | Sin verificar en esta sesión |
+
+**Consecuencia para el ajuste "bloquear crawlers de IA":** no es total. `ChatGPT-User` y `Perplexity-User` pueden ignorar `robots.txt` porque actúan a pedido de un usuario. Si un cliente pide bloqueo real, hace falta una regla en el WAF de Cloudflare (fuera de esta historia).
