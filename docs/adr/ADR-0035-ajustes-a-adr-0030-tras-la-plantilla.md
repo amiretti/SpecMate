@@ -1,6 +1,6 @@
 # ADR-0035 — Ajustes a ADR-0030 tras probar la plantilla: licencias, JSON-LD, negocios sin dirección y hosting
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-11-12, Andy: "perfecto")
 - **Fecha:** 2026-11-12
 - **Reemplaza:** ADR-0030 en parte (filas *Mapa*, *SEO local* y *Hosting*, el control *Sin inyección* y el header HSTS)
 - **Afecta a:** `templates/site` (E1), controles de `verify` (E5), esquema del brief (E2), constitución (licencias)
