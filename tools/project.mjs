@@ -60,6 +60,10 @@ function emit(rel, content) {
   report.written.push(rel);
 }
 
+// Fuente en LF siempre: con core.autocrlf=true (default de Git en Windows) los .md llegan
+// con CRLF, y el \r rompe el parseo del frontmatter (en una regex, `.` no matchea \r).
+const readText = (p) => fs.readFileSync(p, "utf8").replace(/\r\n/g, "\n");
+
 function splitFrontmatter(txt) {
   const end = txt.indexOf("\n---", 4);
   return [txt.slice(4, end).split("\n"), txt.slice(end + 4)];
@@ -101,7 +105,7 @@ const modelFor = (file, tier) => {
 
 const roles = new Map();
 for (const f of fs.readdirSync(path.join(src, "roles")).filter((n) => n.endsWith(".md"))) {
-  const [lines, body] = splitFrontmatter(fs.readFileSync(path.join(src, "roles", f), "utf8"));
+  const [lines, body] = splitFrontmatter(readText(path.join(src, "roles", f)));
   roles.set(f.replace(/\.md$/, ""), { file: f, fm: parseFm(lines), body });
 }
 // El agente principal (lead) es la sesión principal: sus conectores van a .mcp.json; los demás, inline en cada rol.
@@ -156,7 +160,7 @@ emit(".claude/settings.json", JSON.stringify(settings, null, 2) + "\n");
 for (const name of fs.readdirSync(path.join(src, "skills"))) {
   const dir = path.join(src, "skills", name);
   for (const file of fs.readdirSync(dir)) {
-    const txt = fs.readFileSync(path.join(dir, file), "utf8");
+    const txt = readText(path.join(dir, file));
     if (file !== "SKILL.md") {
       emit(`.claude/skills/${name}/${file}`, txt);
       continue;
