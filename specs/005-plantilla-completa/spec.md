@@ -7,7 +7,7 @@ analisis: no requerido
 depende_de: [US-09 (#32)]
 revisa: developer (Andy); revisión `security` obligatoria antes del PR
 zona_critica: plantilla del sitio: CSP, `_headers`, escape de contenido (project-guard §5)
-estimacion: ~300k tok · ~6-8 h de agente (más la espera de publicación para AC-11) · nivel máximo por zona crítica
+estimacion: ~330k tok · ~7-9 h de agente (más la espera de publicación para AC-11) · nivel máximo por zona crítica · actualizada tras el plan (spike de JSON-LD, Playwright, 3 variantes)
 ---
 
 # Generar una plantilla completa (tokens, SEO local, GEO y AEO) para que cada sitio salga completo
