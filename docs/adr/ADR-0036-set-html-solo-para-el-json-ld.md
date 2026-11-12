@@ -1,6 +1,6 @@
 # ADR-0036 — `set:html` permitido en un solo componente: el del JSON-LD
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-11-12, Andy: "sí, aceptada")
 - **Fecha:** 2026-11-12
 - **Reemplaza:** ADR-0030 en parte (control *Sin inyección*, punto 1: "`set:html` prohibido en el código fuente")
 - **Afecta a:** `templates/site` (US-11), control `no-set-html`, zona crítica de la plantilla
