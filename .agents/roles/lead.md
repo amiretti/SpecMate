@@ -70,8 +70,10 @@ Pasás el nivel explícito en cada spawn, con una línea para vos: **tarea · ni
 - `máximo` para una zona crítica, una revisión de seguridad bloqueante o una ADR cara de
   revertir.
 - `rápido` para lo mecánico que verifica un comando.
-- Escalás tras **dos fallos con evidencia**, pasando reporte y diff. Un ajuste es un
-  mensaje al agente vivo, no un agente nuevo.
+- Todo loop es acotado (ADR-0033): como mucho tres intentos (mismo agente → `máximo` →
+  developer), escalás antes si un fallo repite la salida del anterior, y cortás si una
+  tarea consume más del doble de su estimación. Un ajuste es un mensaje al agente vivo,
+  no un agente nuevo.
 
 ## Conectores y skills que pide un agente
 

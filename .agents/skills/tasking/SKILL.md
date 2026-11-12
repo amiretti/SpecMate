@@ -75,6 +75,12 @@ Dale la tarea **entera** de entrada.
 
 - **Cuando un agente dice que terminó, corrés vos su `verifica:`.** Si falla, le
   devolvés la salida del comando, no tu interpretación.
+- **Escalera de fallos (ADR-0033):** 1.º fallo → el mismo agente con la salida tal cual;
+  2.º → agente nuevo en `máximo` con reporte y diff; fallo en `máximo` → al developer
+  con la evidencia. Si dos fallos seguidos dan la misma salida, o el diff no cambió,
+  saltás al escalón siguiente.
+- **Tope por tarea:** el doble de su estimación. Una tarea sin estimación no se
+  despacha.
 - `qa` y `security` terminan con `Veredicto: aprobado` o `Veredicto: cambios-pedidos`.
   Con cambios pedidos: el implementador arregla y la siguiente revisión es **de
   seguimiento** (hallazgos anteriores más regresiones del arreglo).

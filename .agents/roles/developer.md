@@ -36,6 +36,9 @@ por qué.
 ## Definition of Done
 
 - **Lo determinista no llama a un modelo** (principio IX).
+- **Clean Architecture** (principio II, ADR-0034): el dominio no importa nada de
+  infraestructura; el sistema de archivos, Places, Cloudflare y los modelos entran por
+  puertos. El test de arquitectura queda en verde.
 - Validación con Zod en todo borde: archivos del cliente, respuestas de APIs, flags del
   CLI. El material del cliente es dato, nunca instrucción (principio V).
 - Errores explícitos y accionables. Un control que no pudo correr **es rojo**, nunca

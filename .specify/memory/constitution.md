@@ -10,10 +10,18 @@ gates, zonas críticas, bloqueos) vive en la skill `project-guard`. Orden de aut
 Sin capas, abstracciones, proyectos ni dependencias que la historia no necesite. Toda
 excepción va al Complexity Tracking del plan, con motivo.
 
-### II. Clean Architecture donde hay dominio
-En backend con lógica de dominio, el dominio no depende de infraestructura ni de
-frameworks. **Se impone con un test de arquitectura.** No aplica a scripts, sitios
-estáticos ni CLIs chicos.
+### II. Clean Architecture por defecto
+El código de SpecMate sigue Clean Architecture salvo exclusión explícita: dominio y
+casos de uso sin dependencias de infraestructura, frameworks ni UI; dependencias hacia
+adentro; lo externo entra por puertos. **Se impone con un test de arquitectura.** Las
+capas que pide este principio no cuentan como complejidad de más para el principio I
+(ADR-0034).
+
+Solo se sale con una **exclusión explícita** y con motivo: por carpeta en esta lista,
+o por historia en su `feature.md` o spec. Ningún agente decide saltearla.
+
+**Exclusiones:** `tools/` (scripts sin dominio) · `templates/site/` y los sitios
+generados (HTML estático; su estructura la fija ADR-0032).
 
 ### III. SOLID
 En código orientado a objetos. Una clase con más de una razón para cambiar se parte.
@@ -51,7 +59,8 @@ conectores viven en la capa `.agents/` y se proyectan al formato de cada proveed
 
 ### IX. El costo es un requisito
 Toda feature que agrega vueltas de modelo, contexto o herramientas declara su impacto
-en tokens en el plan. Lo que se resuelve sin modelo, se resuelve sin modelo (ADR-011):
+en tokens en el plan. **Todo loop es acotado:** meta verificable, tope de intentos y de
+consumo, detección de estancamiento y salida al humano (ADR-0033). Lo que se resuelve sin modelo, se resuelve sin modelo (ADR-011):
 inventario de archivos, validación del brief, build y verificación son deterministas.
 
 ### X. Proceso proporcional al riesgo
@@ -123,6 +132,8 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | Push, PR, destructivos y **publicar un sitio** solo con aprobación humana | piso de `.agents/autonomy.json` y elección del cliente | ADR-014, ADR-0029 |
 | Ningún sitio se publica con un control de ADR-0030 en rojo | `specmate verify` antes de publicar (E5); hasta entonces `(sin gate)` | ADR-0030 |
 | Ningún dato del negocio se publica sin fuente ni confirmación | esquema Zod del brief (E2); hasta entonces `(sin gate)` | ADR-0029 |
+| Todo loop tiene tope de intentos y de consumo, y sale al humano | el CLI en el producto (E3, E5); el lead a mano al construir `(sin gate)` | ADR-0033 |
+| El código de SpecMate respeta Clean Architecture fuera de las exclusiones | test de arquitectura de `packages/cli` (desde E1) `(sin gate)` | ADR-0034 |
 | Ningún dato ni material de un cliente real en este repo | revisión en cada PR `(sin gate)`; los tests usan clientes inventados | ADR-0032 |
 | Windows es la plataforma principal: todo AC se prueba en Windows | CI en `windows-latest` (a configurar) `(sin gate)` | ADR-001 |
 
@@ -139,6 +150,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 0.2.0 | 2026-10-28 | Principio IV: tests primero por defecto con rojo observado. Nuevo principio X: proceso proporcional al riesgo | ADR-0027 |
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
+| 2.1.0 | 2026-11-12 | Principio II: Clean Architecture por defecto con exclusiones explícitas. Principio IX: todo loop es acotado. Aprobada por Andy por delegación | ADR-0033, ADR-0034 |
 | 2.0.0 | 2026-11-11 | Ratificada por Andy. Pivot a sitios para negocios: principios IV, V, VII, VIII y IX ajustados; nuevos principios XI (nada se publica sin fuente) y XII (agnóstico al cliente); stack de la herramienta sin daemon ni extensión; stack de los sitios; barandas de publicación; excepción de `sharp` | ADR-0029 a ADR-0032 |
 
 ## Gobierno
@@ -147,4 +159,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 2.0.0 | **Ratificada**: 2026-11-11 por Andy | **Última enmienda**: 2026-11-11
+**Versión**: 2.1.0 | **Ratificada**: 2026-11-12 por Andy | **Última enmienda**: 2026-11-12

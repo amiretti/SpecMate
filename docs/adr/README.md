@@ -18,3 +18,5 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [030](ADR-0030-stack-y-barandas-de-los-sitios.md) | Stack y barandas de los sitios generados |
 | [031](ADR-0031-relevamiento-guiado.md) | Relevamiento guiado: detectar, inferir y preguntar solo lo que falta |
 | [032](ADR-0032-opciones-combinables.md) | Opciones combinables: tres sitios completos armados con partes intercambiables |
+| [033](ADR-0033-loops-acotados.md) | Todo loop es acotado: meta verificable, tope, estancamiento y salida al humano |
+| [034](ADR-0034-clean-architecture-con-alcance-explicito.md) | Clean Architecture por defecto en el código de SpecMate, con exclusiones explícitas |
