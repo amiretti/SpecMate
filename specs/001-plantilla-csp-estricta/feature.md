@@ -1,5 +1,5 @@
 ---
-estado: aprobada          # borrador | aprobada | hecha
+estado: hecha             # borrador | aprobada | hecha
 ticket: https://github.com/amiretti/SpecMate/issues/32
 estimacion: ~180k tok · ~4 h (más la espera de la cuenta de Cloudflare)
 tests: node:test sobre dist/ · `npm test` dentro de templates/site
@@ -46,8 +46,8 @@ reglas ya las fija ADR-0030 y los criterios ya están en el issue; por eso no va
 - [x] T1 · S2, S5 · plantilla en `templates/site`: Astro 7 estático, `inlineStylesheets: 'never'`, `assetsInlineLimit: 0`, una página con contenido ficticio, CSS por custom properties, fuente autoalojada, una imagen con `astro:assets`, `_headers`, `.npmrc` con `ignore-scripts=true`, lockfile; tests primero (sin inline, sin `set:html`, headers, sin relleno) · ruta: `frontend` · nivel: máximo (zona crítica, model-routing §2) · commit: b1b7665 · evidencia: npm test 42/42, astro check 0, biome 0, audit 0
 - [x] T2 · S2, S5 · revisión de seguridad de CSP, `_headers` y escape (zona crítica) · ruta: `security` · nivel: máximo · commit: — · veredicto: aprobado con observaciones (L6)
 - [x] T3 · S3, S5 · medición independiente: Lighthouse móvil ×3, axe en tres anchos, html-validate, linkinator, `npm audit`, secretlint, peso y `alt` de imágenes · ruta: `qa` · nivel: estándar · commit: — · evidencia: L7 (html-validate en rojo, se corrige en T1)
-- [ ] T4 · S1 · publicar en Cloudflare con luz verde del developer y pegar los headers servidos · ruta: inline · nivel: — · commit: —
-- [ ] T5 · S4 · sección de la incógnita 4 en `docs/spike/informe.md` · ruta: inline · nivel: — · commit: —
+- [x] T4 · S1 · publicar en Cloudflare con luz verde del developer y pegar los headers servidos · ruta: inline · nivel: — · commit: (este) · evidencia: L10
+- [x] T5 · S4 · sección de la incógnita 4 en `docs/spike/informe.md` · ruta: inline · nivel: — · commit: (este)
 
 ## Registro
 
@@ -60,3 +60,4 @@ reglas ya las fija ADR-0030 y los criterios ya están en el issue; por eso no va
 - L7 — 2026-11-12 T3 (qa, sonnet), sobre `serve` local sin `_headers`: Lighthouse móvil, mediana de 3 = rendimiento 100, accesibilidad 100, buenas prácticas 100, SEO 100. axe: 0 violaciones en 360, 768 y 1280 px. Consola y pedidos fallidos: 0. linkinator: 0 rotos. audit: 0. secretlint: 0. Imágenes: máximo 27,5 KB, `alt` 1/1. Relleno: 0. **html-validate: 5 errores `tel-non-breaking`** (texto del teléfono), que entran en la corrección de T1 junto con los puntos de L6. El `cache-insight` de Lighthouse solo se puede medir publicado (T4).
 - L8 — 2026-11-12 Corrección de T1 (una tanda, ítems 1, 2, 5, 6, 7 y 10 de L6/L7). Rerun del lead: build ok, `npm test` 101/101, html-validate 0 errores. Ítem 9 sin cambios: los paquetes wasm32 los pide el lockfile para otras plataformas. Entorno: el `biome.exe` de node_modules se cuelga al lanzarse en esta máquina (proceso que no se puede matar sin permisos de administrador). Commit b1b7665.
 - L9 — 2026-11-12 T5 en borrador: `docs/spike/informe.md` con la incógnita 4; falta S1 (headers servidos), que depende de T4.
+- L10 — 2026-11-12 T4: con luz verde del developer ("dale"), `wrangler deploy` (4.161.0) publicó en https://specmate-spike-plantilla.andresmiretti.workers.dev. `curl -sI`: `/` 200 con CSP, HSTS, nosniff, Referrer-Policy, Permissions-Policy y COOP; `/noexiste` 404 con CSP; el asset `/_astro/*.css` con CSP; 0 scripts inyectados en el HTML servido. S1 cumplida. Informe actualizado.
