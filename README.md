@@ -37,7 +37,7 @@ publican.
 | El problema | Lo que hace SpecMate |
 |---|---|
 | El generador inventa horarios, servicios o testimonios | **Nada se publica sin fuente:** cada dato sale del material del cliente y el cliente lo confirma antes de construir |
-| Todos los sitios hechos con IA se parecen | **Diseño propio:** dos o tres direcciones de arte por cliente, y la elegida pasa a ser su sistema de diseño |
+| Todos los sitios hechos con IA se parecen | **Diseño propio, elegido de a un paso:** paleta, tipografía y composición, tres opciones cada una, sobre el logo del cliente |
 | "Es seguro" sin nada que lo respalde | **Controles que bloquean:** CSP estricta, nada inline, dependencias auditadas, secretos escaneados. Si algo da rojo, no se publica |
 | Lento en el celular, invisible en Google | **HTML estático:** rendimiento ≥ 90 en Lighthouse, SEO local con `LocalBusiness` y sin JavaScript de más |
 | El sitio queda en una plataforma ajena | **El código es del cliente:** un repo por sitio, hosting en Cloudflare, sin costo mensual de plataforma |
@@ -46,29 +46,33 @@ publican.
 
 ```mermaid
 flowchart LR
-    In["Carpeta del cliente<br/>+ URL de Maps<br/>+ referencias"] --> Brief["Brief verificable<br/>cada dato con su fuente"]
-    Brief --> G1{{"Gate 1<br/>datos confirmados"}}
-    G1 --> Arte["2–3 direcciones<br/>de arte"]
-    Arte --> G2{{"Gate 2<br/>se elige una"}}
-    G2 --> Build["Sitio estático<br/>tests primero"]
+    In["Carpeta del cliente<br/>+ URL de Maps<br/>+ referencias"] --> Rel["Relevamiento<br/>detecta · infiere · pregunta lo que falta"]
+    Rel --> G1{{"Gate datos"}}
+    G1 --> Marca["3 paletas → 3 tipografías"]
+    Marca --> G2{{"Gate marca"}}
+    G2 --> Bosq["3 bosquejos"]
+    Bosq --> G3{{"Gate bosquejo"}}
+    G3 --> Build["Sitio estático<br/>tests primero"]
     Build --> Verify["Verificación<br/>automática"]
     Verify -->|rojo| Build
-    Verify -->|verde| G3{{"Gate 3<br/>vista previa"}}
-    G3 --> Pub([Publicado])
+    Verify -->|verde| G4{{"Gate vista previa"}}
+    G4 --> Pub([Publicado])
 ```
 
-1. **Ingesta.** SpecMate lee la carpeta del cliente (textos, fotos, logo, precios) y las
-   referencias. Usa Google Maps solo para pre-llenar y cruzar datos: sus términos no
-   permiten copiar su contenido, así que lo que se publica es lo que confirma el
-   cliente.
-2. **Gate 1: datos.** El brief muestra cada dato con su fuente. Nada sigue hasta que
-   está confirmado.
-3. **Dirección de arte.** Dos o tres propuestas de portada, paleta y tipografía.
-4. **Gate 2: diseño.** Se elige una; sus tokens son el sistema de diseño del sitio.
+1. **Relevamiento.** Abrís la carpeta del cliente en VS Code y SpecMate **busca antes de
+   preguntar**: manual de marca, logo, fotos, textos y precios. Infiere el rubro, el
+   objetivo del sitio y el tono, y solo pregunta lo que falta. Google Maps pre-llena y
+   cruza datos, pero lo que se publica es lo que confirma el cliente, porque sus
+   términos no permiten copiar su contenido.
+2. **Gate de datos.** Cada dato aparece con su fuente; nada sigue hasta confirmarlo.
+3. **Marca.** Tres paletas desde el logo (en claro y oscuro, con contraste verificado)
+   y después tres combinaciones tipográficas. Si hay manual de marca, se usa el suyo.
+4. **Bosquejos.** Tres composiciones con la marca ya fijada, en un link para mandarle
+   al cliente.
 5. **Construcción.** Un sitio Astro estático, con tests primero y todo el contenido
    escapado.
 6. **Verificación.** Corren todos los controles de abajo; uno solo en rojo frena todo.
-7. **Gate 3: vista previa.** Con tu aprobación, se publica en Cloudflare.
+7. **Gate de vista previa.** Con tu aprobación, se publica en Cloudflare.
 
 ## Qué controla antes de publicar
 
@@ -100,9 +104,9 @@ El detalle y el porqué de cada control: [ADR-0030](docs/adr/ADR-0030-stack-y-ba
 | Fase | Qué trae | Épicas |
 |---|---|---|
 | **F0 · Spike** ← *acá estamos* | Un sitio real hecho a mano con el flujo, horas medidas, Places y CSP probados | [E0](https://github.com/amiretti/SpecMate/issues/1) |
-| **F1 · MVP** | Plantilla segura, brief verificable, dirección de arte, construcción, verificación y publicación | E1 a E5 |
+| **F1 · MVP** | Plantilla segura, relevamiento guiado, marca y bosquejos, construcción, verificación y publicación | E1 a E5 |
 | **F2 · Uso real** | Tres clientes de Harvi publicados y medidos | E6 |
-| **Después** | Formulario con backend · mantenimiento y re-auditoría · edición por el cliente · producto para otras agencias | E7 a E10 |
+| **Después** | Formulario con backend · mantenimiento y re-auditoría · edición por el cliente · producto para otras agencias · relevamiento hecho por el cliente | E7 a E11 |
 
 **El MVP se mide en sitios reales:** 3 publicados, la mitad de horas que hoy, 0 datos sin
 confirmar y Lighthouse en verde. Detalle en [docs/mvp.md](docs/mvp.md).

@@ -16,3 +16,4 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [028](ADR-0028-stack-tecnologico.md) | Stack tecnológico del MVP · en parte reemplazada por ADR-0029 |
 | [029](ADR-0029-pivot-sitios-para-negocios.md) | Pivot: de la carpeta del cliente a la web publicada |
 | [030](ADR-0030-stack-y-barandas-de-los-sitios.md) | Stack y barandas de los sitios generados (propuesta) |
+| [031](ADR-0031-relevamiento-guiado.md) | Relevamiento guiado: detectar, inferir y preguntar solo lo que falta (propuesta) |

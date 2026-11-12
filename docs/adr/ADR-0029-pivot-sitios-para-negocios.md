@@ -28,7 +28,7 @@ un equipo de agentes. Al compararlo con Gentle AI (2026-11-06) quedó claro que:
    Maps del negocio y referencias online, SpecMate genera un **sitio estático**
    (one page, landing o pocas páginas) listo para publicar, con tests, sin
    vulnerabilidades conocidas al publicar y con un diseño propio del cliente.
-2. **Flujo con tres gates humanos:**
+2. **Flujo con tres gates humanos** (los pasos 1 y 2 los precisa [ADR-0031](ADR-0031-relevamiento-guiado.md): relevamiento guiado y cuatro gates):
    1. **Ingesta → brief verificable.** Cada dato publicable lleva su fuente.
       *Gate 1:* Harvi o el cliente confirman los datos.
    2. **Dirección de arte.** Dos o tres direcciones con portada, paleta y tipografía.
