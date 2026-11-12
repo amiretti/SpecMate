@@ -1,0 +1,10 @@
+/* Test fixture: no literals. Zero, keywords, unitless numbers, calc over variables and media queries are fine. */
+@import "./other.css";
+:root { color-scheme: light dark; }
+body { margin: 0; color: var(--color-text); background: var(--color-bg); font: inherit; }
+a { color: inherit; text-decoration: none; }
+.a { margin-inline: auto; padding: var(--space-1) var(--space-2); gap: 0; border-radius: var(--radius); }
+.b { top: calc(-1 * var(--space-5)); width: min(100% - 2 * var(--space-2), var(--content-width)); }
+.c { font-size: var(--font-size-h1); font-family: var(--font-body); border-color: transparent; fill: currentColor; }
+.d { grid-template-columns: 1fr 1fr; max-width: 100%; line-height: 1.5; }
+@media (min-width: 48rem) { .d { grid-template-columns: 2fr 1fr; } }

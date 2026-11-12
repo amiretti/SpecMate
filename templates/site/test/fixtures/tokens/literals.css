@@ -1,0 +1,10 @@
+/* Test fixture: one declaration per kind of literal. Each line number is asserted by css-literals.test. */
+.hex { color: #fff; }
+.func { background: rgb(1 2 3); }
+.named { border-color: rebeccapurple; }
+.family { font-family: Georgia, serif; }
+.size { font-size: 18px; }
+.space { margin: 1rem; }
+.gap { gap: 8px var(--space-1); }
+.radius { border-radius: 4px; }
+.shorthand { font: 12px/1.5 Arial; }
