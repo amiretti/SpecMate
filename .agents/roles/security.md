@@ -11,6 +11,7 @@ mcp: [memory, context7]
 skills:
   - terse
   - project-guard
+  - web-guidance
 color: red
 ---
 

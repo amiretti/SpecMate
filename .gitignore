@@ -5,5 +5,8 @@ CLAUDE.md
 .mcp.json
 .codex/
 
+# Dependencias
+node_modules/
+
 # Estado local del workspace (eventos, memoria, proyecciones)
 .workspace/

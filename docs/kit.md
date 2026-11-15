@@ -18,7 +18,7 @@ AGENTS.md                  # instrucciones del proyecto (estándar abierto AGENT
 │   ├── frontend.md        # plantilla del sitio y biblioteca de secciones (Astro)
 │   ├── qa.md              # verificador independiente
 │   └── security.md        # revisor de seguridad de los sitios y de la herramienta
-├── skills/                # 8 skills, estándar abierto Agent Skills (SKILL.md)
+├── skills/                # 11 skills, estándar abierto Agent Skills (SKILL.md)
 │   ├── terse/             # mandamientos de costo (todos los roles la cargan)
 │   ├── project-guard/     # lo operativo: repo, gates, zonas críticas, bloqueos
 │   ├── feature-doc/       # flujo proporcional: ruta chica, grande o SDD, y el feature.md
@@ -26,7 +26,10 @@ AGENTS.md                  # instrucciones del proyecto (estándar abierto AGENT
 │   ├── close-story/       # cierre de historia o fase con el estado verdadero
 │   ├── adr/               # redactar una ADR o detectar deriva
 │   ├── spec/              # criterio de una buena spec (ruta SDD)
-│   └── connectors/        # qué conectores hay y cómo pedir uno (se pide, no se activa)
+│   ├── connectors/        # qué conectores hay y cómo pedir uno (se pide, no se activa)
+│   ├── frontend-design/   # dirección estética de interfaces (de terceros, fijada, con nota local)
+│   ├── ui-ux-pro-max/     # paletas, tipografías y guías de UX buscables (de terceros, fijada)
+│   └── web-guidance/      # guías de la plataforma web de Chrome, fijadas y sin telemetría (ADR-0036)
 ├── speckit-preset/        # preset "workspace-sdd" de Spec Kit
 ├── autonomy.json          # el piso: lo que siempre pide aprobación humana
 ├── providers.json         # capacidades → herramientas y niveles → modelos, por proveedor
