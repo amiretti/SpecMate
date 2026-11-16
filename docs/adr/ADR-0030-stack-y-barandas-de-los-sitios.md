@@ -1,6 +1,6 @@
 # ADR-0030 — Stack y barandas de los sitios generados
 
-- **Estado:** Aceptada (2026-11-11, Andy) · en parte reemplazada por [ADR-0035](ADR-0035-ajustes-a-adr-0030-tras-la-plantilla.md): licencias, JSON-LD, negocios sin dirección, hosting y HSTS; y por [ADR-0037](ADR-0037-set-html-solo-para-el-json-ld.md): `set:html` solo en el componente del JSON-LD
+- **Estado:** Aceptada (2026-11-11, Andy) · en parte reemplazada por [ADR-0035](ADR-0035-ajustes-a-adr-0030-tras-la-plantilla.md): licencias, JSON-LD, negocios sin dirección, hosting y HSTS; y por [ADR-0037](ADR-0037-set-html-solo-para-el-json-ld.md): `set:html` solo en el componente del JSON-LD; y por [ADR-0038](ADR-0038-lighthouse-sin-lhci-y-licencias-por-excepcion.md): `lighthouse` sin LHCI y `npm audit` sobre todo el árbol
 - **Fecha:** 2026-11-11
 - **Reemplaza:** —
 - **Afecta a:** la plantilla de sitio (E1), la verificación (E5), la constitución (stack y barandas)

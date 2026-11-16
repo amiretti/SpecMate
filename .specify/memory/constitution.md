@@ -117,7 +117,9 @@ o iframes de terceros fuera de la lista blanca del brief (ADR-0030).
 **Licencias permitidas:** MIT, Apache-2.0, BSD-2/3, 0BSD, ISC. En lo que se publica en un
 sitio, además OFL-1.1 (solo fuentes) y CC0-1.0; en lo que solo corre al construir y no
 se publica, además MPL-2.0, LGPL-3.0 y BlueOak-1.0.0 (ADR-0035). Toda dependencia nueva
-se verifica antes de agregarse. Sin módulos nativos salvo ADR.
+se verifica antes de agregarse. Sin módulos nativos salvo ADR. En lo que solo corre al
+construir, una licencia fuera de lista se admite solo como excepción por paquete, con
+motivo, en el test de licencias (ADR-0038).
 **Excepción de licencia:** `@anthropic-ai/claude-agent-sdk` (propietaria de Anthropic),
 aceptada como runtime de agentes; se revisa si el producto se ofrece a terceros
 (ADR-0028).
@@ -154,6 +156,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
 | 2.1.0 | 2026-11-12 | Principio II: Clean Architecture por defecto con exclusiones explícitas. Principio IX: todo loop es acotado. Aprobada por Andy por delegación | ADR-0033, ADR-0034 |
+| 2.3.1 | 2026-11-16 | Licencias: excepciones por paquete, con motivo, para lo que solo corre al construir. Aprobada por Andy al aceptar ADR-0038 | ADR-0038 |
 | 2.3.0 | 2026-11-15 | Stack: guías de la plataforma web de Chrome, fijadas y envueltas en la skill `web-guidance`. Aprobada por Andy al aceptar ADR-0036 | ADR-0036 |
 | 2.2.1 | 2026-11-12 | Licencias: suma 0BSD (más permisiva que MIT; la trae `tslib`). Aprobada por Andy con el plan de US-11 | — |
 | 2.2.0 | 2026-11-12 | Licencias: OFL-1.1 (fuentes) y CC0 en lo publicado; MPL-2.0, LGPL-3.0 y BlueOak en lo que solo corre al construir. Aprobada por Andy al aceptar ADR-0035 | ADR-0035 |
@@ -165,4 +168,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 2.3.0 | **Ratificada**: 2026-11-15 por Andy | **Última enmienda**: 2026-11-15
+**Versión**: 2.3.1 | **Ratificada**: 2026-11-15 por Andy | **Última enmienda**: 2026-11-16

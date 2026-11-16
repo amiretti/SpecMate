@@ -1,6 +1,6 @@
 # ADR-0038 — Rendimiento con `lighthouse` sin LHCI, y licencias de las herramientas de verificación por excepción de paquete
 
-- **Estado:** Propuesta
+- **Estado:** Aceptada (2026-11-16, Andy: "sí, acepto ambas")
 - **Fecha:** 2026-11-16
 - **Reemplaza:** ADR-0030 en parte (versiones verificadas: "`@lhci/cli` 0.16"; alcance del control *Dependencias*)
 - **Afecta a:** `templates/site` (US-12, #40), test de licencias, control de dependencias, constitución («Licencias permitidas»)
