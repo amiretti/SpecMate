@@ -1,4 +1,4 @@
-// Rule (S2, ADR-0030 "Sin inyeccion" 1, narrowed by ADR-0036): set:html is forbidden in src/ except once, in
+// Rule (S2, ADR-0030 "Sin inyeccion" 1, narrowed by ADR-0037): set:html is forbidden in src/ except once, in
 // components/JsonLd.astro, fed only by the serializer (allow-list cases in jsonld.test.mjs).
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -30,7 +30,7 @@ describe('scanner detects set:html', () => {
   it('flags unescapeHTML', () => {
     assert.ok(findSetHtml("import { unescapeHTML } from 'astro/runtime/server/index.js';").length > 0);
   });
-  // Security review: the same raw-HTML path without the words set:html (ADR-0036 bypasses).
+  // Security review: the same raw-HTML path without the words set:html (ADR-0037 bypasses).
   it('flags markHTMLString', () => {
     assert.ok(findSetHtml('const x = markHTMLString(data.raw);').length > 0);
   });
@@ -64,8 +64,8 @@ async function sources() {
   return out;
 }
 
-describe('src/ has no set:html outside the ADR-0036 allow-list', () => {
-  it('no source file other than components/JsonLd.astro uses set:html (as before ADR-0036)', async () => {
+describe('src/ has no set:html outside the ADR-0037 allow-list', () => {
+  it('no source file other than components/JsonLd.astro uses set:html (as before ADR-0037)', async () => {
     const hits = [];
     for (const { rel, text } of await sources()) {
       if (rel === JSON_LD_COMPONENT) continue;

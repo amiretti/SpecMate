@@ -1,6 +1,6 @@
 # Plan de implementación: US-11, plantilla completa (tokens, SEO local, GEO y AEO)
 
-**Rama**: `005-plantilla-completa` | **Fecha**: 2026-11-12 | **Spec**: [spec.md](./spec.md) (aprobada) | **Plan**: aprobado (2026-11-12, Andy: "sí, aprobado"), con la enmienda 0BSD y la ADR-0036 condicionada al spike T0
+**Rama**: `005-plantilla-completa` | **Fecha**: 2026-11-12 | **Spec**: [spec.md](./spec.md) (aprobada) | **Plan**: aprobado (2026-11-12, Andy: "sí, aprobado"), con la enmienda 0BSD y la ADR-0037 condicionada al spike T0
 **Artefactos**: [research.md](./research.md) · [data-model.md](./data-model.md) · [quickstart.md](./quickstart.md). Sin `contracts/` (sin API, eventos ni mensajes). Sin modelo persistido (los datos son archivos del propio sitio).
 
 ## Resumen

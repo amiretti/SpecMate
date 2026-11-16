@@ -54,7 +54,7 @@ export const JSON_LD_EXPRESSION = 'set:html={serializeJsonLd(data)}';
 const SERIALIZER_IMPORT = "import { serializeJsonLd } from '../lib/jsonld.ts';";
 
 /**
- * ADR-0036 allow-list: set:html (or unescapeHTML) may appear only once, in components/JsonLd.astro, and only as
+ * ADR-0037 allow-list: set:html (or unescapeHTML) may appear only once, in components/JsonLd.astro, and only as
  * `set:html={serializeJsonLd(data)}`. `files` is [{ rel, text }] with `rel` relative to src/ using "/".
  */
 export function checkSetHtml(files) {

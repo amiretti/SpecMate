@@ -1,6 +1,6 @@
 # templates/site
 
-La plantilla de la que sale cada sitio de cliente (ADR-0030, ADR-0035, ADR-0036).
+La plantilla de la que sale cada sitio de cliente (ADR-0030, ADR-0035, ADR-0037).
 `specmate new` la copia a un repo propio del cliente; no es un workspace de este
 monorepo.
 
@@ -12,7 +12,7 @@ monorepo.
   La CSP no lleva `unsafe-inline` ni `unsafe-eval` (`script-src 'none'`).
 - **Única excepción: el JSON-LD** (ADR-0035). Un solo `<script type="application/ld+json">`
   por página, generado por `src/lib/jsonld.ts`, que escapa `<`, `>` y `&`. `set:html` solo
-  existe en `src/components/JsonLd.astro` y solo recibe esa salida (ADR-0036). Los tests
+  existe en `src/components/JsonLd.astro` y solo recibe esa salida (ADR-0037). Los tests
   `no-inline-code` y `no-set-html` lo imponen.
 - **Todo el contenido sale del brief confirmado** y se renderiza escapado. Nada de
   texto de relleno, testimonios o preguntas frecuentes inventadas, ni datos copiados de

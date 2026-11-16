@@ -11,6 +11,7 @@ mcp: [memory, context7, playwright]
 skills:
   - terse
   - project-guard
+  - web-guidance
 color: purple
 ---
 

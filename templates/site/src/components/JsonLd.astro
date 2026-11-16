@@ -1,5 +1,5 @@
 ---
-// The one place JSON-LD reaches the HTML (ADR-0035, ADR-0036). Astro does not evaluate an expression inside
+// The one place JSON-LD reaches the HTML (ADR-0035, ADR-0037). Astro does not evaluate an expression inside
 // <script type="application/ld+json">, so raw injection is the only way in; it receives only the serializer
 // output, which escapes "<", ">" and "&". The no-set-html test allows exactly this expression, in this file only.
 import { serializeJsonLd } from '../lib/jsonld.ts';

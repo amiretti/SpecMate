@@ -1,4 +1,4 @@
-// Rules (FR-002, AC-3, ADR-0035 "JSON-LD", ADR-0036): JSON-LD comes only from the template's escaping serializer,
+// Rules (FR-002, AC-3, ADR-0035 "JSON-LD", ADR-0037): JSON-LD comes only from the template's escaping serializer,
 // through one component; each content page carries exactly 1 block that parses, holds no "<" and reproduces the
 // data without loss; 2 blocks, another type or an extra <script> fail the "Sin inyección" control.
 import assert from 'node:assert/strict';
@@ -78,7 +78,7 @@ describe('JSON-LD block control', () => {
   });
 });
 
-describe('set:html allow-list (ADR-0036)', () => {
+describe('set:html allow-list (ADR-0037)', () => {
   const ok =
     'import { serializeJsonLd } from \'../lib/jsonld.ts\';\n<script type="application/ld+json" set:html={serializeJsonLd(data)} />';
   const component = (text) => ({ rel: 'components/JsonLd.astro', text });

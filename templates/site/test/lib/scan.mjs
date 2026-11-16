@@ -96,7 +96,7 @@ export function findInlineCode(html) {
 }
 
 // Raw-HTML paths into Astro output: the set:html directive (attribute or spread key); the runtime helpers that
-// mark a string as HTML and any import of that runtime (security review: ADR-0036 bypasses); a quoted "set:"
+// mark a string as HTML and any import of that runtime (security review: ADR-0037 bypasses); a quoted "set:"
 // key built at run time; and any computed key inside an attribute spread.
 const RAW_HTML =
   /set:html|\b(?:unescapeHTML|markHTMLString|HTMLString|HTMLBytes)\b|astro\/runtime\/server|['"`]set:|\.\.\.\s*\{[^}]*\[/g;

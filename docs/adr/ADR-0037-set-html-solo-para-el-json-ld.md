@@ -1,4 +1,4 @@
-# ADR-0036 — `set:html` permitido en un solo componente: el del JSON-LD
+# ADR-0037 — `set:html` permitido en un solo componente: el del JSON-LD
 
 - **Estado:** Aceptada (2026-11-12, Andy: "sí, aceptada")
 - **Fecha:** 2026-11-12
