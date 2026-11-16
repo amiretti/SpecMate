@@ -1,7 +1,7 @@
 ---
 id: US-12 (#40)
 titulo: Correr cada control de ADR-0030 con un comando y verlo fallar a propósito, para que ninguno pase en verde sin medir
-estado: borrador          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/40
 analisis: no requerido (análisis de `functional-analyst` del 2026-11-16, resumido en §1, §6 y §7)
 depende_de: [US-11 (#39)]
