@@ -1,7 +1,7 @@
 ---
 id: US-11 (#39)
 titulo: Generar una plantilla completa (tokens, SEO local, GEO y AEO) para que cada sitio salga completo
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/39
 analisis: no requerido
 depende_de: [US-09 (#32)]
