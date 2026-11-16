@@ -1,13 +1,32 @@
 ---
+// The frame of every page (FR-007, FR-008): head metadata (FR-005), header with the business name and nav, main,
+// footer. Everything renders from the validated site data and Astro escapes it.
 import '@fontsource-variable/inter/wght.css';
 import '../styles/global.css';
+import JsonLd from '../components/JsonLd.astro';
+import { ogImage } from '../data/og-image.ts';
+import { site } from '../data/site.ts';
+import { buildHead } from '../lib/head.ts';
 
 interface Props {
   title: string;
   description: string;
+  /** Path of the page on the site, for its canonical URL. */
+  path: string;
+  /** schema.org graph of a content page; the 404 page has none (ADR-0035). */
+  jsonLd?: Record<string, unknown>;
+  /** Pages that must stay out of search indexes (the 404). */
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, path, jsonLd, noindex = false } = Astro.props;
+const head = buildHead(site, { path, title, description, image: { src: ogImage.src, alt: site.image.alt } });
+const sections = [
+  { href: '/#nosotros', label: 'Nosotros' },
+  { href: '/#horarios', label: 'Horarios' },
+  { href: '/#contacto', label: 'Contacto' },
+  ...(site.faq.length > 0 ? [{ href: '/#preguntas', label: 'Preguntas frecuentes' }] : []),
+];
 ---
 
 <!doctype html>
@@ -15,12 +34,34 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
+    <title>{head.title}</title>
+    <meta name="description" content={head.description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={head.canonical} />
+    {Object.entries(head.og).map(([property, content]) => <meta property={property} content={content} />)}
+    <link rel="stylesheet" href="/tokens.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {jsonLd && <JsonLd data={jsonLd} />}
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
-    <slot />
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">{site.name}</a>
+        <nav aria-label="Secciones">
+          <ul>
+            {sections.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="contenido">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>{site.name}</p>
+      </div>
+    </footer>
   </body>
 </html>

@@ -22,3 +22,4 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [034](ADR-0034-clean-architecture-con-alcance-explicito.md) | Clean Architecture por defecto en el código de SpecMate, con exclusiones explícitas |
 | [035](ADR-0035-ajustes-a-adr-0030-tras-la-plantilla.md) | Ajustes a ADR-0030 tras la plantilla: licencias, JSON-LD, negocios sin dirección y hosting |
 | [036](ADR-0036-modern-web-guidance.md) | Guías de la plataforma web de Chrome, fijadas y envueltas en la skill `web-guidance` |
+| [037](ADR-0037-set-html-solo-para-el-json-ld.md) | `set:html` permitido en un solo componente: el del JSON-LD |

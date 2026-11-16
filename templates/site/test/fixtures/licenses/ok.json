@@ -1,0 +1,15 @@
+{
+  "name": "fixture",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": { "name": "fixture", "version": "0.0.0" },
+    "node_modules/@fontsource-variable/fonty": { "version": "1.0.0", "license": "OFL-1.1" },
+    "node_modules/zero": { "version": "1.0.0", "license": "0BSD" },
+    "node_modules/builder-lgpl": { "version": "1.0.0", "license": "LGPL-3.0-or-later", "dev": true },
+    "node_modules/builder-mpl": { "version": "1.0.0", "license": "MPL-2.0", "dev": true },
+    "node_modules/builder-blueoak": { "version": "1.0.0", "license": "BlueOak-1.0.0", "dev": true },
+    "node_modules/builder-or": { "version": "1.0.0", "license": "MIT OR Apache-2.0", "dev": true },
+    "node_modules/builder-and": { "version": "1.0.0", "license": "Apache-2.0 AND LGPL-3.0-or-later", "devOptional": true }
+  }
+}

@@ -8,7 +8,7 @@ import { checkHeaders } from './lib/scan.mjs';
 
 const GOOD = `/*
   Content-Security-Policy: default-src 'self'; script-src 'none'; style-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
-  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Strict-Transport-Security: max-age=31536000
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
@@ -17,6 +17,14 @@ const GOOD = `/*
 describe('header checker', () => {
   it('accepts a complete policy', () => {
     assert.deepEqual(checkHeaders(GOOD), []);
+  });
+
+  it("accepts img-src and font-src with 'self' and an allow-listed https origin", () => {
+    const policy = GOOD.replace(
+      "connect-src 'none'",
+      "img-src 'self' https://cdn.cliente.example; font-src 'self'; connect-src 'none'",
+    );
+    assert.deepEqual(checkHeaders(policy), []);
   });
 
   const broken = {
@@ -28,7 +36,12 @@ describe('header checker', () => {
     'missing base-uri': GOOD.replace("base-uri 'self'; ", ''),
     'missing frame-ancestors': GOOD.replace("; frame-ancestors 'none'", ''),
     'missing HSTS': GOOD.replace(/ {2}Strict-Transport-Security.*\n/, ''),
-    'HSTS without max-age': GOOD.replace('max-age=31536000; ', ''),
+    'HSTS without max-age': GOOD.replace('max-age=31536000', 'preload'),
+    // ADR-0035: includeSubDomains only once the client confirms every subdomain serves HTTPS.
+    'HSTS with includeSubDomains': GOOD.replace('max-age=31536000', 'max-age=31536000; includeSubDomains'),
+    'HSTS with includeSubDomains in another rule': `${GOOD}/promo/*
+  Strict-Transport-Security: max-age=31536000; includesubdomains
+`,
     'missing nosniff': GOOD.replace('nosniff', 'off'),
     'missing Referrer-Policy': GOOD.replace(/ {2}Referrer-Policy.*\n/, ''),
     'missing Permissions-Policy': GOOD.replace(/ {2}Permissions-Policy.*\n/, ''),
@@ -39,6 +52,15 @@ describe('header checker', () => {
         ['*', 'data:', 'blob:', 'https:', 'http:', "'unsafe-hashes'", "'wasm-unsafe-eval'"].map((src) => [
           `${d} with ${src}`,
           GOOD.replace(new RegExp(`${d} '(self|none)'`), (m) => `${m} ${src}`),
+        ]),
+      ),
+    ),
+    // Security review: img-src and font-src take no wildcard, data:, blob: or bare scheme either.
+    ...Object.fromEntries(
+      ['img-src', 'font-src'].flatMap((d) =>
+        ['*', 'data:', 'blob:', 'https:', 'http:', 'HTTPS:'].map((src) => [
+          `${d} with ${src}`,
+          GOOD.replace("connect-src 'none'", `${d} 'self' ${src}; connect-src 'none'`),
         ]),
       ),
     ),
