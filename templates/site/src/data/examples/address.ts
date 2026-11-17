@@ -75,4 +75,6 @@ export default {
     },
   ],
   image: { alt: 'Ilustración de panes recién horneados sobre un mostrador de madera' },
+  // No third-party origin: everything is served from the site itself (check:origins).
+  allowedOrigins: [],
 } satisfies SiteInput;

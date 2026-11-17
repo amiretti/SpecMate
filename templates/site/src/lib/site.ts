@@ -26,6 +26,13 @@ export interface SiteInput {
   profiles?: Array<{ url: string } & Sourced>;
   faq?: Array<{ question: string; answer: string } & Sourced>;
   image: { alt: string };
+  /** Third-party origins a page may request (ADR-0030), each with its reason; checked by `check:origins`. */
+  allowedOrigins?: AllowedOrigin[];
+}
+
+export interface AllowedOrigin {
+  origin: string;
+  reason: string;
 }
 
 export interface Hours {
@@ -58,6 +65,7 @@ export interface Site {
   profiles: string[];
   faq: Array<{ question: string; answer: string }>;
   image: { alt: string };
+  allowedOrigins: AllowedOrigin[];
 }
 
 type Rec = Record<string, unknown>;
@@ -138,6 +146,16 @@ function httpsUrl(value: unknown, path: string): string {
   if (url?.protocol !== 'https:') fail(path, `must be an https URL, got ${JSON.stringify(value)}`);
   if (url.username || url.password) fail(path, 'must not carry credentials');
   return url.href;
+}
+
+/** An allow-listed origin: `https://host[:port]` exactly (no path, query or credentials) plus its reason. */
+function parseAllowedOrigin(raw: unknown, i: number): AllowedOrigin {
+  const path = `allowedOrigins[${i}]`;
+  const item = record(raw, path);
+  const value = field(item, 'origin');
+  const url = new URL(httpsUrl(value, `${path}.origin`));
+  if (value !== url.origin) fail(`${path}.origin`, `must be an origin like https://host, got ${JSON.stringify(value)}`);
+  return { origin: url.origin, reason: text(item, 'reason', `${path}.reason`) };
 }
 
 function parseHours(raw: unknown, i: number): Hours {
@@ -230,6 +248,7 @@ export function parseSite(input: unknown): Site {
     profiles,
     faq,
     image: { alt: text(record(field(input, 'image'), 'image'), 'alt', 'image.alt') },
+    allowedOrigins: list(input, 'allowedOrigins', 'allowedOrigins').map(parseAllowedOrigin),
   };
   const address = parseAddress(field(input, 'address'));
   if (address) site.address = address;
