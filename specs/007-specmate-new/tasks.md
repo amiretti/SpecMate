@@ -16,3 +16,16 @@ acotados). Todo inline (lead): una cadena acoplada, sin zona crítica.
 ## Registro
 
 - 2026-11-17: tareas desde el plan aprobado.
+- 2026-11-17, U0: el primer `npm ci` no dejó el binario de TypeScript 7 (`@typescript/typescript-win32-x64`,
+  carpeta vacía); el segundo sí. `npm audit` da 5 altas en la cadena de Vitest 5.1 (ReDoS de `picomatch`, sin
+  parche; el único arreglo es bajar a Vitest 3.1.4). El gate del repo es `npm audit --omit=dev` y da 0: se sigue
+  con Vitest 5.1 (constitución). Biome sin `vcs` (el `.gitignore` vive en la raíz; `dist` excluido explícito).
+- 2026-11-17, U1: RED (módulos ausentes) → GREEN. Saqué "sin guiones dobles" del test del slug: la spec no lo pide.
+  Desvío: `application` no importa ningún `node:*` ni paquete (el plan decía "de E/S"); más estricto y más simple.
+- 2026-11-17, U2: RED (módulo ausente) → GREEN, caso de uso con dobles de los puertos (11 casos).
+- 2026-11-17, U3, desvío de proceso: la infraestructura se escribió antes que su test de integración (sin RED).
+  Compensado con 3 sabotajes: lockfile sin renombrar y `discard` que no borra los detecta la integración; el
+  chequeo de `publish` no (el caso de uso ya chequea antes): se sumó `test/node-file-system.test.ts`, que sí lo
+  detecta. Falsos positivos de la regla de separadores (`}\n`) corregidos. Una parameter property rompía la
+  ejecución sin compilar: reemplazada por un campo. Plan, decisión 5: sin override por variable de entorno; la
+  plantilla se busca subiendo desde el módulo (la profundidad cambia entre `src/` y `dist/`).
