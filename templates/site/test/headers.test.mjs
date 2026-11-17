@@ -104,6 +104,37 @@ describe('header checker', () => {
     );
   });
 
+  // FR-009 / AC-5 (US-12): a host wildcard or any plain-http origin in img-src or font-src is rejected, by name.
+  for (const directive of ['img-src', 'font-src']) {
+    for (const source of ['https://*', 'http://cdn.cliente.example']) {
+      it(`rejects ${directive} with ${source}, naming it`, () => {
+        const problems = checkHeaders(
+          GOOD.replace("connect-src 'none'", `${directive} 'self' ${source}; connect-src 'none'`),
+        );
+        assert.equal(problems.length, 1, problems.join('\n'));
+        assert.equal(problems[0], `/*: CSP ${directive} allows ${source}`);
+      });
+    }
+  }
+
+  it('also rejects the uppercase and port forms of those sources', () => {
+    for (const source of [
+      'HTTPS://*',
+      'https://*:443',
+      'https://*:*',
+      'https://*.com',
+      'https://*/img/',
+      'wss://*',
+      'HTTP://cdn.cliente.example:8080',
+    ]) {
+      assert.equal(
+        checkHeaders(GOOD.replace("connect-src 'none'", `img-src 'self' ${source}; connect-src 'none'`)).length,
+        1,
+        source,
+      );
+    }
+  });
+
   for (const [name, text] of Object.entries(broken)) {
     it(`rejects ${name}`, () => {
       assert.ok(checkHeaders(text).length > 0, name);

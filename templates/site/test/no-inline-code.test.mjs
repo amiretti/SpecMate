@@ -8,6 +8,7 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { FIXTURES, VARIANTS } from './lib/build.mjs';
 import { checkJsonLd } from './lib/jsonld.mjs';
+import { copyBuild, mutateFile, removeBuild } from './lib/mutate.mjs';
 import { distDir } from './lib/paths.mjs';
 import { findInlineCode, listFiles } from './lib/scan.mjs';
 
@@ -113,6 +114,24 @@ describe('dist/ has no inline code', () => {
       assert.equal(hits.length, 3, hits.join('\n'));
     } finally {
       await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// FR-008 / AC-4 (US-12): a site that fails on purpose with ONE invented <meta http-equiv="refresh"> in dist/.
+describe('site that fails on purpose: meta refresh', () => {
+  it('a copy of dist/ with a meta refresh fails the inline-code scan, naming the page', async () => {
+    const dir = await copyBuild(distDir);
+    try {
+      assert.deepEqual((await scanDir(dir)).hits, [], 'the healthy copy must pass first');
+      await mutateFile(dir, 'index.html', (html) =>
+        html.replace('</head>', '<meta http-equiv="refresh" content="0;url=https://invented.example/"></head>'),
+      );
+      const { hits } = await scanDir(dir);
+      assert.equal(hits.length, 1, hits.join('\n'));
+      assert.match(hits[0], /^index\.html: .*refresh/i);
+    } finally {
+      await removeBuild(dir);
     }
   });
 });
