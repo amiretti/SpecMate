@@ -1,6 +1,6 @@
 # Plan de implementación: US-13, `specmate new` sobre un CLI con Clean Architecture
 
-**Rama**: `007-specmate-new` | **Fecha**: 2026-11-17 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-17) | **Plan**: borrador
+**Rama**: `007-specmate-new` | **Fecha**: 2026-11-17 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-17) | **Plan**: aprobado (2026-11-17, Andy: "sí, aprobado")
 **Artefactos**: este plan. Sin `research.md` ni `contracts/`: no hay incógnitas externas ni API pública.
 
 ## Resumen
