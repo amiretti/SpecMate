@@ -25,7 +25,8 @@ monorepo.
   (`src/lib/ai-crawlers.ts`), con un ajuste por sitio para bloquearlos. Sin `llms.txt`.
 - **Estilos desde `src/data/tokens.json`** (custom properties en `/tokens.css`), sin
   valores sueltos en el CSS escrito a mano; fuentes autoalojadas.
-- **Orígenes externos solo de la lista blanca del brief**, con motivo.
+- **Orígenes externos solo de la lista blanca del brief**, con motivo. Hasta E2 vive como `allowedOrigins`
+  (`{ origin, reason }`, https exacto) en los datos del sitio; vacía en las 3 variantes.
 - `_headers` versionado con CSP, HSTS (sin `includeSubDomains` por defecto), `nosniff`,
   `Referrer-Policy`, `Permissions-Policy` y COOP. Hosting en Cloudflare Workers con
   `not_found_handling: "404-page"`.
@@ -33,8 +34,21 @@ monorepo.
   solo lo que termina en `dist/`; el resto en `devDependencies`. El test de licencias
   controla los dos grupos (constitución 2.2.1).
 - **LF en todos los archivos** (`.gitattributes`); Biome formatea con LF.
+- **Controles de ADR-0030** (US-12, zona crítica): un script por control en `scripts/controls/`, cada uno con
+  `run(dir) → { ok, violations }` y salida ≠ 0 si no cumple su umbral. Un control que no puede medir falla, no pasa
+  (constitución VI). Cada uno tiene su sitio que falla a propósito (`test/lib/mutations-*.mjs`) y
+  `controls-isolation` prueba que cada mutación rompe solo su control. Lighthouse sin LHCI, mediana de 3, sin la
+  auditoría `robots-txt` (la bloquea nuestra CSP); `@sentry/node` es un stub local que lanza si se importa (ADR-0038).
+- **Licencias fuera de lista solo por excepción de paquete** (`LICENSE_EXCEPTIONS` en `test/lib/licenses.mjs`,
+  ADR-0038); `sentry` y `oxc-parser` no pueden volver al lockfile.
 
 ## Comandos
 
 `npm run build` · `npm test` (construye las variantes de ejemplo y corre todo, incluida la
-CSP en Chromium y Firefox con Playwright) · `npx astro check` · `npx biome check .`
+CSP en Chromium y Firefox con Playwright y los sitios que fallan a propósito; ~6-7 min) · `npx astro check` ·
+`npx biome check .`
+
+Controles: `npm run check:<behavior|a11y|lighthouse|html|links|secrets|origins> [dir]` sobre un build (por
+defecto `dist`; `check:origins` toma `--data <módulo>`) · `npm run check:deps` (`npm audit --audit-level=high`
+sobre todo el árbol; necesita red) · `npm run controls` corre todos sobre las 3 variantes (antes:
+`npm run build:variants`).
