@@ -37,7 +37,8 @@ monorepo.
 - **Controles de ADR-0030** (US-12, zona crítica): un script por control en `scripts/controls/`, cada uno con
   `run(dir) → { ok, violations }` y salida ≠ 0 si no cumple su umbral. Un control que no puede medir falla, no pasa
   (constitución VI). Cada uno tiene su sitio que falla a propósito (`test/lib/mutations-*.mjs`) y
-  `controls-isolation` prueba que cada mutación rompe solo su control. Lighthouse sin LHCI, mediana de 3, sin la
+  `controls-isolation` prueba que cada mutación rompe solo su control. `check:origins` mide en el navegador y además
+  lee `dist/` estáticamente (preconnect, srcset, CSS). Lighthouse sin LHCI, mediana de 3, sin la
   auditoría `robots-txt` (la bloquea nuestra CSP); `@sentry/node` es un stub local que lanza si se importa (ADR-0038).
 - **Licencias fuera de lista solo por excepción de paquete** (`LICENSE_EXCEPTIONS` en `test/lib/licenses.mjs`,
   ADR-0038); `sentry` y `oxc-parser` no pueden volver al lockfile.
