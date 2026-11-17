@@ -57,3 +57,8 @@ Ninguno toca `package.json`, el lockfile ni `test/lib/`.
   seguimiento. BAJO-3 (excepción por nombre y licencia, sin versión) es lo que fija ADR-0038.
 - 2026-11-17, suite: en paralelo dio 3 rojos de 497 por contención de Chromium (timeouts de `page.goto` y `NO_FCP`;
   los controles dieron rojo "could not measure", como pide VI). `npm test` pasa a `--test-concurrency=1`: 498/498.
+- 2026-11-17, developer: "hacelo ahora" (MEDIO-2). `check:origins` suma una pasada estática sobre `dist/`
+  (`staticOrigins`): atributos que piden algo (`src`, `srcset`, `poster`, `<link>` salvo `canonical`/`alternate`/…,
+  `<image|use href>`) y `url()`/`@import` del CSS, contra el origen canónico más `allowedOrigins`; `<a href>` no
+  cuenta. `test/controls-origins-static.test.mjs`: RED (export ausente) → 15/15 con preconnect, dns-prefetch,
+  preload, lazy, srcset 2x, `<source media>`, entidades, `:hover`, print e `@import`. Las 3 variantes siguen en OK.
