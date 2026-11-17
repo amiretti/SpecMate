@@ -6,6 +6,39 @@ const BUILD_ONLY = [...SHIPPED, 'MPL-2.0', 'LGPL-3.0', 'BlueOak-1.0.0'];
 
 export const allowedLicenses = { shipped: new Set(SHIPPED), 'build-only': new Set(BUILD_ONLY) };
 
+// ADR-0038 decision 4-5: out-of-list licences admitted one package at a time, build-only group only. A new package
+// with the same licence fails, and an entry that no longer matches the lockfile fails so the table never goes stale.
+const SECRETLINT = 'secretlint 13 dependency, runs only when checking the site (ADR-0038)';
+export const LICENSE_EXCEPTIONS = [
+  { name: 'binaryextensions', license: 'Artistic-2.0', reason: SECRETLINT },
+  { name: 'editions', license: 'Artistic-2.0', reason: SECRETLINT },
+  { name: 'istextorbinary', license: 'Artistic-2.0', reason: SECRETLINT },
+  { name: 'textextensions', license: 'Artistic-2.0', reason: SECRETLINT },
+  { name: 'version-range', license: 'Artistic-2.0', reason: SECRETLINT },
+  { name: '@azu/style-format', license: 'WTFPL', reason: SECRETLINT },
+  { name: 'argparse', license: 'Python-2.0', reason: SECRETLINT },
+  { name: 'argparse', license: 'PSF-2.0', reason: `${SECRETLINT}; older argparse nested under rc-config-loader` },
+  { name: 'spdx-exceptions', license: 'CC-BY-3.0', reason: `${SECRETLINT}; SPDX data, not code` },
+];
+
+// sentry is FSL-1.1 (not open source) and oxc-parser is native; both came with @sentry/node (ADR-0038).
+const STUB_TARGET = 'vendor/sentry-stub';
+const nameOf = (key) => key.slice(key.lastIndexOf('node_modules/') + 'node_modules/'.length);
+
+/** Keys of lockfile entries that ADR-0038 forbids: sentry, oxc-parser, and any @sentry/* other than the local stub. */
+export function forbiddenPackages(lock) {
+  return Object.entries(lock.packages ?? {})
+    .filter(([key, pkg]) => {
+      if (!key.includes('node_modules/')) return false;
+      const name = nameOf(key);
+      if (name === '@sentry/node' && pkg.link === true && pkg.resolved === STUB_TARGET) return false;
+      return (
+        name === 'sentry' || name === 'oxc-parser' || name.startsWith('@oxc-parser/') || name.startsWith('@sentry/')
+      );
+    })
+    .map(([key]) => key);
+}
+
 // OFL-1.1 is for fonts only (constitution), whatever the group.
 const FONT_PACKAGE = /^@fontsource(-variable)?\//;
 
@@ -63,10 +96,15 @@ function groupOf(pkg) {
 }
 
 /** Returns one problem string per package that breaks its group's list (empty array = compliant). */
-export function checkLockfile(lock) {
+export function checkLockfile(lock, { exceptions = [] } = {}) {
   const problems = [];
-  for (const [key, pkg] of Object.entries(lock.packages ?? {})) {
+  const used = new Set();
+  const packages = lock.packages ?? {};
+  for (const [key, pkg] of Object.entries(packages)) {
     if (key === '') continue;
+    // A local link is checked through its target entry, which the loop visits on its own.
+    if (pkg.link === true && typeof pkg.resolved === 'string' && packages[pkg.resolved]?.version !== undefined)
+      continue;
     const group = pkg.link === true || pkg.version === undefined ? null : groupOf(pkg);
     if (group === null) {
       problems.push(`${key}: unclassified (cannot tell whether it ships in dist/ or only builds)`);
@@ -77,7 +115,7 @@ export function checkLockfile(lock) {
       problems.push(`${key} (${group}): no licence declared`);
       continue;
     }
-    const name = key.slice(key.lastIndexOf('node_modules/') + 'node_modules/'.length);
+    const name = key.includes('node_modules/') ? nameOf(key) : (pkg.name ?? key);
     const allowed = allowedLicenses[group];
     let tree;
     try {
@@ -87,7 +125,17 @@ export function checkLockfile(lock) {
       continue;
     }
     const ok = (id) => allowed.has(id) && (id !== 'OFL-1.1' || FONT_PACKAGE.test(name));
-    if (!satisfies(tree, ok)) problems.push(`${key} (${group}): licence ${license} is not on the ${group} list`);
+    if (satisfies(tree, ok)) continue;
+    const excused = group === 'build-only' ? exceptions.findIndex((e) => e.name === name && e.license === license) : -1;
+    if (excused !== -1) {
+      used.add(excused);
+      continue;
+    }
+    problems.push(`${key} (${group}): licence ${license} is not on the ${group} list`);
   }
+  exceptions.forEach((e, i) => {
+    if (!used.has(i))
+      problems.push(`exception ${e.name} (${e.license}) is not in the lockfile: remove it from the table`);
+  });
   return problems;
 }

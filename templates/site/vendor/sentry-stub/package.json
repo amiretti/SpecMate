@@ -1,0 +1,10 @@
+{
+  "name": "@sentry/node",
+  "version": "0.0.0-specmate-stub",
+  "description": "Empty stand-in for @sentry/node so lighthouse never loads Sentry (ADR-0038).",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js"
+}

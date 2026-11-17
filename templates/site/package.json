@@ -12,18 +12,37 @@
     "preview": "astro preview",
     "check": "astro check",
     "lint": "biome check .",
-    "test": "node scripts/build-variants.mjs && node --test \"test/*.test.mjs\"",
-    "build:variants": "node scripts/build-variants.mjs"
+    "test": "node scripts/build-variants.mjs && node --test --test-concurrency=1 \"test/*.test.mjs\"",
+    "build:variants": "node scripts/build-variants.mjs",
+    "check:behavior": "node scripts/controls/behavior.mjs dist",
+    "check:a11y": "node scripts/controls/a11y.mjs dist",
+    "check:lighthouse": "node scripts/controls/lighthouse.mjs dist",
+    "check:html": "node scripts/controls/html.mjs dist",
+    "check:links": "node scripts/controls/links.mjs dist",
+    "check:secrets": "node scripts/controls/secrets.mjs dist",
+    "check:origins": "node scripts/controls/origins.mjs dist",
+    "check:deps": "node scripts/controls/deps.mjs .",
+    "controls": "node scripts/controls/run-all.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.3.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",
+    "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.7",
+    "@secretlint/secretlint-rule-preset-recommend": "13.1.0",
+    "@sentry/node": "file:vendor/sentry-stub",
     "astro": "7.4.11",
+    "html-validate": "11.21.1",
+    "lighthouse": "13.6.0",
+    "linkinator": "8.1.0",
     "playwright": "1.65.0",
+    "secretlint": "13.1.0",
     "sharp": "0.35.5",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "@sentry/node": "$@sentry/node"
   }
 }
