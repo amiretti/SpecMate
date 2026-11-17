@@ -1,6 +1,6 @@
 # Plan de implementación: US-12, suite de controles y sitio que falla a propósito
 
-**Rama**: `006-suite-de-controles` | **Fecha**: 2026-11-17 | **Spec**: [spec.md](./spec.md) (aprobada, ajustada por ADR-0038) | **Plan**: borrador
+**Rama**: `006-suite-de-controles` | **Fecha**: 2026-11-17 | **Spec**: [spec.md](./spec.md) (aprobada, ajustada por ADR-0038) | **Plan**: aprobado (2026-11-17, Andy: "sí! Avancemos")
 **Artefactos**: este plan. Sin `research.md` aparte: el spike del 2026-11-16/17 está resumido en «Mediciones». Sin `contracts/` ni modelo persistido.
 
 ## Resumen
