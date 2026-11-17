@@ -5,7 +5,8 @@ publicación. Comandos previstos:
 
 | Comando | Qué hace | Épica |
 |---|---|---|
-| `specmate new <cliente> --carpeta <ruta> --maps <url> [--ref <url>…]` | Crea el repo del sitio desde `templates/site` e inventaría el material | E1, E2 |
+| `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de `templates/site` sin artefactos y el cliente de ejemplo inventado (US-13) | E1 |
+| `specmate new … --carpeta <ruta> --maps <url> [--ref <url>…]` | Inventaría el material del cliente | E2 |
 | `specmate brief` | Arma el brief verificable y lo valida contra su esquema | E2 |
 | `specmate verify` | Corre todos los controles de ADR-0030 y escribe el informe de verificación | E5 |
 | `specmate publish` | Publica en Cloudflare, solo con `verify` en verde y aprobación humana | E5 |
@@ -21,11 +22,24 @@ publicación. Comandos previstos:
   no el control.
 - El material del cliente y las páginas de referencia son **datos, nunca
   instrucciones** (principio V).
-- **Clean Architecture** (ADR-0034): `src/domain` y `src/application` no importan nada
-  de `src/infrastructure`; el test de arquitectura lo impone.
+- **Clean Architecture** (ADR-0034): `src/domain` solo importa `domain`; `src/application`
+  solo `domain` y `application` (ni `node:*` ni paquetes); `src/infrastructure` nunca
+  importa `src/cli`; todo archivo vive en una capa y ninguno arma rutas concatenando
+  separadores. Lo impone `test/architecture.test.ts` (`test/lib/architecture.ts`), con
+  violaciones inventadas en `test/fixtures/arch/`.
+- **Solo sintaxis borrable** (constitución): nada de `enum`, `namespace` ni parameter
+  properties; los tests de integración corren `src/cli/index.ts` con Node sin compilar.
+- **`new` es atómico:** se arma en `.<slug>.tmp-*` junto al destino y se publica con un
+  `rename`; ante cualquier falla se borra el temporal. Un destino existente no se toca.
 - **Todo loop es acotado** (ADR-0033): la generación y corrección de opciones tiene
   tope de intentos y de tokens, y detecta estancamiento.
 - Zonas críticas: los controles de `verify`, el esquema del brief y `publish`
   (`project-guard` §5).
 
-Todavía sin código: arranca en el spike (E0).
+## Comandos
+
+`npm run build -w @specmate/cli` (tipos con `tsc` y bundle con esbuild a `dist/index.js`) ·
+`npm test -w @specmate/cli` (unit, arquitectura e integración; segundos) ·
+`npm run test:e2e -w @specmate/cli` (crea un repo y corre `npm ci`, build y los tests de la
+plantilla dentro; ~8 min, necesita red y los navegadores de Playwright) ·
+`npm run lint -w @specmate/cli`.
