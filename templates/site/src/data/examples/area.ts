@@ -44,4 +44,6 @@ export default {
     },
   ],
   image: { alt: 'Ilustración de herramientas de plomería sobre una mesa de trabajo' },
+  // No third-party origin: everything is served from the site itself (check:origins).
+  allowedOrigins: [],
 } satisfies SiteInput;

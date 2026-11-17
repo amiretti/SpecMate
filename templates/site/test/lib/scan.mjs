@@ -168,6 +168,13 @@ const SOURCE_DIRECTIVES = ['default-src', 'script-src', 'style-src', 'img-src', 
 const FORBIDDEN_SOURCES = new Set(['*', 'data:', 'blob:', 'https:', 'http:', "'unsafe-hashes'", "'wasm-unsafe-eval'"]);
 const WEAK_REFERRER = new Set(['unsafe-url', 'no-referrer-when-downgrade']);
 
+// FR-009 (US-12, security review of US-11): img-src and font-src take neither a host wildcard ("https://*")
+// nor any plain-http origin; an allow-listed https origin with a real host is still fine. Security review V1: any
+// host that starts with "*" counts as a wildcard ("https://*:*", "https://*.com", "https://*/img/").
+const ORIGIN_DIRECTIVES = new Set(['img-src', 'font-src']);
+const weakOrigin = (directive, source) =>
+  ORIGIN_DIRECTIVES.has(directive) && /^([a-z][a-z0-9+.-]*:\/\/\*|http:\/\/)/i.test(source);
+
 function parseCsp(csp) {
   return new Map(
     csp
@@ -192,7 +199,9 @@ function checkRule(pattern, { headers, detached }, baseline) {
     const directives = parseCsp(csp);
     for (const name of SOURCE_DIRECTIVES) {
       for (const source of directives.get(name) ?? []) {
-        if (FORBIDDEN_SOURCES.has(source.toLowerCase())) problems.push(`${pattern}: CSP ${name} allows ${source}`);
+        if (FORBIDDEN_SOURCES.has(source.toLowerCase()) || weakOrigin(name, source)) {
+          problems.push(`${pattern}: CSP ${name} allows ${source}`);
+        }
       }
     }
     if (baseline) {

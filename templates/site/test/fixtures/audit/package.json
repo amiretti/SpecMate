@@ -1,0 +1,9 @@
+{
+  "name": "specmate-audit-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Invented site that fails check:deps on purpose: lodash 4.17.20 has a known high advisory (GHSA-35jh-r3h4-6jhm).",
+  "dependencies": {
+    "lodash": "4.17.20"
+  }
+}

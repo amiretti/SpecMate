@@ -32,4 +32,6 @@ export default {
   ],
   profiles: [{ url: 'https://social-uno.example/hojasuelta', source: 'ejemplo: brief', confirmed: true }],
   image: { alt: 'Ilustración de cuadernos cosidos a mano apilados sobre una mesa' },
+  // No third-party origin: everything is served from the site itself (check:origins).
+  allowedOrigins: [],
 } satisfies SiteInput;
