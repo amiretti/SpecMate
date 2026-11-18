@@ -39,8 +39,9 @@ monorepo.
   (constitución VI). Cada uno tiene su sitio que falla a propósito (`test/lib/mutations-*.mjs`) y
   `controls-isolation` prueba que cada mutación rompe solo su control. `check:origins` mide en el navegador y además
   lee `dist/` estáticamente (preconnect, srcset, CSS). `check:links` trata como interno un enlace escrito con la URL
-  canónica del sitio (la de `rel="canonical"`) y lo pide al servidor local (#47). Lighthouse sin LHCI, mediana de 3, sin la
-  auditoría `robots-txt` (la bloquea nuestra CSP) y con el puerto de DevTools elegido por Chromium (#48); `@sentry/node` es un stub local que lanza si se importa (ADR-0038).
+  canónica del sitio (la de `rel="canonical"`) y lo pide al servidor local (#47). Lighthouse sin LHCI, mediana
+  de 3, sin la auditoría `robots-txt` (la bloquea nuestra CSP) y con el puerto de DevTools elegido por Chromium
+  (#48); `@sentry/node` es un stub local que lanza si se importa (ADR-0038).
 - **Licencias fuera de lista solo por excepción de paquete** (`LICENSE_EXCEPTIONS` en `test/lib/licenses.mjs`,
   ADR-0038); `sentry` y `oxc-parser` no pueden volver al lockfile.
 
