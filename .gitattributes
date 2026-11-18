@@ -1,0 +1,11 @@
+# LF everywhere, also on Windows checkouts: Biome formats with LF, and core.autocrlf=true would otherwise turn every
+# file into CRLF and make `npm run lint` fail on a clean checkout (#56). templates/site keeps its own copy of this rule
+# because each client repo starts from it.
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.avif binary
+*.webp binary
+*.ico binary
+*.woff2 binary
