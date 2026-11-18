@@ -40,7 +40,8 @@ tools/                # proyector a cada proveedor, conectores y GitHub Project
 - Windows es la plataforma principal: rutas con `path`, nada de supuestos de shell
   POSIX en el código del producto.
 - Ramas `###-slug`; commits `<type>: <desc>`; PR con `Closes #n`.
-- Build: `npm run build` · Tests: `npm test`.
+- Build: `npm run build` · Tests: `npm test` (CLI y los 513 de `templates/site`, ~6 min; la plantilla no es un
+  workspace: su lockfile viaja a cada repo de cliente).
 - El producto se construye con su propio flujo, **proporcional al riesgo** (ADR-0027,
   skill `feature-doc`): chico sin artefactos, grande con un `feature.md`, SDD con Spec
   Kit solo cuando el riesgo lo pide. Tests primero, pedido literal, delegación por
