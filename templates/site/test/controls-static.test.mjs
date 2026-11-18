@@ -55,6 +55,50 @@ describe('static controls: edge cases', () => {
     }
   });
 
+  // #47 (security review V1, BAJO-1): a link written with the site's own canonical URL is internal, so it is checked
+  // against the build like a relative one, never treated as external. The address variant's canonical origin is
+  // https://horno-azul.example.
+  it('check:links fails on a broken internal link written with the canonical URL', async () => {
+    const dir = await mutant(VARIANTS.address.out, (d) =>
+      mutateFile(d, 'index.html', (t) =>
+        t.replace('</main>', '<p><a href="https://horno-azul.example/missing-absolute/">Missing</a></p></main>'),
+      ),
+    );
+    try {
+      const result = await runControl('links', dir);
+      assert.equal(result.ok, false);
+      assert.match(result.violations.join('\n'), /\/missing-absolute\/ -> 404 \(from \/index\.html\)/);
+      assert.ok(!result.warnings.some((w) => w.includes('horno-azul.example')), result.warnings.join('\n'));
+    } finally {
+      await removeBuild(dir);
+    }
+  });
+
+  it('check:links passes a working internal link written with the canonical URL, and does not warn it', async () => {
+    const dir = await mutant(VARIANTS.address.out, (d) =>
+      mutateFile(d, 'index.html', (t) =>
+        t.replace(
+          '</main>',
+          '<p><a href="https://horno-azul.example/404.html">Absolute</a>' +
+            '<a href="https://horno-azul.example.invalid/x">Look-alike host</a></p></main>',
+        ),
+      ),
+    );
+    try {
+      const result = await runControl('links', dir);
+      assert.deepEqual(result.violations, []);
+      assert.equal(result.ok, true);
+      assert.ok(!result.warnings.some((w) => w.includes('horno-azul.example/')), result.warnings.join('\n'));
+      // A longer host that starts with the canonical one is another site: external, warned, never requested.
+      assert.ok(
+        result.warnings.some((w) => w.includes('https://horno-azul.example.invalid/x') && /not requested/.test(w)),
+        result.warnings.join('\n'),
+      );
+    } finally {
+      await removeBuild(dir);
+    }
+  });
+
   // Security review V1 (BAJO-2): only the template's own root config is skipped, not any file with that name.
   it('check:secrets scans a nested .secretlintrc.json', async () => {
     const repo = await mkdtemp(path.join(tmpdir(), 'specmate-repo-'));
