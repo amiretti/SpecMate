@@ -31,8 +31,9 @@ publicación. Comandos previstos:
   properties; los tests de integración corren `src/cli/index.ts` con Node sin compilar.
 - **`new` es atómico:** se arma en `.<slug>.tmp-*` junto al destino y se publica con un
   `rename`; ante cualquier falla se borra el temporal. Un destino existente no se toca.
-- **`new` copia solo lo versionado** (#53): la lista sale de `git ls-files` en `templates/site`; un archivo
-  ignorado o sin trackear (un `.env` local, el `CLAUDE.md` generado) nunca llega al repo de un cliente.
+- **`new` copia solo lo versionado** (#53): la lista sale de lo commiteado en `templates/site`
+  (`git ls-tree HEAD`); un archivo ignorado, sin trackear o solo en el índice (un `.env` local, el `CLAUDE.md`
+  generado) nunca llega al repo de un cliente, y un symlink o un submódulo hacen fallar la copia.
 - **Todo loop es acotado** (ADR-0033): la generación y corrección de opciones tiene
   tope de intentos y de tokens, y detecta estancamiento.
 - Zonas críticas: los controles de `verify`, el esquema del brief y `publish`

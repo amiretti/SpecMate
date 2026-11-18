@@ -37,9 +37,10 @@ const nulList = (out: string) => out.split('\0').filter((file) => file !== '');
 
 export const gitCli: Git = {
   async trackedFiles(dir) {
-    // ls-files run inside `dir` lists only files under it, relative to it. A tracked file deleted on disk is dropped:
-    // there is nothing to copy.
-    const tracked = nulList(await git(['ls-files', '-z', '--cached'], dir));
+    // What HEAD holds, not the index: a staged but uncommitted file (even force-added past .gitignore) never counts.
+    // Run inside `dir`, ls-tree lists only files under it, relative to it. A committed file deleted on disk is
+    // dropped: there is nothing to copy.
+    const tracked = nulList(await git(['ls-tree', '-r', '-z', '--name-only', 'HEAD'], dir));
     const deleted = new Set(nulList(await git(['ls-files', '-z', '--deleted'], dir)));
     return tracked.filter((file) => !deleted.has(file)).sort();
   },

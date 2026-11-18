@@ -1,5 +1,6 @@
-// Rule (#53): the template is read through git, so only tracked files that exist on disk reach a client repo. An
-// ignored file (a local .env, the generated CLAUDE.md), an untracked one or a tracked one deleted on disk is left out.
+// Rule (#53): the template is read through git, so only files committed in HEAD that exist on disk reach a client
+// repo. An ignored file (a local .env, the generated CLAUDE.md), an untracked one, a staged but uncommitted one (even
+// force-added) or a committed one deleted on disk is left out.
 import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -37,12 +38,17 @@ describe('gitCli.trackedFiles', () => {
     await writeFile(path.join(site, '.env'), 'SECRET=1');
     await writeFile(path.join(site, 'CLAUDE.md'), 'generated');
     await writeFile(path.join(site, 'untracked.txt'), 'new');
+    // Staged but never committed, even past .gitignore: only what HEAD holds counts.
+    await writeFile(path.join(site, '.env.local'), 'SECRET=2');
+    git(site, 'add', '--force', '.env.local');
+    await writeFile(path.join(site, 'staged.txt'), 'staged');
+    git(site, 'add', 'staged.txt');
 
     expect(await gitCli.trackedFiles(site)).toEqual(['.gitignore', 'package.json', 'src/pages/index.astro']);
   });
 
   it('fails naming git when the dir is not inside a git repo', async () => {
     await expect(gitCli.trackedFiles(work)).rejects.toThrow(GitError);
-    await expect(gitCli.trackedFiles(work)).rejects.toThrow(/git ls-files failed/);
+    await expect(gitCli.trackedFiles(work)).rejects.toThrow(/git ls-tree failed/);
   });
 });

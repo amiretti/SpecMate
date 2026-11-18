@@ -6,7 +6,8 @@ export interface RepoWorkspace {
   exists(dir: string): Promise<boolean>;
   /** Creates an empty staging dir next to `target` (same parent, so publishing is a rename) and returns its path. */
   createStaging(target: string): Promise<string>;
-  /** Copies exactly `files` (paths relative to `from`, separated by "/") from `from` into `to`. */
+  /** Copies exactly `files` (paths relative to `from`, separated by "/") from `from` into `to`; refuses any entry that
+   * is not a regular file (a symlink, a submodule). */
   copyTemplate(from: string, to: string, files: readonly string[]): Promise<void>;
   /** Sets the root `name` of `package.json` and `package-lock.json` in `dir`. */
   renamePackage(dir: string, name: string): Promise<void>;
@@ -18,8 +19,8 @@ export interface RepoWorkspace {
 
 export interface Git {
   /**
-   * Files under `dir` that git tracks and that exist on disk, relative to `dir`, separated by "/", sorted. Ignored and
-   * untracked files are never listed. Fails if `dir` is not inside a git repo.
+   * Files under `dir` committed in HEAD that exist on disk, relative to `dir`, separated by "/", sorted. Ignored,
+   * untracked and staged-but-uncommitted files are never listed. Fails if `dir` is not inside a git repo with a commit.
    */
   trackedFiles(dir: string): Promise<string[]>;
   /** `git init` in `dir` and one commit with every file, authored by the user's git identity. */

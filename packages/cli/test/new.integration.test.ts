@@ -70,12 +70,12 @@ describe('specmate new <slug>', () => {
     expect(await readdir(work)).toEqual(['panaderia-ejemplo']);
   });
 
-  it('copies exactly the files git tracks in the template, minus build artifacts (#53)', async () => {
+  it('copies exactly the files committed in the template, minus build artifacts (#53)', async () => {
     expect(specmate(['new', 'solo-versionados'], work).status).toBe(0);
     const repo = path.join(work, 'solo-versionados');
     const template = fileURLToPath(new URL('../../../templates/site/', import.meta.url));
     const artifacts = new Set(['node_modules', 'dist', '.astro', '.wrangler']);
-    const expected = gitOut(template, 'ls-files', '--cached')
+    const expected = gitOut(template, 'ls-tree', '-r', '--name-only', 'HEAD')
       .split('\n')
       .filter((f) => f && !artifacts.has(f.split('/')[0] ?? ''))
       .sort();
