@@ -3,7 +3,23 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "bin": {
     "specmate": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p . && esbuild src/cli/index.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/index.js --banner:js=\"#!/usr/bin/env node\"",
+    "test": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "lint": "biome check . && tsc -p ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "@types/node": "24.19.2",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
   }
 }
