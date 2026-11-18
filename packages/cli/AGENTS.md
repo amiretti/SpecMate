@@ -5,7 +5,7 @@ publicación. Comandos previstos:
 
 | Comando | Qué hace | Épica |
 |---|---|---|
-| `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de `templates/site` sin artefactos y el cliente de ejemplo inventado (US-13) | E1 |
+| `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de lo que git versiona en `templates/site` (sin artefactos) y el cliente de ejemplo inventado (US-13) | E1 |
 | `specmate new … --carpeta <ruta> --maps <url> [--ref <url>…]` | Inventaría el material del cliente | E2 |
 | `specmate brief` | Arma el brief verificable y lo valida contra su esquema | E2 |
 | `specmate verify` | Corre todos los controles de ADR-0030 y escribe el informe de verificación | E5 |
@@ -31,6 +31,9 @@ publicación. Comandos previstos:
   properties; los tests de integración corren `src/cli/index.ts` con Node sin compilar.
 - **`new` es atómico:** se arma en `.<slug>.tmp-*` junto al destino y se publica con un
   `rename`; ante cualquier falla se borra el temporal. Un destino existente no se toca.
+- **`new` copia solo lo versionado** (#53): la lista sale de lo commiteado en `templates/site`
+  (`git ls-tree HEAD`); un archivo ignorado, sin trackear o solo en el índice (un `.env` local, el `CLAUDE.md`
+  generado) nunca llega al repo de un cliente, y un symlink o un submódulo hacen fallar la copia.
 - **Todo loop es acotado** (ADR-0033): la generación y corrección de opciones tiene
   tope de intentos y de tokens, y detecta estancamiento.
 - Zonas críticas: los controles de `verify`, el esquema del brief y `publish`

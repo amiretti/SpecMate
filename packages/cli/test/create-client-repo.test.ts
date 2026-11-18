@@ -1,14 +1,25 @@
-// Rule (US-13 FR-001, FR-005, FR-006, FR-007, FR-010; AC-5, AC-6), at the use-case level with test doubles of the
-// ports: an existing target is never touched; everything is built in a staging dir and published at the end; any
-// failure discards the staging dir and leaves no target behind.
+// Rule (US-13 FR-001, FR-005, FR-006, FR-007, FR-010; AC-5, AC-6; #53), at the use-case level with test doubles of
+// the ports: an existing target is never touched; only the files git tracks in the template are copied, never a build
+// or install artifact; everything is built in a staging dir and published at the end; any failure discards the
+// staging dir and leaves no target behind.
 import { describe, expect, it } from 'vitest';
 import { createClientRepo, EXCLUDED_FROM_TEMPLATE, TargetExistsError } from '../src/application/create-client-repo.ts';
 import type { Git, RepoWorkspace, TemplateSource } from '../src/application/ports.ts';
 import { parseSlug } from '../src/domain/slug.ts';
 
-type Step = 'copy' | 'rename' | 'git' | 'publish';
+type Step = 'list' | 'copy' | 'rename' | 'git' | 'publish';
 
-function doubles({ exists = false, failAt }: { exists?: boolean; failAt?: Step } = {}) {
+const TRACKED = ['.gitignore', 'package.json', 'src/pages/index.astro', 'dist/index.html', 'node_modules/x/y.js'];
+
+function doubles({
+  exists = false,
+  failAt,
+  tracked = TRACKED,
+}: {
+  exists?: boolean;
+  failAt?: Step;
+  tracked?: string[];
+} = {}) {
   const calls: string[] = [];
   const fail = (step: Step) => {
     if (failAt === step) throw new Error(`injected failure at ${step}`);
@@ -22,8 +33,8 @@ function doubles({ exists = false, failAt }: { exists?: boolean; failAt?: Step }
       calls.push(`staging for ${target}`);
       return `${target}.staging`;
     },
-    copyTemplate: async (from, to, excluded) => {
-      calls.push(`copy ${from} -> ${to} without ${excluded.join(',')}`);
+    copyTemplate: async (from, to, files) => {
+      calls.push(`copy ${from} -> ${to}: ${files.join(',')}`);
       fail('copy');
     },
     renamePackage: async (dir, name) => {
@@ -39,6 +50,11 @@ function doubles({ exists = false, failAt }: { exists?: boolean; failAt?: Step }
     },
   };
   const git: Git = {
+    trackedFiles: async (dir) => {
+      calls.push(`list tracked in ${dir}`);
+      fail('list');
+      return tracked;
+    },
     initAndCommit: async (dir, message) => {
       calls.push(`git ${dir}: ${message}`);
       fail('git');
@@ -57,8 +73,9 @@ describe('createClientRepo', () => {
     expect(await createClientRepo({ slug, targetDir }, deps)).toEqual({ dir: targetDir });
     expect(calls).toEqual([
       'exists TARGET',
+      'list tracked in TEMPLATE',
       'staging for TARGET',
-      'copy TEMPLATE -> TARGET.staging without node_modules,dist,.astro,.wrangler',
+      'copy TEMPLATE -> TARGET.staging: .gitignore,package.json,src/pages/index.astro',
       'rename package in TARGET.staging to panaderia-ejemplo',
       'git TARGET.staging: chore: create panaderia-ejemplo from the SpecMate site template',
       'publish TARGET.staging -> TARGET',
@@ -67,6 +84,18 @@ describe('createClientRepo', () => {
 
   it('excludes exactly the build and install artifacts', () => {
     expect(EXCLUDED_FROM_TEMPLATE).toEqual(['node_modules', 'dist', '.astro', '.wrangler']);
+  });
+
+  it('fails before creating anything when the template has no tracked files', async () => {
+    const { calls, deps } = doubles({ tracked: [] });
+    await expect(createClientRepo({ slug, targetDir }, deps)).rejects.toThrow(/no files tracked by git/);
+    expect(calls.some((c) => c.startsWith('staging'))).toBe(false);
+  });
+
+  it('fails before creating anything when the tracked files cannot be listed', async () => {
+    const { calls, deps } = doubles({ failAt: 'list' });
+    await expect(createClientRepo({ slug, targetDir }, deps)).rejects.toThrow('injected failure at list');
+    expect(calls.some((c) => c.startsWith('staging'))).toBe(false);
   });
 
   it('fails on an existing target without creating or touching anything', async () => {

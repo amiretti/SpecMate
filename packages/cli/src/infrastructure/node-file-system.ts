@@ -1,8 +1,10 @@
 // RepoWorkspace over node:fs (US-13 FR-001, FR-005 to FR-007). Every path is built with node:path (AC-9).
-import { access, cp, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { TargetExistsError } from '../application/create-client-repo.ts';
 import type { RepoWorkspace } from '../application/ports.ts';
+import { SpecmateError } from '../domain/errors.ts';
 
 const errorCode = (error: unknown) => (error as NodeJS.ErrnoException | undefined)?.code;
 
@@ -28,13 +30,18 @@ export const nodeFileSystem: RepoWorkspace = {
     return mkdtemp(path.join(path.dirname(target), `.${path.basename(target)}.tmp-`));
   },
 
-  async copyTemplate(from, to, excluded) {
-    const skip = new Set(excluded);
+  async copyTemplate(from, to, files) {
     // `to` is the fresh, empty staging dir from createStaging: nothing in it can be overwritten.
-    await cp(from, to, {
-      recursive: true,
-      filter: (src) => !skip.has(path.relative(from, src).split(path.sep)[0] ?? ''),
-    });
+    for (const file of files) {
+      const parts = file.split('/');
+      const source = path.join(from, ...parts);
+      // copyFile follows symlinks: a committed link could pull a file from outside the template (#53).
+      if (!(await lstat(source)).isFile())
+        throw new SpecmateError(`${file} is not a regular file: refusing to copy it`);
+      const destination = path.join(to, ...parts);
+      await mkdir(path.dirname(destination), { recursive: true });
+      await copyFile(source, destination, constants.COPYFILE_EXCL);
+    }
   },
 
   async renamePackage(dir, name) {

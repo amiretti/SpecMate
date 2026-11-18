@@ -6,10 +6,15 @@ import { SpecmateError } from '../domain/errors.ts';
 
 export class GitError extends SpecmateError {}
 
-function git(args: readonly string[], cwd: string): Promise<void> {
+/** Runs git in `cwd` and resolves with its stdout. */
+function git(args: readonly string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn('git', args, { cwd, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
+    const child = spawn('git', args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let stdout = '';
     let stderr = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk: string) => {
+      stdout += chunk;
+    });
     child.stderr.setEncoding('utf8').on('data', (chunk: string) => {
       stderr += chunk;
     });
@@ -21,13 +26,25 @@ function git(args: readonly string[], cwd: string): Promise<void> {
       );
     });
     child.on('close', (code) => {
-      if (code === 0) resolve();
+      if (code === 0) resolve(stdout);
       else reject(new GitError(`git ${args[0]} failed (exit ${code}): ${stderr.trim().split('\n').at(-1) ?? ''}`));
     });
   });
 }
 
+// NUL-separated output (-z): no quoting of spaces or accents, and paths always use "/".
+const nulList = (out: string) => out.split('\0').filter((file) => file !== '');
+
 export const gitCli: Git = {
+  async trackedFiles(dir) {
+    // What HEAD holds, not the index: a staged but uncommitted file (even force-added past .gitignore) never counts.
+    // Run inside `dir`, ls-tree lists only files under it, relative to it. A committed file deleted on disk is
+    // dropped: there is nothing to copy.
+    const tracked = nulList(await git(['ls-tree', '-r', '-z', '--name-only', 'HEAD'], dir));
+    const deleted = new Set(nulList(await git(['ls-files', '-z', '--deleted'], dir)));
+    return tracked.filter((file) => !deleted.has(file)).sort();
+  },
+
   async initAndCommit(dir, message) {
     await git(['init', '--quiet', '--initial-branch=main'], dir);
     await git(['add', '--all'], dir);

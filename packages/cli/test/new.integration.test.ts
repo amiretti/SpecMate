@@ -70,6 +70,24 @@ describe('specmate new <slug>', () => {
     expect(await readdir(work)).toEqual(['panaderia-ejemplo']);
   });
 
+  it('copies exactly the files committed in the template, minus build artifacts (#53)', async () => {
+    expect(specmate(['new', 'solo-versionados'], work).status).toBe(0);
+    const repo = path.join(work, 'solo-versionados');
+    const template = fileURLToPath(new URL('../../../templates/site/', import.meta.url));
+    const artifacts = new Set(['node_modules', 'dist', '.astro', '.wrangler']);
+    const expected = gitOut(template, 'ls-tree', '-r', '--name-only', 'HEAD')
+      .split('\n')
+      .filter((f) => f && !artifacts.has(f.split('/')[0] ?? ''))
+      .sort();
+    const onDisk = (await readdir(repo, { recursive: true, withFileTypes: true }))
+      .filter((e) => e.isFile())
+      .map((e) => path.relative(repo, path.join(e.parentPath, e.name)).split(path.sep).join('/'))
+      .filter((f) => !f.startsWith('.git/'))
+      .sort();
+    expect(onDisk).toEqual(expected);
+    expect(gitOut(repo, 'ls-files').split('\n').sort()).toEqual(expected);
+  });
+
   it('keeps the invented example client, marked as such (FR-003)', async () => {
     expect(specmate(['new', 'ejemplo'], work).status).toBe(0);
     const data = await readFile(path.join(work, 'ejemplo', 'src', 'data', 'examples', 'address.ts'), 'utf8');
