@@ -1,6 +1,6 @@
 # ADR-0039 — `check:deps` admite una excepción temporal por aviso alto sin parche, con motivo y vencimiento
 
-- **Estado:** Propuesta
+- **Estado:** Descartada (2026-11-18: GitHub retiró GHSA-fc5q-39xc-vjpf el 2026-11-18 15:38 UTC y `check:deps` volvió a verde sin excepción; si vuelve un aviso alto sin parche, se retoma desde esta ADR con la tabla vacía)
 - **Fecha:** 2026-11-17
 - **Reemplaza:** ADR-0038 en parte (punto 3: "umbral 0 altas o críticas" pasa a "0 altas o críticas no exceptuadas")
 - **Afecta a:** `templates/site` (`scripts/controls/deps.mjs`) y cada repo de cliente que sale de la plantilla, US-12 (#40), US-13 (#41), #51; zona crítica: controles de ADR-0030
