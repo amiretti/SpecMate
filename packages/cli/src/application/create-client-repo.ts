@@ -5,8 +5,19 @@ import { SpecmateError } from '../domain/errors.ts';
 import type { Slug } from '../domain/slug.ts';
 import type { Git, RepoWorkspace, TemplateSource } from './ports.ts';
 
-/** Top-level entries of the template that are build or install artifacts, never part of a client repo. */
+/**
+ * Top-level entries of the template that are build or install artifacts, never part of a client repo. Only tracked
+ * files are copied (#53), so these are already left out; the list stays as a second guard in case one gets committed.
+ */
 export const EXCLUDED_FROM_TEMPLATE = ['node_modules', 'dist', '.astro', '.wrangler'] as const;
+
+export class EmptyTemplateError extends SpecmateError {
+  constructor(source: string) {
+    super(`${source} has no files tracked by git: the template cannot be copied (nothing was created)`);
+  }
+}
+
+const isArtifact = (file: string) => (EXCLUDED_FROM_TEMPLATE as readonly string[]).includes(file.split('/')[0] ?? '');
 
 export class TargetExistsError extends SpecmateError {
   readonly target: string;
@@ -29,9 +40,12 @@ export async function createClientRepo(
 ): Promise<{ dir: string }> {
   if (await workspace.exists(targetDir)) throw new TargetExistsError(targetDir);
   const source = await template.locate();
+  // Only what git tracks: an ignored or untracked file (a local .env, a generated CLAUDE.md) never reaches a client.
+  const files = (await git.trackedFiles(source)).filter((file) => !isArtifact(file));
+  if (files.length === 0) throw new EmptyTemplateError(source);
   const staging = await workspace.createStaging(targetDir);
   try {
-    await workspace.copyTemplate(source, staging, EXCLUDED_FROM_TEMPLATE);
+    await workspace.copyTemplate(source, staging, files);
     await workspace.renamePackage(staging, slug);
     await git.initAndCommit(staging, `chore: create ${slug} from the SpecMate site template`);
     await workspace.publish(staging, targetDir);

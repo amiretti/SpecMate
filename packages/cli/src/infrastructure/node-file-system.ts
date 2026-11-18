@@ -1,5 +1,6 @@
 // RepoWorkspace over node:fs (US-13 FR-001, FR-005 to FR-007). Every path is built with node:path (AC-9).
-import { access, cp, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { access, copyFile, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { TargetExistsError } from '../application/create-client-repo.ts';
 import type { RepoWorkspace } from '../application/ports.ts';
@@ -28,13 +29,14 @@ export const nodeFileSystem: RepoWorkspace = {
     return mkdtemp(path.join(path.dirname(target), `.${path.basename(target)}.tmp-`));
   },
 
-  async copyTemplate(from, to, excluded) {
-    const skip = new Set(excluded);
+  async copyTemplate(from, to, files) {
     // `to` is the fresh, empty staging dir from createStaging: nothing in it can be overwritten.
-    await cp(from, to, {
-      recursive: true,
-      filter: (src) => !skip.has(path.relative(from, src).split(path.sep)[0] ?? ''),
-    });
+    for (const file of files) {
+      const parts = file.split('/');
+      const destination = path.join(to, ...parts);
+      await mkdir(path.dirname(destination), { recursive: true });
+      await copyFile(path.join(from, ...parts), destination, constants.COPYFILE_EXCL);
+    }
   },
 
   async renamePackage(dir, name) {
