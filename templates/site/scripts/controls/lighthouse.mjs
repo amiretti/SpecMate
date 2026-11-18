@@ -5,14 +5,17 @@
 // it (plan decision 3; robots.txt is covered by seo-files.test.mjs). Error reporting is always off: `@sentry/node`
 // is a stub that throws if imported. The 404 page is not measured: it is `noindex` on purpose.
 // A control that cannot measure (no browser, a run without metrics) fails, never passes (constitution VI).
+// Chromium picks its own DevTools port (--remote-debugging-port=0, read back from the profile; #48).
 // Usage: node scripts/controls/lighthouse.mjs <buildDir>
-import { createServer } from 'node:net';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import lighthouse from 'lighthouse';
 import { computeMedianRun, filterToValidRuns } from 'lighthouse/core/lib/median-run.js';
+import { chromium } from 'playwright';
 import { serve } from '../../test/lib/serve.mjs';
-import { firstLine, openBrowser } from './behavior.mjs';
+import { firstLine, pagePaths } from './behavior.mjs';
 
 export const RUNS = 3;
 export const THRESHOLDS = { performance: 90, accessibility: 95, 'best-practices': 95, seo: 95 };
@@ -49,13 +52,39 @@ export function evaluateRuns(label, lhrs) {
   return { violations, median, summary: `${label}: ${scores.join(', ')} ${of}` };
 }
 
-/** A free TCP port on 127.0.0.1 for Chromium's DevTools endpoint. */
-async function freePort() {
-  const server = createServer();
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address();
-  await new Promise((resolve) => server.close(resolve));
-  return port;
+/** The port Chromium wrote to `<userDataDir>/DevToolsActivePort` (first line), waiting up to 10 s for the file. */
+async function activePort(userDataDir) {
+  const file = path.join(userDataDir, 'DevToolsActivePort');
+  for (let waited = 0; waited < 10_000; waited += 100) {
+    const port = Number.parseInt((await readFile(file, 'utf8').catch(() => '')).split('\n')[0], 10);
+    if (Number.isInteger(port) && port > 0) return port;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error('Chromium did not report its DevTools port');
+}
+
+/**
+ * Chromium with its DevTools endpoint on 127.0.0.1 and a port Chromium picks itself (#48): choosing a free port
+ * beforehand raced with other processes. The port is read back from the profile and closes with the browser.
+ * @returns {Promise<{ port: number, close: () => Promise<void> }>}
+ */
+export async function launchBrowser({ executablePath } = {}) {
+  const userDataDir = await mkdtemp(path.join(tmpdir(), 'specmate-lighthouse-'));
+  let context;
+  const close = async () => {
+    await context?.close().catch(() => undefined);
+    await rm(userDataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  };
+  try {
+    context = await chromium.launchPersistentContext(userDataDir, {
+      ...(executablePath ? { executablePath } : {}),
+      args: ['--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1'],
+    });
+    return { port: await activePort(userDataDir), close };
+  } catch (error) {
+    await close();
+    throw error;
+  }
 }
 
 /**
@@ -63,12 +92,18 @@ async function freePort() {
  * @returns {Promise<{ ok: boolean, violations: string[], summary: string[], reports: Array<{ rel: string, lhr: object }> }>}
  */
 export async function run(dir, { runs = RUNS, executablePath } = {}) {
-  const port = await freePort();
-  const { pages, browser, failure } = await openBrowser(dir, {
-    executablePath,
-    args: [`--remote-debugging-port=${port}`, '--remote-debugging-address=127.0.0.1'],
-  });
-  if (failure) return { ok: false, violations: [failure], summary: [], reports: [] };
+  const pages = await pagePaths(dir).catch(() => []);
+  if (pages.length === 0) {
+    return { ok: false, violations: [`could not measure ${dir}: no HTML pages`], summary: [], reports: [] };
+  }
+  let browser;
+  try {
+    browser = await launchBrowser({ executablePath });
+  } catch (error) {
+    const failure = `could not measure ${dir}: no browser (${firstLine(error)})`;
+    return { ok: false, violations: [failure], summary: [], reports: [] };
+  }
+  const { port } = browser;
   const content = pages.filter((page) => page.rel !== '404.html');
   const server = await serve(dir);
   const violations = [];

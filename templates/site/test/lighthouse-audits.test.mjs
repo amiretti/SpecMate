@@ -3,9 +3,17 @@
 // Error reporting is always off. The verdict is the median run of the three (computeMedianRun), so one run out
 // of range does not decide it (edge case of AC-1). The real run here is 1 run on the home only (risk R1).
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import defaultConfig from 'lighthouse/core/config/default-config.js';
-import { CATEGORIES, evaluateRuns, LIGHTHOUSE_CONFIG, LIGHTHOUSE_FLAGS, run } from '../scripts/controls/lighthouse.mjs';
+import {
+  CATEGORIES,
+  evaluateRuns,
+  LIGHTHOUSE_CONFIG,
+  LIGHTHOUSE_FLAGS,
+  launchBrowser,
+  run,
+} from '../scripts/controls/lighthouse.mjs';
 import { VARIANTS } from './lib/build.mjs';
 
 /** Every audit id the 4 measured categories reference in Lighthouse's default config. */
@@ -46,6 +54,32 @@ describe('check:lighthouse configuration', () => {
 
   it('never enables error reporting (the @sentry/node stub throws if imported)', () => {
     assert.equal(LIGHTHOUSE_FLAGS.enableErrorReporting, false);
+  });
+});
+
+// #48 (security review V1, BAJO-4): Chromium picks its own DevTools port (--remote-debugging-port=0) and the control
+// reads it back, so no port is chosen beforehand (no race with another process). The port listens on 127.0.0.1 only
+// while Lighthouse runs: the pipe was tried and made Lighthouse lose the trace (NO_NAVSTART) inside the suite.
+describe('check:lighthouse browser', () => {
+  it('reads the DevTools port Chromium chose, on 127.0.0.1, and frees it on close', async () => {
+    const browser = await launchBrowser();
+    let closed = false;
+    try {
+      assert.ok(Number.isInteger(browser.port) && browser.port > 0, String(browser.port));
+      const version = await (await fetch(`http://127.0.0.1:${browser.port}/json/version`)).json();
+      assert.match(version.Browser, /Chrom/);
+      await browser.close();
+      closed = true;
+      await assert.rejects(fetch(`http://127.0.0.1:${browser.port}/json/version`));
+    } finally {
+      if (!closed) await browser.close();
+    }
+  });
+
+  it('never picks the port itself', async () => {
+    const source = await readFile(new URL('../scripts/controls/lighthouse.mjs', import.meta.url), 'utf8');
+    assert.match(source, /--remote-debugging-port=0/);
+    assert.doesNotMatch(source, /freePort|listen\(0/);
   });
 });
 
