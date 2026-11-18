@@ -71,9 +71,10 @@ async function activePort(userDataDir) {
 export async function launchBrowser({ executablePath } = {}) {
   const userDataDir = await mkdtemp(path.join(tmpdir(), 'specmate-lighthouse-'));
   let context;
+  // Never throws: a profile Windows still holds must not hide the verdict or the launch error.
   const close = async () => {
     await context?.close().catch(() => undefined);
-    await rm(userDataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    await rm(userDataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }).catch(() => undefined);
   };
   try {
     context = await chromium.launchPersistentContext(userDataDir, {
@@ -105,11 +106,21 @@ export async function run(dir, { runs = RUNS, executablePath } = {}) {
   }
   const { port } = browser;
   const content = pages.filter((page) => page.rel !== '404.html');
-  const server = await serve(dir);
   const violations = [];
   const summary = [];
   const reports = [];
+  let server;
   try {
+    try {
+      server = await serve(dir);
+    } catch (error) {
+      return {
+        ok: false,
+        violations: [`could not measure ${dir}: cannot serve it (${firstLine(error)})`],
+        summary,
+        reports,
+      };
+    }
     if (content.length === 0) violations.push(`could not measure ${dir}: no content pages`);
     for (const page of content) {
       const lhrs = [];
@@ -131,7 +142,7 @@ export async function run(dir, { runs = RUNS, executablePath } = {}) {
       if (verdict.median) reports.push({ rel: page.rel, lhr: verdict.median });
     }
   } finally {
-    await server.close();
+    await server?.close();
     await browser.close();
   }
   return { ok: violations.length === 0, violations, summary, reports };
