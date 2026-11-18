@@ -1,7 +1,7 @@
 ---
 id: US-13 (#41)
 titulo: Crear el repo de un cliente desde la plantilla con un comando, sobre un CLI con Clean Architecture
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/41
 analisis: no requerido (historia M sin reglas de negocio nuevas; el lead la analizó inline: §6 y §7)
 depende_de: [US-11 (#39)]
