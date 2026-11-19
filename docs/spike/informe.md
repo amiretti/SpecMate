@@ -4,6 +4,10 @@ Una sección por incógnita de `docs/mvp.md`, con las horas medidas y los cambio
 piden a las ADR. Ningún dato de un cliente real: los clientes se nombran de forma
 genérica.
 
+**Cierre (US-10, 2026-11-19):** las cuatro incógnitas tienen veredicto (la 2, descartada).
+Los cambios que pidió el spike están en ADR-0035 (incógnita 4) y ADR-0040 (el resto,
+incluidos los topes de tokens de ADR-0033); las épicas E2 a E5 los listan.
+
 ## Incógnita 1 · ¿Sale un sitio publicable con el flujo hecho a mano, y en cuántas horas?
 
 Historia: US-06 (#29) · cliente: un servicio online de invitaciones de cumpleaños en video,

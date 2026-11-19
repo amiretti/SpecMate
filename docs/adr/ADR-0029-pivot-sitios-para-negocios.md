@@ -1,6 +1,6 @@
 # ADR-0029 — Pivot: de la carpeta del cliente a la web publicada
 
-- **Estado:** Aceptada (2026-11-11, Andy: "dale, vamos por ahí")
+- **Estado:** Aceptada (2026-11-11, Andy: "dale, vamos por ahí") · el punto 4 (pre-llenado desde Places) lo reemplaza [ADR-0040](ADR-0040-ajustes-tras-el-spike.md): Places fuera del MVP
 - **Fecha:** 2026-11-11
 - **Reemplaza:** el alcance de producto de `docs/architecture/v2.md` y de ADR-019 a ADR-026 (agente principal con equipos, router de suscripciones, canal móvil, daemon y extensión de VS Code). Reemplaza en parte a ADR-0028 (ver Consecuencias).
 - **Afecta a:** constitución (stack, barandas y principios VII a IX), `docs/mvp.md`, épicas, README, estructura de `packages/`
