@@ -4,6 +4,69 @@ Una sección por incógnita de `docs/mvp.md`, con las horas medidas y los cambio
 piden a las ADR. Ningún dato de un cliente real: los clientes se nombran de forma
 genérica.
 
+## Incógnita 1 · ¿Sale un sitio publicable con el flujo hecho a mano, y en cuántas horas?
+
+Historia: US-06 (#29) · cliente: un servicio online de invitaciones de cumpleaños en video,
+emprendimiento del propio developer (con su consentimiento) · sitio: repo propio del
+cliente creado con `specmate new`, fuera de este repo; la URL pública vive en la carpeta
+del cliente (AC-5).
+
+**Veredicto: sí, en ~1 h 20 min de trabajo con agente.** One page publicada en Cloudflare
+Workers (`workers.dev`, sin dominio propio), con los 7 controles de ADR-0030 en verde y
+Lighthouse 100 · 100 · 100 · 100. El developer la aceptó después de un rediseño: la
+primera versión pasaba todo pero "parece de los 90".
+
+### Horas por etapa (2026-11-19)
+
+| Etapa | Tiempo | Qué llevó |
+|---|---|---|
+| Ingesta | ~15 min | Leer la carpeta y pedir dos archivos que las notas nombraban y no estaban |
+| Brief | ~5 min | Sin brief formal: una pregunta por email, horario y dominio |
+| Diseño y construcción | ~15 min | Datos, secciones propias, tokens, fuentes, logo claro/oscuro, imagen OG |
+| Verificación | ~5 min | 7 controles; dos fallos (h1 con imagen) corregidos en el momento |
+| Publicación | ~20 min | Casi todo en el login de wrangler y en publicar dos veces |
+| Rediseño | ~20 min | CSS nuevo completo tras el feedback del developer |
+
+Tiempo del developer: el que llevó contestar 6 preguntas, iniciar sesión en Cloudflare y
+revisar el resultado.
+
+### Fricciones, ordenadas por tiempo perdido
+
+1. **El estilo base de la plantilla no vende** (~20 min, rediseño entero). Pasa todos los
+   controles pero no causa efecto: header no fijo, links subrayados, footer pobre, sin
+   movimiento. Issue #61 (E4).
+2. **Publicación** (~15 min). Wrangler no está en el lockfile del sitio (npx, y la
+   primera descarga cortó por la red); el login OAuth venció a los 120 s; la URL real se
+   conoce recién después del primer deploy, así que hay que publicar dos veces;
+   `wrangler.jsonc` heredó el nombre de Worker de la plantilla.
+3. **Tokens de marca** (~10 min). El cliente trajo su `tokens.json` con otro formato
+   (temas propios, nombres propios, dos familias, `px`, sin color de foco). Hubo que
+   traducirlo a mano y abrir el esquema de la plantilla: segunda familia tipográfica,
+   seis colores más y un tamaño `hero`.
+4. **El esquema de datos no cubre una one page de servicio** (~10 min). No hay lugar
+   para "cómo funciona", "qué incluye" ni texto libre: fueron a un módulo aparte, fuera
+   de la validación. Y exige email, un horario y un dominio `https` que un negocio que
+   solo atiende por WhatsApp puede no tener.
+5. **La plantilla no contempla un logo** (~5 min). Con el logo como `h1` fallaron
+   `check:behavior` y `check:html`; en modo oscuro hace falta la versión negativa.
+6. **Menores.** La carpeta trajo un README de otro repo en lugar de notas; los términos
+   y la privacidad estaban en borrador con revisión legal pendiente (se dejaron fuera);
+   la CSP bloquea `data:` en CSS; el minificador convierte `animation` sin nombre en
+   `none`; `!` de Claude Code corre bash y rompe las rutas de Windows.
+
+### Cambios que pide
+
+- **E2 (#20), brief:** aceptar el `tokens.json` del cliente o traducirlo automáticamente;
+  email, horario y dominio opcionales, con WhatsApp como contacto suficiente; secciones de
+  contenido libre con fuente; carpeta de clientes configurable (#60).
+- **E4 (#22), biblioteca de secciones:** estilo base moderno (#61), logo en el header y
+  en el héroe con versión clara y oscura, y un héroe con movimiento solo en CSS.
+- **E5 (#23), publicación:** wrangler fijado en el lockfile, nombre del Worker desde el
+  slug del cliente, y conocer la URL antes del primer deploy (o un deploy en dos pasos
+  automático).
+- **Sin cambios a ADR-0030:** el rediseño entró sin JavaScript, sin dependencias nuevas
+  y sin tocar la CSP.
+
 ## Incógnita 4 · ¿Astro con CSP estricta pasa los controles de ADR-0030?
 
 Historia: US-09 (#32) · documento: `specs/001-plantilla-csp-estricta/feature.md` ·
