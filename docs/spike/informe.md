@@ -67,6 +67,13 @@ revisar el resultado.
 - **Sin cambios a ADR-0030:** el rediseño entró sin JavaScript, sin dependencias nuevas
   y sin tocar la CSP.
 
+## Incógnita 2 · ¿La API de Places sirve para pre-llenar, dentro de sus términos y a costo razonable?
+
+Historia: US-07 (#30). **Sin medir: descartada por el developer el 2026-11-19, fuera del
+MVP.** El brief se llena con la carpeta del cliente y su confirmación; la dirección y, si
+se quiere, las coordenadas o el link de Maps se cargan a mano. Ver "Decisiones del
+developer" más abajo.
+
 ## Incógnita 3 · ¿Tres opciones completas y combinables son vendibles?
 
 Historia: US-08 (#31) · mismo cliente que la incógnita 1 · todo en el repo del cliente,
@@ -185,6 +192,14 @@ servidos tal como están en `_headers` (verificados con `curl -sI` en esta URL).
   - ADR-0029 punto 4 y principio XI: sin cambio de fondo (Maps ya era solo pre-llenado),
     pero aclarar que su ausencia es un caso normal.
   - US-07 (Places) mide algo opcional: su veredicto pasa a ser "¿vale la pena cuando existe?".
+- **2026-11-19 · Places fuera del MVP.** El developer descarta la integración con la API
+  de Places: "va solo dirección y puede que vaya coordenadas de maps, o link, pero no la
+  integración. Fuera del MVP". US-07 (#30) se cierra sin medir. Pide a US-10:
+  - ADR-0029 punto 4 y ADR-0031: sacar el pre-llenado desde Places del MVP; el brief se
+    llena con la carpeta y la confirmación del cliente (la rama "si la respuesta es no"
+    de la incógnita 2 en `docs/mvp.md`).
+  - Esquema del brief (E2): dirección opcional, más coordenadas o link de Maps
+    opcionales cargados a mano, con fuente y confirmación como cualquier dato (XI).
 
 ### Horas
 
