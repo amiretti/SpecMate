@@ -1,6 +1,6 @@
 # ADR-0033 — Todo loop es acotado: meta verificable, tope, detección de estancamiento y salida al humano
 
-- **Estado:** Aceptada (2026-11-12, Andy: "si crees que necesitas alguno, llevalo a main directamente")
+- **Estado:** Aceptada (2026-11-12, Andy: "si crees que necesitas alguno, llevalo a main directamente") · los topes por sitio y por pedido del punto 4 los fija [ADR-0040](ADR-0040-ajustes-tras-el-spike.md)
 - **Fecha:** 2026-11-12 (rescata la propuesta local del 2026-11-02, adaptada al producto de ADR-0029)
 - **Reemplaza:** —
 - **Afecta a:** rol `lead`, skill `tasking`, `specmate verify` y la generación de opciones (ADR-0032), épicas E3 y E5
