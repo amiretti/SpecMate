@@ -1,6 +1,6 @@
 # Plan de implementación: US-14, el sitio se construye desde `relevamiento.json`
 
-**Rama**: `066-esquema-del-brief` | **Fecha**: 2026-11-20 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-20) | **Plan**: borrador
+**Rama**: `066-esquema-del-brief` | **Fecha**: 2026-11-20 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-20) | **Plan**: aprobado (2026-11-20, Andy: "si")
 **Artefactos**: este plan. Sin `research.md` ni `contracts/`: el contrato es el esquema, que vive en el código y en sus tests.
 
 ## Resumen
