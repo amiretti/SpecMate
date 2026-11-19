@@ -14,8 +14,8 @@ const EXAMPLES = ['address', 'area', 'online'];
 const base = () => readExample('address');
 const parse = (input) => parseRelevamiento(input, { root });
 const CONFIRMED = 'fixture: cliente inventado, por WhatsApp, 2026-01-01';
-const LOGO_LIGHT = 'src/assets/examples/logo-claro.svg';
-const LOGO_DARK = 'src/assets/examples/logo-oscuro.svg';
+const LOGO_LIGHT = 'src/assets/brand/logo-claro.svg';
+const LOGO_DARK = 'src/assets/brand/logo-oscuro.svg';
 
 function throwsNaming(mutate, name) {
   const input = base();
@@ -260,6 +260,12 @@ describe('field formats fail naming them', () => {
       (d) => d.brief.allowedOrigins.push({ origin: 'https://cdn.example/x', reason: 'x' }),
       'brief.allowedOrigins[0].origin',
     ],
+    // Security review of US-14: a wildcard is not an origin; it would read as an allow-list of a whole domain.
+    ...['https://*.x.com', 'https://*', 'https://cdn.*.example'].map((origin) => [
+      `a wildcard allowed origin ${origin}`,
+      (d) => d.brief.allowedOrigins.push({ origin, reason: 'x' }),
+      'brief.allowedOrigins[0].origin',
+    ]),
   ];
   for (const [label, mutate, name] of cases) {
     it(`${label} -> error naming ${name}`, () => throwsNaming(mutate, name));
@@ -396,7 +402,11 @@ describe('free content sections (FR-007)', () => {
   });
   const bad = [
     ['an id that is not lowercase and hyphens', { id: 'Cómo Funciona', title: 't', body: 'b' }, 'brief.sections[0].id'],
-    ['an id taken by the page', { id: 'contacto', title: 't', body: 'b' }, 'brief.sections[0].id'],
+    // Security review of US-14: every id the page renders, as a section anchor or as a heading id.
+    ...['contenido', 'titulo', 'nosotros', 'horarios', 'ubicacion', 'contacto', 'preguntas'].flatMap((id) => [
+      [`the page anchor "${id}"`, { id, title: 't', body: 'b' }, 'brief.sections[0].id'],
+      [`the heading id "titulo-${id}"`, { id: `titulo-${id}`, title: 't', body: 'b' }, 'brief.sections[0].id'],
+    ]),
     ['both body and items', { id: 'a', title: 't', body: 'b', items: ['x'] }, 'brief.sections[0]'],
     ['neither body nor items', { id: 'a', title: 't' }, 'brief.sections[0]'],
     ['an empty list', { id: 'a', title: 't', items: [] }, 'brief.sections[0].items'],
@@ -406,6 +416,14 @@ describe('free content sections (FR-007)', () => {
   for (const [label, raw, name] of bad) {
     it(`${label} -> ${name}`, () => throwsNaming((d) => Object.assign(d.brief, { sections: [section(raw)] }), name));
   }
+  it("an id equal to another section's heading id fails", () =>
+    throwsNaming(
+      (d) =>
+        Object.assign(d.brief, {
+          sections: [section({ id: 'a', title: 't', body: 'b' }), section({ id: 'titulo-a', title: 'u', body: 'c' })],
+        }),
+      'brief.sections[1].id',
+    ));
   it('a repeated id fails naming the second one', () =>
     throwsNaming(
       (d) =>
@@ -428,10 +446,12 @@ describe('logo (FR-008, AC-8)', () => {
     ['a path that leaves the repo midway', { light: 'src/assets/../../../x.svg' }, 'brief.logo.light'],
     ['an absolute path', { light: path.join(root, LOGO_LIGHT) }, 'brief.logo.light'],
     ['a root-relative path', { light: `/${LOGO_LIGHT}` }, 'brief.logo.light'],
-    ['a file that does not exist', { light: 'src/assets/examples/no-existe.svg' }, 'brief.logo.light'],
-    ['a dark file that does not exist', { dark: 'src/assets/examples/no-existe.svg' }, 'brief.logo.dark'],
+    ['a file that does not exist', { light: 'src/assets/brand/no-existe.svg' }, 'brief.logo.light'],
+    ['a dark file that does not exist', { dark: 'src/assets/brand/no-existe.svg' }, 'brief.logo.dark'],
     ['a file outside src/assets', { light: 'package.json' }, 'brief.logo.light'],
-    ['a directory', { light: 'src/assets/examples' }, 'brief.logo.light'],
+    ['an image of src/assets outside brand/', { light: 'src/assets/vidriera.jpg' }, 'brief.logo.light'],
+    ['an image in a subfolder of brand/', { light: 'src/assets/brand/sub/logo.svg' }, 'brief.logo.light'],
+    ['a directory', { light: 'src/assets/brand' }, 'brief.logo.light'],
     ['no alt', { alt: '' }, 'brief.logo.alt'],
   ];
   for (const [label, extra, name] of bad) {

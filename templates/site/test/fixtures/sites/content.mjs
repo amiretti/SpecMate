@@ -11,8 +11,8 @@ export const CONTENT = {
     { id: 'que-incluye', title: 'Qué incluye', items: ['Pan <script>alert(1)</script>', 'Facturas & budines'] },
   ],
   logo: {
-    light: 'src/assets/examples/logo-claro.svg',
-    dark: 'src/assets/examples/logo-oscuro.svg',
+    light: 'src/assets/brand/logo-claro.svg',
+    dark: 'src/assets/brand/logo-oscuro.svg',
     alt: 'Logo inventado de la panadería',
   },
   unconfirmed: {

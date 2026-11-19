@@ -86,10 +86,12 @@ const field = (record: Rec, key: string): unknown => record[key];
 const isRecord = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 const SOURCED = ['source', 'confirmedBy'] as const;
-// Anchors and heading ids the page already uses: a free section must not take them.
+// Anchors the page already uses; their headings take `titulo-<anchor>`, and so does each free section's heading, so a
+// section id must be none of these and must not start with "titulo" (security review of US-14).
 const RESERVED_IDS = new Set(['contenido', 'titulo', 'nosotros', 'horarios', 'ubicacion', 'contacto', 'preguntas']);
 const SECTION_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const LOGO_DIR = 'src/assets/';
+// Logos live only directly in this folder: the files published are exactly the validated ones (src/lib/logo.ts).
+const LOGO_DIR = 'src/assets/brand/';
 const LOGO_FILE = /\.(svg|png|jpe?g|webp|avif)$/i;
 
 function fail(at: string, problem: string): never {
@@ -189,6 +191,10 @@ function parseAllowedOrigin(raw: unknown, i: number): AllowedOrigin {
   const value = field(item, 'origin');
   const url = new URL(httpsUrl(value, `${at}.origin`));
   if (value !== url.origin) fail(`${at}.origin`, `must be an origin like https://host, got ${JSON.stringify(value)}`);
+  // A wildcard host parses as a URL but is not an origin: it must not read as an allow-list of a whole domain.
+  if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/.test(url.hostname)) {
+    fail(`${at}.origin`, `must name one exact host, without wildcards, got ${JSON.stringify(value)}`);
+  }
   return { origin: url.origin, reason: text(item, 'reason', `${at}.reason`) };
 }
 
@@ -312,7 +318,8 @@ function parseSections(brief: Rec): Section[] {
     const ok = confirmed(item, at);
     const id = text(item, 'id', `${at}.id`);
     if (!SECTION_ID.test(id)) fail(`${at}.id`, 'must be lowercase letters, digits and hyphens (it is the anchor)');
-    if (RESERVED_IDS.has(id) || seen.has(id)) fail(`${at}.id`, `"${id}" is already used on the page`);
+    if (RESERVED_IDS.has(id) || id === 'titulo' || id.startsWith('titulo-') || seen.has(id))
+      fail(`${at}.id`, `"${id}" is already used on the page`);
     seen.add(id);
     const title = text(item, 'title', `${at}.title`);
     const hasBody = field(item, 'body') !== undefined;
@@ -339,8 +346,8 @@ function logoPath(item: Rec, key: string, at: string, root: string): string {
   if (value.split('/').some((part) => part === '..' || part === '.' || part === '')) {
     fail(at, 'must not leave the repo (no "..", "." or empty segments)');
   }
-  if (!value.startsWith(LOGO_DIR) || !LOGO_FILE.test(value)) {
-    fail(at, `must be an image (svg, png, jpg, webp or avif) under ${LOGO_DIR}`);
+  if (!value.startsWith(LOGO_DIR) || value.slice(LOGO_DIR.length).includes('/') || !LOGO_FILE.test(value)) {
+    fail(at, `must be an image (svg, png, jpg, webp or avif) directly in ${LOGO_DIR}`);
   }
   const file = path.resolve(root, ...value.split('/'));
   let real: string;

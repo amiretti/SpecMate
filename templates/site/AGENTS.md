@@ -22,7 +22,7 @@ monorepo.
   build. Obligatorios: `site.url` (https, solo el origen; vale la de Workers), `name`, `tagline`, `about` y **un
   canal de contacto confirmado** (`contact.phone`, `contact.whatsapp` o `contact.email`, canales separados: un
   WhatsApp no genera "Llamar"). Opcionales: horarios, dirección, zona, `geo`, `mapsUrl`, perfiles, FAQ, `sections`
-  (contenido libre: texto o lista) y `logo` (claro y oscuro, imágenes bajo `src/assets/`, nunca fuera del repo).
+  (contenido libre: texto o lista) y `logo` (claro y oscuro, imágenes directamente en `src/assets/brand/`, nunca fuera del repo; se publican solo los archivos de un logo confirmado, por `src/pages/brand/[file].ts`).
   `SITE_DATA` elige otro archivo (las variantes y los fixtures de los tests); los ejemplos son
   `src/data/examples/*.relevamiento.json`, inventados y marcados.
 - **Todo el contenido sale del brief confirmado** y se renderiza escapado. Nada de
