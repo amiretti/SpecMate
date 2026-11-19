@@ -2,8 +2,9 @@
 // - confirmed address -> LocalBusiness with address (and areaServed if also confirmed);
 // - service area and no address -> LocalBusiness with areaServed;
 // - neither -> Organization with url and contactPoint.
-// Never aggregateRating, review or geo (constitution XI). FAQPage only with confirmed questions (FR-009);
-// sameAs only with confirmed https profiles (FR-010).
+// Never aggregateRating or review (constitution XI); geo only with a confirmed address and confirmed coordinates
+// (US-14 FR-009). FAQPage only with confirmed questions; sameAs only with confirmed https profiles. Telephone is the
+// phone, or the WhatsApp number when it is the only one (US-14 plan decision 3); email only when confirmed.
 import { type Address, type Hours, pageUrl, type Site } from './site.ts';
 
 type Node = Record<string, unknown>;
@@ -27,8 +28,18 @@ function postalAddress({ street, locality, region, postalCode, country }: Addres
   };
 }
 
+/** telephone and email of the business, each only when confirmed. */
+function contactFields({ contact }: Site): Node {
+  const telephone = (contact.phone ?? contact.whatsapp)?.e164;
+  return {
+    ...(telephone === undefined ? {} : { telephone }),
+    ...(contact.email === undefined ? {} : { email: contact.email }),
+  };
+}
+
 function businessNode(site: Site, imageUrl: string): Node {
   const home = pageUrl(site, '/');
+  const hours = openingHours(site.hours);
   const common: Node = {
     '@id': `${home}#negocio`,
     name: site.name,
@@ -45,9 +56,8 @@ function businessNode(site: Site, imageUrl: string): Node {
       contactPoint: {
         '@type': 'ContactPoint',
         contactType: 'customer service',
-        telephone: site.phone.e164,
-        email: site.email,
-        hoursAvailable: openingHours(site.hours),
+        ...contactFields(site),
+        ...(hours.length > 0 ? { hoursAvailable: hours } : {}),
       },
     };
   }
@@ -55,10 +65,12 @@ function businessNode(site: Site, imageUrl: string): Node {
   return {
     '@type': 'LocalBusiness',
     ...common,
-    telephone: site.phone.e164,
-    email: site.email,
-    openingHoursSpecification: openingHours(site.hours),
+    ...contactFields(site),
+    ...(hours.length > 0 ? { openingHoursSpecification: hours } : {}),
     ...(site.address ? { address: postalAddress(site.address) } : {}),
+    ...(site.address && site.geo
+      ? { geo: { '@type': 'GeoCoordinates', latitude: site.geo.latitude, longitude: site.geo.longitude } }
+      : {}),
     ...(site.areaServed.length > 0 ? { areaServed: site.areaServed } : {}),
   };
 }

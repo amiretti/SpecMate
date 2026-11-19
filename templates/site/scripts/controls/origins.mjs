@@ -1,24 +1,24 @@
 // Control "Orígenes externos" (ADR-0030, US-12 FR-007, plan decision 4): the origins of every request each page
 // makes, at 360, 768 and 1280 px and in the light and dark color schemes, against the site's allowlist
-// (`allowedOrigins` in its data module, each origin with its reason). Threshold: "0 orígenes fuera de la lista".
+// (`brief.allowedOrigins` in its relevamiento.json, each origin with its reason, US-14 FR-010). Threshold: "0 orígenes fuera de la lista".
 // The page opens WITHOUT the CSP (bypassCSP, risk R2): the CSP would block a foreign request before it is seen.
 // Only this control does so; the others measure with the real `_headers`. A link (<a href>) is not a request.
-// Usage: node scripts/controls/origins.mjs <buildDir> [--data <module>]   (default: SITE_DATA or the address example)
+// Usage: node scripts/controls/origins.mjs <buildDir> [--data <relevamiento.json>]   (default: SITE_DATA or the
+// relevamiento.json at the repo root)
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseSite } from '../../src/lib/site.ts';
+import { fileURLToPath } from 'node:url';
+import { loadRelevamiento } from '../../src/lib/site.ts';
 import { decodeEntities, listFiles } from '../../test/lib/scan.mjs';
 import { serve } from '../../test/lib/serve.mjs';
-import { dataModule } from '../site-env.mjs';
+import { dataFile, root } from '../site-env.mjs';
 import { firstLine, openBrowser, WIDTHS } from './behavior.mjs';
 
 export const SCHEMES = ['light', 'dark'];
 
-/** The validated site of a data module: its canonical origin and its allow-listed origins. */
+/** The validated site of a relevamiento.json: its canonical origin and its allow-listed origins. */
 async function loadSite(data) {
-  const { default: input } = await import(pathToFileURL(path.resolve(data)).href);
-  const site = parseSite(input);
+  const site = loadRelevamiento(path.resolve(data), root);
   return { origin: new URL(site.url).origin, allowed: site.allowedOrigins.map((o) => o.origin) };
 }
 
@@ -131,18 +131,20 @@ export async function staticOrigins(dir, site) {
 }
 
 /** @returns {Promise<{ ok: boolean, violations: string[] }>} */
-export async function run(dir, { data = dataModule, executablePath } = {}) {
+export async function run(dir, { data = dataFile, executablePath } = {}) {
   let site;
   try {
     site = await loadSite(data);
   } catch (error) {
-    return { ok: false, violations: [`could not measure ${dir}: data module ${data}: ${firstLine(error)}`] };
+    return { ok: false, violations: [`could not measure ${dir}: relevamiento ${data}: ${firstLine(error)}`] };
   }
   const built = await builtOrigin(dir).catch(() => undefined);
   if (built !== site.origin)
     return {
       ok: false,
-      violations: [`data module ${data} (${site.origin}) does not match the build ${dir} (${built ?? 'no canonical'})`],
+      violations: [
+        `relevamiento ${data} (${site.origin}) does not match the build ${dir} (${built ?? 'no canonical'})`,
+      ],
     };
   const violations = [];
   try {

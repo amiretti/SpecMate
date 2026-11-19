@@ -1,9 +1,10 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import { dataModule, outDir } from './scripts/site-env.mjs';
+import { dataFile, outDir, root } from './scripts/site-env.mjs';
 
 // ADR-0030: static HTML, no client JS, nothing inline so the CSP needs no 'unsafe-inline'.
-// `@data` is the site's single data module (FR-004); see scripts/site-env.mjs for SITE_DATA and SITE_OUT.
+// The site is built from one relevamiento.json (US-14 FR-001): its path and the repo root reach src/data/site.ts as
+// build-time constants; see scripts/site-env.mjs for SITE_DATA and SITE_OUT.
 export default defineConfig({
   output: 'static',
   outDir,
@@ -11,8 +12,9 @@ export default defineConfig({
     inlineStylesheets: 'never',
   },
   vite: {
-    resolve: {
-      alias: [{ find: /^@data$/, replacement: dataModule }],
+    define: {
+      __SITE_DATA__: JSON.stringify(dataFile),
+      __SITE_ROOT__: JSON.stringify(root),
     },
     build: {
       assetsInlineLimit: 0,

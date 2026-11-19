@@ -3,9 +3,9 @@
 // A changed value replaces the old one everywhere; an absent one is missing in all three.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { hoursText, parseSite } from '../src/lib/site.ts';
+import { hoursText } from '../src/lib/site.ts';
 import { CHANGED, PREVIOUS } from './fixtures/sites/changed.mjs';
-import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
+import { FIXTURES, readPages, siteOf, VARIANTS } from './lib/build.mjs';
 import { digits, element, metas, normalize, schemaOf, tags, titles, visibleText } from './lib/html.mjs';
 
 const TARGETS = { ...VARIANTS, ...FIXTURES };
@@ -14,8 +14,7 @@ async function home(name) {
   const target = TARGETS[name];
   const index = (await readPages(target.out)).find((p) => p.rel === 'index.html');
   assert.ok(index, `${name}: no index.html`);
-  const data = (await import(`file:///${target.data.replaceAll('\\', '/')}`)).default;
-  return { html: index.html, site: parseSite(data), ...schemaOf(index.html) };
+  return { html: index.html, site: siteOf(target.data), ...schemaOf(index.html) };
 }
 
 const contact = (business) => business.contactPoint ?? business;
@@ -38,21 +37,27 @@ for (const name of Object.keys(TARGETS)) {
       assert.equal(business.url, canonical);
     });
 
-    it('phone (by digits) and email: visible text, links and JSON-LD', async () => {
+    it('phone (by digits), WhatsApp and email: visible text, links and JSON-LD, each only when confirmed', async () => {
       const { html, site, business } = await home(name);
+      const { phone, whatsapp, email } = site.contact;
       const text = visibleText(html);
       const tel = tags(html, 'a').find((a) => a.href?.startsWith('tel:'));
-      assert.equal(digits(tel?.href), digits(site.phone.e164));
-      assert.equal(digits(contact(business).telephone), digits(site.phone.e164));
-      assert.ok(text.includes(site.phone.display), `visible phone ${site.phone.display}`);
-      assert.ok(text.includes(site.email));
-      assert.equal(contact(business).email, site.email);
+      const wa = tags(html, 'a').find((a) => a.href?.startsWith('https://wa.me/'));
+      const mail = tags(html, 'a').find((a) => a.href?.startsWith('mailto:'));
+      assert.equal(tel && digits(tel.href), phone && digits(phone.e164));
+      assert.equal(wa && digits(new URL(wa.href).pathname), whatsapp && digits(whatsapp.e164));
+      assert.equal(mail?.href, email && `mailto:${email}`);
+      const number = phone ?? whatsapp;
+      assert.equal(digits(contact(business).telephone), digits(number?.e164 ?? ''));
+      for (const n of [phone, whatsapp]) if (n) assert.ok(text.includes(n.display), `visible number ${n.display}`);
+      if (email) assert.ok(text.includes(email));
+      assert.equal(contact(business).email, email);
     });
 
     it('hours: each visible line and its schema entry come from the same pair', async () => {
       const { html, site, business } = await home(name);
       const list = normalize((element(html, 'dl') ?? '').replace(/<[^>]*>/g, ' '));
-      const schemaHours = business.openingHoursSpecification ?? business.contactPoint.hoursAvailable;
+      const schemaHours = business.openingHoursSpecification ?? business.contactPoint?.hoursAvailable ?? [];
       const open = site.hours.filter((h) => h.opens);
       for (const h of site.hours) assert.ok(list.includes(`${h.label} ${hoursText(h)}`), `${h.label} ${hoursText(h)}`);
       assert.deepEqual(
