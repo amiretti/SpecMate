@@ -1,11 +1,11 @@
 ---
 id: US-14 (#66)
 titulo: Construir cada sitio desde un relevamiento.json validado, donde cada dato publicable dice de dónde salió y quién lo confirmó
-estado: borrador          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/66
 analisis: no requerido (el lead lo analizó inline con lo medido en el spike: §1, §6 y §7)
 depende_de: []
-revisa: developer (Andy); revisión `security` obligatoria antes del PR
+revisa: developer (Andy, spec aprobada 2026-11-20: "sí"); revisión `security` obligatoria antes del PR
 zona_critica: esquema del brief (project-guard §5)
 estimacion: ~200k tok · ~5-6 h de agente · nivel máximo por zona crítica · a revisar tras el plan
 ---
@@ -107,7 +107,7 @@ al sitio.
 
 ## §7 Riesgos y decisiones abiertas
 
-- **Constitución, principio XI:** dice "Google Maps pre-llena y cruza datos", y ADR-0040 sacó Places del MVP. Hace falta una enmienda (2.4.0) que lo alinee; la propone el lead y la ratifica Andy, junto con esta spec.
+- **Constitución, principio XI:** decía "Google Maps pre-llena y cruza datos", y ADR-0040 sacó Places del MVP. Enmienda 2.4.0 ratificada por Andy con esta spec (2026-11-20).
 - **Contradicciones entre fuentes** (reportadas, no arbitradas; resueltas por el developer el 2026-11-20):
 
 | Contradicción | Fuente A dice | Fuente B dice | Resolución |
