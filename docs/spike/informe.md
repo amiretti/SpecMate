@@ -67,6 +67,63 @@ revisar el resultado.
 - **Sin cambios a ADR-0030:** el rediseño entró sin JavaScript, sin dependencias nuevas
   y sin tocar la CSP.
 
+## Incógnita 3 · ¿Tres opciones completas y combinables son vendibles?
+
+Historia: US-08 (#31) · mismo cliente que la incógnita 1 · todo en el repo del cliente,
+fuera de este repo; las URLs de prueba viven en la carpeta del cliente (AC-5 de US-06).
+
+**Veredicto: sí.** Tres sitios completos, distintos en paleta, tipografía y composición,
+cada uno publicado en su URL de prueba con los 7 controles de ADR-0030 en verde y
+Lighthouse 100 · 100 · 100 · 100. El cliente pidió un mix y salió en **48 segundos, sin
+modelo**, recombinando una variante ya hecha.
+
+### Cómo se armó
+
+El sitio se partió en los ejes de ADR-0032: una opción es un archivo que nombra una
+paleta (`src/axes/palettes/<id>.json`), una tipografía (`src/axes/type/<id>.json`), un
+header, un footer y una lista ordenada de secciones, cada una una variante
+(`src/sections/<tipo>/<Variante>.astro`, encontrada por glob). El contenido es el mismo
+para las tres. Cada variante se estiliza solo con los tokens, así que al cambiar de
+opción hereda paleta y tipografía.
+
+| Opción | Concepto (sale del material del cliente) | Paleta y tipografía |
+|---|---|---|
+| A | El producto reproduciéndose en un celular | Crema y uva; el par del manual de marca |
+| B | Una noche de estreno de cine ("mini estreno" en sus notas) | Tinta y limón, oscura; display grotesca + cuerpo del manual |
+| C | La tarjetita de cumpleaños de papel (su frase de entrada) | Lavanda y mandarina; display redondeada + cuerpo del manual |
+
+### Mediciones (2026-11-19)
+
+| Paso | Quién | Tiempo | Tokens |
+|---|---|---|---|
+| Partir el sitio en ejes; A = el sitio de la incógnita 1 | Lead, inline | ~25 min | sin medir (contexto del lead) |
+| Opción B | Agente frontend (estándar) | 5,0 min | 119k |
+| Opción C, en paralelo con B | Agente frontend (estándar) | 5,2 min | 107k |
+| Verificación de las tres y publicación | Lead | ~5 min | — |
+| **Mix pedido por el cliente** | Archivo de opción de 12 líneas | **48 s** (build + 7 controles) | 0 |
+
+Hasta las tres opciones: ~35 min de reloj y ~226k tokens de agentes. Con una biblioteca
+de secciones ya hecha, el refactor desaparece y cada opción nueva cuesta solo componer.
+
+### Lo que eligió el cliente (AC-2)
+
+"Me quedo con la A, pero con el ¿Cómo funciona? de la C". Un mix de una sección: la
+variante de pasos de C con la paleta y la tipografía de A. Publicado como `v2`. El motivo
+no quedó registrado.
+
+### Cambios que pide
+
+- **ADR-0033, tope de tokens:** un dato para fijarlo. Una opción completa cuesta
+  ~110k tokens de un agente estándar cuando las secciones se escriben desde cero; con
+  biblioteca debería bajar mucho. Lo fija US-10 (#33).
+- **E3 (#21) y E4 (#22):** la estructura de ejes y variantes de este spike es un buen
+  punto de partida para la biblioteca: el mix funcionó sin tocar código porque cada
+  variante se estiliza solo con tokens. Hace falta un contrato de tokens común (en el
+  spike, `pop` y `on-pop` cambiaron de significado entre opciones y aun así combinaron
+  bien porque siempre se usan en pareja).
+- **E5 (#23):** las URLs de prueba de las opciones deberían salir con `noindex`; hoy
+  apuntan su canonical al sitio principal.
+
 ## Incógnita 4 · ¿Astro con CSP estricta pasa los controles de ADR-0030?
 
 Historia: US-09 (#32) · documento: `specs/001-plantilla-csp-estricta/feature.md` ·
