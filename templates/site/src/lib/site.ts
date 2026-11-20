@@ -92,7 +92,8 @@ const RESERVED_IDS = new Set(['contenido', 'titulo', 'nosotros', 'horarios', 'ub
 const SECTION_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Logos live only directly in this folder: the files published are exactly the validated ones (src/lib/logo.ts).
 const LOGO_DIR = 'src/assets/brand/';
-const LOGO_FILE = /\.(svg|png|jpe?g|webp|avif)$/i;
+// SVG is published as is; PNG, JPEG and WebP are converted to AVIF and WebP at build time (src/lib/logo.ts).
+const LOGO_FILE = /\.(svg|png|jpe?g|webp)$/i;
 
 function fail(at: string, problem: string): never {
   throw new Error(`relevamiento: "${at}" ${problem}`);
@@ -347,7 +348,7 @@ function logoPath(item: Rec, key: string, at: string, root: string): string {
     fail(at, 'must not leave the repo (no "..", "." or empty segments)');
   }
   if (!value.startsWith(LOGO_DIR) || value.slice(LOGO_DIR.length).includes('/') || !LOGO_FILE.test(value)) {
-    fail(at, `must be an image (svg, png, jpg, webp or avif) directly in ${LOGO_DIR}`);
+    fail(at, `must be an image (svg, png, jpg, jpeg or webp) directly in ${LOGO_DIR}`);
   }
   const file = path.resolve(root, ...value.split('/'));
   let real: string;

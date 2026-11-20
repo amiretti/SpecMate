@@ -449,6 +449,11 @@ describe('logo (FR-008, AC-8)', () => {
     ['a file that does not exist', { light: 'src/assets/brand/no-existe.svg' }, 'brief.logo.light'],
     ['a dark file that does not exist', { dark: 'src/assets/brand/no-existe.svg' }, 'brief.logo.dark'],
     ['a file outside src/assets', { light: 'package.json' }, 'brief.logo.light'],
+    ...['logo.gif', 'logo.bmp', 'logo.tiff', 'logo.heic', 'logo.avif'].map((file) => [
+      `an unsupported format (${file}), naming the accepted ones`,
+      { light: `src/assets/brand/${file}` },
+      'brief.logo.light',
+    ]),
     ['an image of src/assets outside brand/', { light: 'src/assets/vidriera.jpg' }, 'brief.logo.light'],
     ['an image in a subfolder of brand/', { light: 'src/assets/brand/sub/logo.svg' }, 'brief.logo.light'],
     ['a directory', { light: 'src/assets/brand' }, 'brief.logo.light'],
@@ -460,6 +465,21 @@ describe('logo (FR-008, AC-8)', () => {
       throwsNaming((d) => Object.assign(d.brief, { logo: { ...logo(extra), confirmedBy: undefined } }), name);
     });
   }
+});
+
+describe('logo formats (US-14, developer 2026-11-20)', () => {
+  it('an unsupported format fails naming the field and the accepted formats', () => {
+    const d = base();
+    d.brief.logo = { light: 'src/assets/brand/logo.gif', alt: 'Logo', source: 's', confirmedBy: CONFIRMED };
+    assert.throws(() => parse(d), /"brief\.logo\.light".*svg, png, jpg, jpeg or webp/);
+  });
+  it('accepts the invented PNG and JPEG logos', () => {
+    const d = base();
+    const light = 'src/assets/brand/logo-ejemplo-claro.png';
+    const dark = 'src/assets/brand/logo-ejemplo-oscuro.jpg';
+    d.brief.logo = { light, dark, alt: 'Logo', source: 's', confirmedBy: CONFIRMED };
+    assert.deepEqual(parse(d).logo, { light, dark, alt: 'Logo' });
+  });
 });
 
 describe('coordinates and Maps link (FR-009)', () => {

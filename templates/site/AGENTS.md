@@ -22,7 +22,11 @@ monorepo.
   build. Obligatorios: `site.url` (https, solo el origen; vale la de Workers), `name`, `tagline`, `about` y **un
   canal de contacto confirmado** (`contact.phone`, `contact.whatsapp` o `contact.email`, canales separados: un
   WhatsApp no genera "Llamar"). Opcionales: horarios, dirección, zona, `geo`, `mapsUrl`, perfiles, FAQ, `sections`
-  (contenido libre: texto o lista) y `logo` (claro y oscuro, imágenes directamente en `src/assets/brand/`, nunca fuera del repo; se publican solo los archivos de un logo confirmado, por `src/pages/brand/[file].ts`).
+  (contenido libre: texto o lista) y `logo` (claro y oscuro, SVG, PNG, JPEG o WebP directamente en `src/assets/brand/`, nunca fuera del repo).
+  El logo se lee de la ruta validada y se procesa con `sharp` directamente (`src/lib/logo.ts`), no con
+  `astro:assets`, para que solo el archivo confirmado llegue a `dist/` (`src/pages/brand/[file].ts`): el SVG tal
+  cual; un raster pasa a AVIF y WebP al doble del alto del header y el original no se publica. Otro formato rompe el
+  build.
   `SITE_DATA` elige otro archivo (las variantes y los fixtures de los tests); los ejemplos son
   `src/data/examples/*.relevamiento.json`, inventados y marcados.
 - **Todo el contenido sale del brief confirmado** y se renderiza escapado. Nada de
