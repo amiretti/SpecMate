@@ -1,17 +1,17 @@
 // Rules (FR-003, AC-2, ADR-0035 "Negocios sin dirección"): the schema.org type follows the confirmed data; no
-// address without a confirmed one; never aggregateRating, review or geo.
+// address without a confirmed one; never aggregateRating or review; geo only with a confirmed address and
+// confirmed coordinates (US-14 FR-009).
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import address from '../src/data/examples/address.ts';
-import area from '../src/data/examples/area.ts';
-import online from '../src/data/examples/online.ts';
 import { buildSchema } from '../src/lib/schema.ts';
-import { parseSite } from '../src/lib/site.ts';
-import { readPages, VARIANTS } from './lib/build.mjs';
+import { parseRelevamiento } from '../src/lib/site.ts';
+import { readExample, readPages, root, VARIANTS } from './lib/build.mjs';
 import { splitJsonLd } from './lib/jsonld.mjs';
 
 const IMAGE = 'https://example.test/_astro/og.jpg';
-const FORBIDDEN = ['aggregateRating', 'review', 'geo'];
+const FORBIDDEN = ['aggregateRating', 'review'];
+const [address, area, online] = ['address', 'area', 'online'].map(readExample);
+const parseSite = (data) => parseRelevamiento(data, { root });
 
 /** Every key used anywhere in a JSON value. */
 function keys(value, out = new Set()) {
@@ -33,7 +33,7 @@ const TABLE = {
     data: address,
     type: 'LocalBusiness',
     present: ['address', 'openingHoursSpecification', 'telephone', 'email', 'url'],
-    absent: ['areaServed'],
+    absent: ['areaServed', 'geo'],
   },
   area: {
     data: area,
@@ -77,8 +77,23 @@ describe('schema type per case', () => {
 
   it('an unconfirmed address yields no address (constitution XI)', () => {
     const data = structuredClone(address);
-    data.address.confirmed = false;
+    data.brief.address.source = 'fixture: borrador';
+    delete data.brief.address.confirmedBy;
     assert.equal('address' in business(buildSchema(parseSite(data), IMAGE)), false);
+  });
+
+  it('geo: only with a confirmed address and confirmed coordinates (US-14 FR-009)', () => {
+    const geo = { latitude: -34.6, longitude: -58.4, source: 'fixture', confirmedBy: 'fixture: inventado, 2026-01-01' };
+    const withGeo = (data) => ({ ...data, brief: { ...data.brief, geo } });
+    assert.deepEqual(business(buildSchema(parseSite(withGeo(address)), IMAGE)).geo, {
+      '@type': 'GeoCoordinates',
+      latitude: -34.6,
+      longitude: -58.4,
+    });
+    assert.equal('geo' in business(buildSchema(parseSite(withGeo(area)), IMAGE)), false, 'no address, no geo');
+    const unconfirmed = withGeo(address);
+    unconfirmed.brief.geo = { ...geo, confirmedBy: undefined };
+    assert.equal('geo' in business(buildSchema(parseSite(unconfirmed), IMAGE)), false, 'unconfirmed, no geo');
   });
 
   it('online: the contact point carries phone, email and hours', () => {
@@ -90,7 +105,8 @@ describe('schema type per case', () => {
   });
 
   it('mixed case: a confirmed address and service area emit both (spec §6 assumption)', () => {
-    const data = { ...structuredClone(address), areaServed: [{ name: 'Zona X', source: 'fixture', confirmed: true }] };
+    const data = structuredClone(address);
+    data.brief.areaServed = [{ name: 'Zona X', source: 'fixture', confirmedBy: 'fixture: inventado, 2026-01-01' }];
     const node = business(buildSchema(parseSite(data), IMAGE));
     assert.equal(node['@type'], 'LocalBusiness');
     assert.ok(node.address);

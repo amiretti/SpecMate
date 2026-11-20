@@ -1,5 +1,6 @@
-// FICTITIOUS fixture: the address example without its public URL -> the build must fail (FR-005, AC-5).
-import address from '../../../src/data/examples/address.ts';
+// FICTITIOUS fixture: the address example without its public URL -> the build must fail naming brief.site.url.
+import { readExample } from '../../lib/build.mjs';
 
-const { url: _dropped, ...settings } = address.site;
-export default { ...address, site: settings };
+const data = readExample('address');
+delete data.brief.site.url;
+export default data;

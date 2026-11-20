@@ -1,0 +1,60 @@
+{
+  "$comment": "FICTITIOUS example business for the template, invented: not a real client. Every name, phone and profile is made up. Variant \"online\": no address and no service area -> Organization with url and contactPoint (ADR-0035). Its AI crawler policy is \"block\" so the examples exercise both values of the setting; it has a phone and no WhatsApp.",
+  "$schemaVersion": 1,
+  "brief": {
+    "exampleNotice": "Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.",
+    "site": {
+      "url": "https://hoja-suelta.example",
+      "aiCrawlers": "block",
+      "source": "ejemplo: dominio inventado",
+      "confirmedBy": "ejemplo: operador inventado, por formulario, 2026-01-01"
+    },
+    "name": {
+      "text": "Encuadernación Hoja Suelta",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "tagline": {
+      "text": "Cuadernos cosidos a mano, con envío a todo el país.",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "about": {
+      "text": "Hacemos cuadernos y libretas cosidos a mano, por encargo. Vendemos solo en línea: elegís el modelo, lo armamos y lo despachamos por correo.",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "contact": {
+      "phone": {
+        "display": "+54 11 0000-2222",
+        "e164": "+541100002222",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      },
+      "email": {
+        "address": "pedidos@hoja-suelta.example",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      }
+    },
+    "hours": [
+      {
+        "label": "Lunes a viernes",
+        "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "10:00",
+        "closes": "17:00",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      }
+    ],
+    "profiles": [
+      {
+        "url": "https://social-uno.example/hojasuelta",
+        "source": "ejemplo: brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      }
+    ],
+    "image": { "alt": "Ilustración de cuadernos cosidos a mano apilados sobre una mesa" },
+    "allowedOrigins": []
+  }
+}

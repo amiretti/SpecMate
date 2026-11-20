@@ -3,8 +3,8 @@
 // are visible text, in a reading order that starts with who the business is and what it offers.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { addressText, hoursText, parseSite } from '../src/lib/site.ts';
-import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
+import { addressText, hoursText } from '../src/lib/site.ts';
+import { FIXTURES, readPages, siteOf, VARIANTS } from './lib/build.mjs';
 import { element, normalize, visibleText } from './lib/html.mjs';
 
 const TARGETS = { ...VARIANTS, ...FIXTURES };
@@ -46,18 +46,18 @@ for (const [name, target] of Object.entries(TARGETS)) {
     });
 
     it('the home page shows the business data as text, in reading order', async () => {
-      const data = (await import(`file:///${target.data.replaceAll('\\', '/')}`)).default;
-      const site = parseSite(data);
+      const site = siteOf(target.data);
       const html = (await readPages(target.out)).find((p) => p.rel === 'index.html').html;
       const main = normalize((element(html, 'main') ?? '').replace(/<[^>]*>/g, ' '));
       const sequence = [
         site.name,
         site.tagline,
         site.about,
+        ...site.sections.flatMap((s) => [s.title, ...('body' in s ? [s.body] : s.items)]),
         ...site.hours.flatMap((h) => [h.label, hoursText(h)]),
         ...(site.address ? [addressText(site.address)] : []),
-        site.phone.display,
-        site.email,
+        ...[site.contact.phone ?? site.contact.whatsapp].flatMap((n) => (n ? [n.display] : [])),
+        ...(site.contact.email ? [site.contact.email] : []),
       ];
       let from = 0;
       for (const piece of sequence) {
@@ -69,8 +69,7 @@ for (const [name, target] of Object.entries(TARGETS)) {
     });
 
     it('hours are a definition list; the address, when confirmed, is an <address>', async () => {
-      const data = (await import(`file:///${target.data.replaceAll('\\', '/')}`)).default;
-      const site = parseSite(data);
+      const site = siteOf(target.data);
       const html = (await readPages(target.out)).find((p) => p.rel === 'index.html').html;
       const list = element(html, 'dl') ?? '';
       assert.equal((list.match(/<dt\b/g) ?? []).length, site.hours.length);

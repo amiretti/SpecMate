@@ -29,7 +29,7 @@ const runControl = (control, target, extra = []) => {
 const results = [];
 for (const [variant, { out, data }] of Object.entries(VARIANTS)) {
   for (const control of SITE_CONTROLS) {
-    // check:origins reads the allow-list from the variant's data module (US-12 plan decision 4).
+    // check:origins reads the allow-list from the variant's relevamiento.json (US-14 FR-010).
     const r = { ...runControl(control, out, control === 'origins' ? ['--data', data] : []), variant };
     results.push(r);
     process.stdout.write(`\n[${variant}] check:${control} exit=${r.status} (${r.ms} ms)\n${r.output}\n`);

@@ -6,15 +6,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import address from '../src/data/examples/address.ts';
-import area from '../src/data/examples/area.ts';
-import online from '../src/data/examples/online.ts';
-import { readPages, VARIANTS } from './lib/build.mjs';
+import { readExample, readPages, VARIANTS } from './lib/build.mjs';
 import { normalize, schemaOf } from './lib/html.mjs';
 import { srcDir } from './lib/paths.mjs';
 import { listFiles } from './lib/scan.mjs';
 
-const DATA = { address, area, online };
+const DATA = Object.fromEntries(['address', 'area', 'online'].map((n) => [n, readExample(n).brief]));
+const { address, online } = DATA;
 const home = async (name) => (await readPages(VARIANTS[name].out)).find((p) => p.rel === 'index.html').html;
 const strip = (html) => normalize(html.replace(/<[^>]*>/g, ' '));
 
@@ -31,7 +29,7 @@ function shownFaq(html) {
 describe('FAQ (AC-9)', () => {
   it('address: 3 questions, 1 unconfirmed -> HTML and FAQPage show exactly the 2 confirmed, identical text', async () => {
     const html = await home('address');
-    const confirmed = address.faq.filter((f) => f.confirmed).map((f) => [f.question, f.answer]);
+    const confirmed = address.faq.filter((f) => f.confirmedBy).map((f) => [f.question, f.answer]);
     assert.equal(address.faq.length, 3);
     assert.equal(confirmed.length, 2);
     assert.deepEqual(shownFaq(html), confirmed);
@@ -40,7 +38,7 @@ describe('FAQ (AC-9)', () => {
       faq.mainEntity.map((q) => [q.name, q.acceptedAnswer.text]),
       confirmed,
     );
-    const unconfirmed = address.faq.find((f) => !f.confirmed);
+    const unconfirmed = address.faq.find((f) => !f.confirmedBy);
     assert.equal(html.includes(unconfirmed.question), false);
     assert.equal(html.includes(unconfirmed.answer), false);
   });
@@ -60,7 +58,7 @@ describe('FAQ (AC-9)', () => {
     });
   }
 
-  it('the template code holds no question or answer text outside the data modules', async () => {
+  it('the template code holds no question or answer text outside the example relevamientos', async () => {
     const texts = Object.values(DATA).flatMap((d) => (d.faq ?? []).flatMap((f) => [f.question, f.answer]));
     const hits = [];
     for (const file of await listFiles(srcDir)) {
@@ -78,10 +76,10 @@ describe('sameAs (AC-10)', () => {
   it('address: lists only the confirmed profiles, all https; the unconfirmed one is nowhere', async () => {
     const html = await home('address');
     const { business } = schemaOf(html);
-    const confirmed = address.profiles.filter((p) => p.confirmed).map((p) => p.url);
+    const confirmed = address.profiles.filter((p) => p.confirmedBy).map((p) => p.url);
     assert.deepEqual(business.sameAs, confirmed);
     assert.ok(business.sameAs.every((u) => new URL(u).protocol === 'https:'));
-    assert.equal(html.includes(address.profiles.find((p) => !p.confirmed).url), false);
+    assert.equal(html.includes(address.profiles.find((p) => !p.confirmedBy).url), false);
   });
 
   it('online: its one confirmed profile', async () => {

@@ -1,0 +1,120 @@
+{
+  "$comment": "FICTITIOUS example business for the template, invented: not a real client. Every name, phone, address, profile and question is made up. Variant \"address\": a business with a public street address -> LocalBusiness with address (ADR-0035). In a client site this file holds the client's confirmed brief.",
+  "$schemaVersion": 1,
+  "brief": {
+    "exampleNotice": "Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.",
+    "site": {
+      "url": "https://horno-azul.example",
+      "aiCrawlers": "allow",
+      "source": "ejemplo: dominio inventado",
+      "confirmedBy": "ejemplo: operador inventado, por formulario, 2026-01-01"
+    },
+    "name": {
+      "text": "Panadería El Horno Azul",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "tagline": {
+      "text": "Pan de masa madre horneado cada mañana en el barrio.",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "about": {
+      "text": "Somos una panadería de barrio que hornea en tandas chicas: pan de masa madre, facturas y budines. Usamos harinas de molinos cercanos y fermentaciones largas.",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "contact": {
+      "phone": {
+        "display": "+54 11 0000-0000",
+        "e164": "+541100000000",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      },
+      "whatsapp": {
+        "display": "+54 11 0000-0000",
+        "e164": "+541100000000",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      },
+      "email": {
+        "address": "hola@horno-azul.example",
+        "source": "ejemplo: formulario del brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      }
+    },
+    "hours": [
+      {
+        "label": "Lunes a viernes",
+        "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        "opens": "07:00",
+        "closes": "20:00",
+        "source": "ejemplo: cartel de la vidriera",
+        "confirmedBy": "ejemplo: cliente inventado, por WhatsApp, 2026-01-01"
+      },
+      {
+        "label": "Sábados",
+        "days": ["Saturday"],
+        "opens": "08:00",
+        "closes": "14:00",
+        "source": "ejemplo: cartel de la vidriera",
+        "confirmedBy": "ejemplo: cliente inventado, por WhatsApp, 2026-01-01"
+      },
+      {
+        "label": "Domingos",
+        "days": ["Sunday"],
+        "source": "ejemplo: cartel de la vidriera",
+        "confirmedBy": "ejemplo: cliente inventado, por WhatsApp, 2026-01-01"
+      }
+    ],
+    "address": {
+      "street": "Calle Ficticia 123",
+      "locality": "Ciudad de Ejemplo",
+      "region": "Provincia Inventada",
+      "postalCode": "X0000",
+      "country": "AR",
+      "source": "ejemplo: formulario del brief",
+      "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+    },
+    "profiles": [
+      {
+        "url": "https://social-uno.example/hornoazul",
+        "source": "ejemplo: brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      },
+      {
+        "url": "https://social-dos.example/@hornoazul",
+        "source": "ejemplo: brief",
+        "confirmedBy": "ejemplo: cliente inventado, por formulario, 2026-01-01"
+      },
+      {
+        "$comment": "Unconfirmed on purpose: it must not reach the site (FR-010).",
+        "url": "https://social-tres.example/horno-azul-viejo",
+        "source": "ejemplo: búsqueda web"
+      }
+    ],
+    "faq": [
+      {
+        "question": "¿Hacen pedidos para eventos?",
+        "answer": "Sí, con 48 horas de anticipación. Escribinos por WhatsApp con la cantidad y la fecha.",
+        "source": "ejemplo: respuesta del cliente en el brief",
+        "confirmedBy": "ejemplo: cliente inventado, por WhatsApp, 2026-01-01"
+      },
+      {
+        "question": "¿Tienen pan sin TACC?",
+        "answer": "No. Trabajamos con harina de trigo y no podemos garantizar un ambiente libre de gluten.",
+        "source": "ejemplo: respuesta del cliente en el brief",
+        "confirmedBy": "ejemplo: cliente inventado, por WhatsApp, 2026-01-01"
+      },
+      {
+        "$comment": "Unconfirmed on purpose: it must not reach the HTML nor the FAQPage (FR-009).",
+        "question": "¿Hacen envíos a domicilio?",
+        "answer": "Respuesta pendiente de confirmar por el cliente.",
+        "source": "ejemplo: borrador del brief"
+      }
+    ],
+    "image": { "alt": "Ilustración de panes recién horneados sobre un mostrador de madera" },
+    "allowedOrigins": []
+  },
+  "steps": {}
+}

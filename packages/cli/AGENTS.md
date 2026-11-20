@@ -5,7 +5,7 @@ publicación. Comandos previstos:
 
 | Comando | Qué hace | Épica |
 |---|---|---|
-| `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de lo que git versiona en `templates/site` (sin artefactos) y el cliente de ejemplo inventado (US-13) | E1 |
+| `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de lo que git versiona en `templates/site` (sin artefactos) y el `relevamiento.json` del cliente de ejemplo inventado, con dirección (US-13, US-14) | E1 |
 | `specmate new … --carpeta <ruta> --maps <url> [--ref <url>…]` | Inventaría el material del cliente | E2 |
 | `specmate brief` | Arma el brief verificable y lo valida contra su esquema | E2 |
 | `specmate verify` | Corre todos los controles de ADR-0030 y escribe el informe de verificación | E5 |
@@ -13,6 +13,10 @@ publicación. Comandos previstos:
 
 ## Invariantes
 
+- **El esquema del brief vive solo en la plantilla** (US-14, plan decisión 1): el validador de
+  `relevamiento.json` es `templates/site/src/lib/site.ts` (`parseRelevamiento`), sin dependencias. El CLI no
+  tiene un esquema propio ni usa Zod para el brief: cuando valide fuera del build (US-19), corre el validador del
+  repo del sitio, así cada cliente queda con el esquema de su versión.
 - **Lo determinista no llama a un modelo** (principio IX): inventario, validación del
   brief, build, verificación y publicación son código. Los agentes escriben el brief,
   las direcciones de arte y los componentes.

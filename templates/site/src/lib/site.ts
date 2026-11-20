@@ -1,34 +1,15 @@
-// The site's single data source (FR-004): HTML, JSON-LD and metadata all render from the `Site` that parseSite
-// returns. It throws naming the offending field, so bad data fails the build. Publishable data carries `source`
-// and `confirmed` (constitution XI): required data must be confirmed; unconfirmed optional data is dropped.
+// The validator of relevamiento.json (US-14, plan decision 1): the only definition of the brief schema. HTML,
+// JSON-LD and metadata all render from the `Site` it returns. It throws naming the offending field by its full path
+// (`brief.contact.email.confirmedBy`), so bad data fails the build. Every publishable datum carries `source` and
+// `confirmedBy` (constitution XI): a required one must be confirmed; an unconfirmed optional one is dropped. An
+// unknown key fails at every level (FR-011), so a typo never makes a datum vanish. No dependencies.
+import { readFileSync, realpathSync, statSync } from 'node:fs';
+import path from 'node:path';
 
+export const SCHEMA_VERSION = 1;
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 export type Day = (typeof DAYS)[number];
 export type AiCrawlerPolicy = 'allow' | 'block';
-
-export interface Sourced {
-  source: string;
-  confirmed: boolean;
-}
-
-export interface SiteInput {
-  $comment?: string;
-  site: { url: string; aiCrawlers?: AiCrawlerPolicy };
-  exampleNotice?: string;
-  name: string;
-  tagline: string;
-  about: string;
-  phone: { display: string; e164: string; whatsapp: boolean } & Sourced;
-  email: { address: string } & Sourced;
-  hours: Array<{ label: string; days: Day[]; opens?: string; closes?: string } & Sourced>;
-  address?: { street: string; locality: string; region?: string; postalCode?: string; country: string } & Sourced;
-  areaServed?: Array<{ name: string } & Sourced>;
-  profiles?: Array<{ url: string } & Sourced>;
-  faq?: Array<{ question: string; answer: string } & Sourced>;
-  image: { alt: string };
-  /** Third-party origins a page may request (ADR-0030), each with its reason; checked by `check:origins`. */
-  allowedOrigins?: AllowedOrigin[];
-}
 
 export interface AllowedOrigin {
   origin: string;
@@ -50,6 +31,27 @@ export interface Address {
   country: string;
 }
 
+export interface PhoneNumber {
+  display: string;
+  e164: string;
+}
+
+export interface Contact {
+  phone?: PhoneNumber;
+  whatsapp?: PhoneNumber;
+  email?: string;
+}
+
+export type Section = { id: string; title: string; body: string } | { id: string; title: string; items: string[] };
+
+export interface Logo {
+  /** Repo-relative path of the logo for light backgrounds. */
+  light: string;
+  /** Repo-relative path of the logo for dark backgrounds. */
+  dark?: string;
+  alt: string;
+}
+
 export interface Site {
   url: string;
   aiCrawlers: AiCrawlerPolicy;
@@ -57,15 +59,25 @@ export interface Site {
   name: string;
   tagline: string;
   about: string;
-  phone: { display: string; e164: string; whatsapp: boolean };
-  email: string;
+  /** At least one confirmed channel. */
+  contact: Contact;
   hours: Hours[];
   address?: Address;
   areaServed: string[];
+  geo?: { latitude: number; longitude: number };
+  mapsUrl?: string;
   profiles: string[];
   faq: Array<{ question: string; answer: string }>;
+  sections: Section[];
+  logo?: Logo;
   image: { alt: string };
+  /** Third-party origins a page may request (ADR-0030), each with its reason; checked by `check:origins`. */
   allowedOrigins: AllowedOrigin[];
+}
+
+export interface ParseOptions {
+  /** Root of the site repo: logo paths resolve against it and must stay inside it. */
+  root: string;
 }
 
 type Rec = Record<string, unknown>;
@@ -73,44 +85,69 @@ type Rec = Record<string, unknown>;
 const field = (record: Rec, key: string): unknown => record[key];
 const isRecord = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-function fail(path: string, problem: string): never {
-  throw new Error(`site data: "${path}" ${problem}`);
+const SOURCED = ['source', 'confirmedBy'] as const;
+// Anchors the page already uses; their headings take `titulo-<anchor>`, and so does each free section's heading, so a
+// section id must be none of these and must not start with "titulo" (security review of US-14).
+const RESERVED_IDS = new Set(['contenido', 'titulo', 'nosotros', 'horarios', 'ubicacion', 'contacto', 'preguntas']);
+const SECTION_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Logos live only directly in this folder: the files published are exactly the validated ones (src/lib/logo.ts).
+const LOGO_DIR = 'src/assets/brand/';
+// SVG is published as is; PNG, JPEG and WebP are converted to AVIF and WebP at build time (src/lib/logo.ts).
+const LOGO_FILE = /\.(svg|png|jpe?g|webp)$/i;
+
+function fail(at: string, problem: string): never {
+  throw new Error(`relevamiento: "${at}" ${problem}`);
 }
 
-function record(value: unknown, path: string): Rec {
-  if (!isRecord(value)) fail(path, 'must be an object');
+const join = (parent: string, key: string) => (parent ? `${parent}.${key}` : key);
+
+function record(value: unknown, at: string): Rec {
+  if (!isRecord(value)) fail(at, 'must be an object');
   return value;
 }
 
-function text(parent: Rec, key: string, path: string): string {
+/** A record whose keys are all in `allowed` (plus `$comment`); an unknown key fails naming it (FR-011). */
+function strict(value: unknown, at: string, allowed: readonly string[]): Rec {
+  const item = record(value, at);
+  for (const key of Object.keys(item)) {
+    if (key !== '$comment' && !allowed.includes(key)) fail(join(at, key), 'is not a known field (typo?)');
+  }
+  return item;
+}
+
+function text(parent: Rec, key: string, at: string): string {
   const value = parent[key];
-  if (typeof value !== 'string' || value.trim() === '') fail(path, 'must be a non-empty string');
+  if (typeof value !== 'string' || value.trim() === '') fail(at, 'must be a non-empty string');
   // A lone surrogate would later fail URL encoding without naming the field.
-  if (!value.isWellFormed()) fail(path, 'must be well-formed text (it holds a lone surrogate)');
+  if (!value.isWellFormed()) fail(at, 'must be well-formed text (it holds a lone surrogate)');
   return value.trim();
 }
 
-function optionalText(parent: Rec, key: string, path: string): string | undefined {
-  return parent[key] === undefined ? undefined : text(parent, key, path);
+function optionalText(parent: Rec, key: string, at: string): string | undefined {
+  return parent[key] === undefined ? undefined : text(parent, key, at);
 }
 
-function list(parent: Rec, key: string, path: string): unknown[] {
+function list(parent: Rec, key: string, at: string): unknown[] {
   const value = parent[key];
   if (value === undefined) return [];
-  if (!Array.isArray(value)) fail(path, 'must be an array');
+  if (!Array.isArray(value)) fail(at, 'must be an array');
   return value;
 }
 
-/** Checks `source` and `confirmed`; returns whether the item is confirmed. */
-function sourced(item: Rec, path: string): boolean {
-  text(item, 'source', `${path}.source`);
-  const confirmed = field(item, 'confirmed');
-  if (typeof confirmed !== 'boolean') fail(`${path}.confirmed`, 'must be true or false');
-  return confirmed;
+/** Checks `source` (always required) and `confirmedBy`; returns whether the datum is confirmed (FR-002). */
+function confirmed(item: Rec, at: string): boolean {
+  text(item, 'source', `${at}.source`);
+  const by = field(item, 'confirmedBy');
+  if (by === undefined) return false;
+  if (typeof by !== 'string') fail(`${at}.confirmedBy`, 'must be text: who confirmed it, how and when');
+  if (!by.isWellFormed()) fail(`${at}.confirmedBy`, 'must be well-formed text (it holds a lone surrogate)');
+  return by.trim() !== '';
 }
 
-function required(item: Rec, path: string): void {
-  if (!sourced(item, path)) fail(path, 'is required and must be confirmed by the client');
+function required(item: Rec, at: string): void {
+  if (!confirmed(item, at)) {
+    fail(`${at}.confirmedBy`, 'is required: the client must confirm this datum (who confirmed it, how and when)');
+  }
 }
 
 const digits = (value: string) => value.replace(/\D/g, '');
@@ -120,141 +157,337 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const EMAIL =
   /^[A-Za-z0-9._+-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
 
-function siteUrl(value: unknown): string {
-  if (typeof value !== 'string' || value.trim() === '') fail('site.url', 'is required (absolute https URL)');
+function siteUrl(value: unknown, at: string): string {
+  if (typeof value !== 'string' || value.trim() === '') fail(at, 'is required (absolute https URL)');
   let url: URL;
   try {
     url = new URL(value);
   } catch {
-    fail('site.url', `must be an absolute https URL, got ${JSON.stringify(value)}`);
+    fail(at, `must be an absolute https URL, got ${JSON.stringify(value)}`);
   }
-  if (url.protocol !== 'https:') fail('site.url', `must use https, got ${JSON.stringify(value)}`);
+  if (url.protocol !== 'https:') fail(at, `must use https, got ${JSON.stringify(value)}`);
   if (url.search || url.hash || url.username || url.password)
-    fail('site.url', 'must not carry a query, fragment or credentials');
+    fail(at, 'must not carry a query, fragment or credentials');
   // pageUrl resolves every page from the origin: a path here would be silently dropped.
-  if (url.pathname !== '/') fail('site.url', `must be the site origin, without a path (got ${url.pathname})`);
+  if (url.pathname !== '/') fail(at, `must be the site origin, without a path (got ${url.pathname})`);
   return url.href.replace(/\/+$/, '');
 }
 
-function httpsUrl(value: unknown, path: string): string {
+function httpsUrl(value: unknown, at: string): string {
   let url: URL | undefined;
   try {
     url = typeof value === 'string' ? new URL(value) : undefined;
   } catch {
     url = undefined;
   }
-  if (url?.protocol !== 'https:') fail(path, `must be an https URL, got ${JSON.stringify(value)}`);
-  if (url.username || url.password) fail(path, 'must not carry credentials');
+  if (url?.protocol !== 'https:') fail(at, `must be an https URL, got ${JSON.stringify(value)}`);
+  if (url.username || url.password) fail(at, 'must not carry credentials');
   return url.href;
 }
 
 /** An allow-listed origin: `https://host[:port]` exactly (no path, query or credentials) plus its reason. */
 function parseAllowedOrigin(raw: unknown, i: number): AllowedOrigin {
-  const path = `allowedOrigins[${i}]`;
-  const item = record(raw, path);
+  const at = `brief.allowedOrigins[${i}]`;
+  const item = strict(raw, at, ['origin', 'reason']);
   const value = field(item, 'origin');
-  const url = new URL(httpsUrl(value, `${path}.origin`));
-  if (value !== url.origin) fail(`${path}.origin`, `must be an origin like https://host, got ${JSON.stringify(value)}`);
-  return { origin: url.origin, reason: text(item, 'reason', `${path}.reason`) };
+  const url = new URL(httpsUrl(value, `${at}.origin`));
+  if (value !== url.origin) fail(`${at}.origin`, `must be an origin like https://host, got ${JSON.stringify(value)}`);
+  // A wildcard host parses as a URL but is not an origin: it must not read as an allow-list of a whole domain.
+  if (!/^[a-z0-9-]+(?:\.[a-z0-9-]+)*$/.test(url.hostname)) {
+    fail(`${at}.origin`, `must name one exact host, without wildcards, got ${JSON.stringify(value)}`);
+  }
+  return { origin: url.origin, reason: text(item, 'reason', `${at}.reason`) };
 }
 
-function parseHours(raw: unknown, i: number): Hours {
-  const path = `hours[${i}]`;
-  const item = record(raw, path);
-  required(item, path);
-  const label = text(item, 'label', `${path}.label`);
+/** A required text datum: `{ text, source, confirmedBy }`. */
+function requiredText(brief: Rec, key: string): string {
+  const at = `brief.${key}`;
+  const item = strict(field(brief, key), at, ['text', ...SOURCED]);
+  required(item, at);
+  return text(item, 'text', `${at}.text`);
+}
+
+/** A phone or WhatsApp number; its format is checked even when unconfirmed. */
+function parseNumber(raw: unknown, at: string): PhoneNumber | undefined {
+  const item = strict(raw, at, ['display', 'e164', ...SOURCED]);
+  const ok = confirmed(item, at);
+  const e164 = text(item, 'e164', `${at}.e164`);
+  if (!/^\+\d{8,15}$/.test(e164)) fail(`${at}.e164`, 'must be +<country><number>, 8 to 15 digits');
+  const display = text(item, 'display', `${at}.display`);
+  if (digits(display) !== digits(e164)) fail(`${at}.display`, `must have the same digits as ${at}.e164`);
+  return ok ? { display, e164 } : undefined;
+}
+
+/** Phone, WhatsApp and email are separate channels (FR-005); at least one must be confirmed (FR-004). */
+function parseContact(raw: unknown): Contact {
+  const at = 'brief.contact';
+  const item = strict(raw ?? {}, at, ['phone', 'whatsapp', 'email']);
+  const contact: Contact = {};
+  const unconfirmed: string[] = [];
+  for (const channel of ['phone', 'whatsapp'] as const) {
+    const value = field(item, channel);
+    if (value === undefined) continue;
+    const number = parseNumber(value, `${at}.${channel}`);
+    if (number) contact[channel] = number;
+    else unconfirmed.push(`"${at}.${channel}.confirmedBy"`);
+  }
+  const rawEmail = field(item, 'email');
+  if (rawEmail !== undefined) {
+    const email = strict(rawEmail, `${at}.email`, ['address', ...SOURCED]);
+    const ok = confirmed(email, `${at}.email`);
+    const address = text(email, 'address', `${at}.email.address`);
+    if (!EMAIL.test(address)) fail(`${at}.email.address`, 'must be an email address');
+    if (ok) contact.email = address;
+    else unconfirmed.push(`"${at}.email.confirmedBy"`);
+  }
+  if (Object.keys(contact).length === 0) {
+    const missing = unconfirmed.length > 0 ? `; unconfirmed: ${unconfirmed.join(', ')}` : '';
+    fail(at, `needs at least one confirmed contact channel (phone, whatsapp or email)${missing}`);
+  }
+  return contact;
+}
+
+function parseHours(raw: unknown, i: number): Hours | undefined {
+  const at = `brief.hours[${i}]`;
+  const item = strict(raw, at, ['label', 'days', 'opens', 'closes', ...SOURCED]);
+  const ok = confirmed(item, at);
+  const label = text(item, 'label', `${at}.label`);
   const days = field(item, 'days');
   if (!Array.isArray(days) || days.length === 0 || !days.every((d) => (DAYS as readonly unknown[]).includes(d))) {
-    fail(`${path}.days`, `must list days among ${DAYS.join(', ')}`);
+    fail(`${at}.days`, `must list days among ${DAYS.join(', ')}`);
   }
-  const hours: Hours = { label, days: days as Day[] };
+  let hours: Hours = { label, days: days as Day[] };
   const { opens, closes } = item;
-  if (opens === undefined && closes === undefined) return hours;
-  if (opens === undefined || closes === undefined) fail(path, 'needs both opens and closes, or neither (closed)');
-  if (typeof opens !== 'string' || !TIME.test(opens)) fail(`${path}.opens`, 'must be HH:MM');
-  if (typeof closes !== 'string' || !TIME.test(closes)) fail(`${path}.closes`, 'must be HH:MM');
-  return { ...hours, opens, closes };
+  if (opens !== undefined || closes !== undefined) {
+    if (opens === undefined || closes === undefined) fail(at, 'needs both opens and closes, or neither (closed)');
+    if (typeof opens !== 'string' || !TIME.test(opens)) fail(`${at}.opens`, 'must be HH:MM');
+    if (typeof closes !== 'string' || !TIME.test(closes)) fail(`${at}.closes`, 'must be HH:MM');
+    hours = { ...hours, opens, closes };
+  }
+  return ok ? hours : undefined;
 }
 
 function parseAddress(raw: unknown): Address | undefined {
   if (raw === undefined) return undefined;
-  const item = record(raw, 'address');
-  const confirmed = sourced(item, 'address');
+  const at = 'brief.address';
+  const item = strict(raw, at, ['street', 'locality', 'region', 'postalCode', 'country', ...SOURCED]);
+  const ok = confirmed(item, at);
   const address: Address = {
-    street: text(item, 'street', 'address.street'),
-    locality: text(item, 'locality', 'address.locality'),
-    country: text(item, 'country', 'address.country'),
+    street: text(item, 'street', `${at}.street`),
+    locality: text(item, 'locality', `${at}.locality`),
+    country: text(item, 'country', `${at}.country`),
   };
-  const region = optionalText(item, 'region', 'address.region');
-  const postalCode = optionalText(item, 'postalCode', 'address.postalCode');
+  const region = optionalText(item, 'region', `${at}.region`);
+  const postalCode = optionalText(item, 'postalCode', `${at}.postalCode`);
   if (region !== undefined) address.region = region;
   if (postalCode !== undefined) address.postalCode = postalCode;
-  return confirmed ? address : undefined;
+  return ok ? address : undefined;
 }
 
-export function parseSite(input: unknown): Site {
-  if (!isRecord(input)) throw new Error('site data: must be an object');
-  const settings = record(field(input, 'site'), 'site');
+function coordinate(item: Rec, key: string, at: string, limit: number): number {
+  const value = field(item, key);
+  if (typeof value !== 'number' || !Number.isFinite(value) || Math.abs(value) > limit) {
+    fail(at, `must be a number between -${limit} and ${limit}`);
+  }
+  return value;
+}
+
+function parseGeo(raw: unknown): Site['geo'] {
+  if (raw === undefined) return undefined;
+  const at = 'brief.geo';
+  const item = strict(raw, at, ['latitude', 'longitude', ...SOURCED]);
+  const ok = confirmed(item, at);
+  const latitude = coordinate(item, 'latitude', `${at}.latitude`, 90);
+  const longitude = coordinate(item, 'longitude', `${at}.longitude`, 180);
+  return ok ? { latitude, longitude } : undefined;
+}
+
+function parseMapsUrl(raw: unknown): string | undefined {
+  if (raw === undefined) return undefined;
+  const at = 'brief.mapsUrl';
+  const item = strict(raw, at, ['url', ...SOURCED]);
+  const ok = confirmed(item, at);
+  const url = httpsUrl(field(item, 'url'), `${at}.url`);
+  return ok ? url : undefined;
+}
+
+function parseSections(brief: Rec): Section[] {
+  const seen = new Set<string>();
+  return list(brief, 'sections', 'brief.sections').flatMap((raw, i) => {
+    const at = `brief.sections[${i}]`;
+    const item = strict(raw, at, ['id', 'title', 'body', 'items', ...SOURCED]);
+    const ok = confirmed(item, at);
+    const id = text(item, 'id', `${at}.id`);
+    if (!SECTION_ID.test(id)) fail(`${at}.id`, 'must be lowercase letters, digits and hyphens (it is the anchor)');
+    if (RESERVED_IDS.has(id) || id === 'titulo' || id.startsWith('titulo-') || seen.has(id))
+      fail(`${at}.id`, `"${id}" is already used on the page`);
+    seen.add(id);
+    const title = text(item, 'title', `${at}.title`);
+    const hasBody = field(item, 'body') !== undefined;
+    const hasItems = field(item, 'items') !== undefined;
+    if (hasBody === hasItems) fail(at, 'needs either body (a text) or items (a list), not both');
+    let section: Section;
+    if (hasBody) section = { id, title, body: text(item, 'body', `${at}.body`) };
+    else {
+      const entries = list(item, 'items', `${at}.items`);
+      if (entries.length === 0) fail(`${at}.items`, 'must list at least one item');
+      const items = entries.map((_, j) => text(entries as unknown as Rec, String(j), `${at}.items[${j}]`));
+      section = { id, title, items };
+    }
+    return ok ? [section] : [];
+  });
+}
+
+/** A repo-relative logo file under src/assets/ (served through astro:assets); never outside the repo (FR-008). */
+function logoPath(item: Rec, key: string, at: string, root: string): string {
+  const value = text(item, key, at);
+  if (path.isAbsolute(value) || /^[\\/]/.test(value) || /^[A-Za-z]:/.test(value) || value.includes('\\')) {
+    fail(at, 'must be a path relative to the repo, with forward slashes');
+  }
+  if (value.split('/').some((part) => part === '..' || part === '.' || part === '')) {
+    fail(at, 'must not leave the repo (no "..", "." or empty segments)');
+  }
+  if (!value.startsWith(LOGO_DIR) || value.slice(LOGO_DIR.length).includes('/') || !LOGO_FILE.test(value)) {
+    fail(at, `must be an image (svg, png, jpg, jpeg or webp) directly in ${LOGO_DIR}`);
+  }
+  const file = path.resolve(root, ...value.split('/'));
+  let real: string;
+  try {
+    if (!statSync(file).isFile()) fail(at, `is not a file: ${value}`);
+    real = realpathSync(file);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('relevamiento:')) throw error;
+    fail(at, `does not exist in the repo: ${value}`);
+  }
+  const base = realpathSync(root);
+  // A symlink inside the repo must not point outside it.
+  if (path.relative(base, real).startsWith('..') || path.isAbsolute(path.relative(base, real))) {
+    fail(at, 'must not leave the repo (it resolves outside it)');
+  }
+  return value;
+}
+
+function parseLogo(raw: unknown, root: string): Logo | undefined {
+  if (raw === undefined) return undefined;
+  const at = 'brief.logo';
+  const item = strict(raw, at, ['light', 'dark', 'alt', ...SOURCED]);
+  const ok = confirmed(item, at);
+  const logo: Logo = { light: logoPath(item, 'light', `${at}.light`, root), alt: text(item, 'alt', `${at}.alt`) };
+  if (field(item, 'dark') !== undefined) logo.dark = logoPath(item, 'dark', `${at}.dark`, root);
+  return ok ? { light: logo.light, ...(logo.dark ? { dark: logo.dark } : {}), alt: logo.alt } : undefined;
+}
+
+const BRIEF_KEYS = [
+  'exampleNotice',
+  'site',
+  'name',
+  'tagline',
+  'about',
+  'contact',
+  'hours',
+  'address',
+  'areaServed',
+  'geo',
+  'mapsUrl',
+  'profiles',
+  'faq',
+  'sections',
+  'logo',
+  'image',
+  'allowedOrigins',
+] as const;
+
+/** Validates a parsed relevamiento.json and returns the Site every page renders from. */
+export function parseRelevamiento(input: unknown, { root }: ParseOptions): Site {
+  if (!isRecord(input)) throw new Error('relevamiento: the file must hold a JSON object');
+  const file = strict(input, '', ['$schemaVersion', 'brief', 'steps']);
+  if (field(file, '$schemaVersion') !== SCHEMA_VERSION) fail('$schemaVersion', `must be ${SCHEMA_VERSION}`);
+  // The state of the relevamiento steps (ADR-0031) is defined by US-15..US-19; the build ignores it.
+  if (field(file, 'steps') !== undefined) record(field(file, 'steps'), 'steps');
+  const brief = strict(field(file, 'brief'), 'brief', BRIEF_KEYS);
+
+  const settings = strict(field(brief, 'site'), 'brief.site', ['url', 'aiCrawlers', ...SOURCED]);
+  required(settings, 'brief.site');
   const policy = field(settings, 'aiCrawlers') ?? 'allow';
-  if (policy !== 'allow' && policy !== 'block') fail('site.aiCrawlers', 'must be "allow" or "block"');
+  if (policy !== 'allow' && policy !== 'block') fail('brief.site.aiCrawlers', 'must be "allow" or "block"');
 
-  const phone = record(field(input, 'phone'), 'phone');
-  required(phone, 'phone');
-  const e164 = text(phone, 'e164', 'phone.e164');
-  if (!/^\+\d{8,15}$/.test(e164)) fail('phone.e164', 'must be +<country><number>, 8 to 15 digits');
-  const display = text(phone, 'display', 'phone.display');
-  if (digits(display) !== digits(e164)) fail('phone.display', 'must have the same digits as phone.e164');
-  const whatsapp = field(phone, 'whatsapp');
-  if (typeof whatsapp !== 'boolean') fail('phone.whatsapp', 'must be true or false');
+  const name = requiredText(brief, 'name');
+  const tagline = requiredText(brief, 'tagline');
+  const about = requiredText(brief, 'about');
+  const contact = parseContact(field(brief, 'contact'));
 
-  const email = record(field(input, 'email'), 'email');
-  required(email, 'email');
-  const emailAddress = text(email, 'address', 'email.address');
-  if (!EMAIL.test(emailAddress)) fail('email.address', 'must be an email address');
+  const hours = list(brief, 'hours', 'brief.hours').flatMap((raw, i) => parseHours(raw, i) ?? []);
 
-  const hours = list(input, 'hours', 'hours').map(parseHours);
-  if (hours.length === 0) fail('hours', 'must list at least one entry');
-
-  const areaServed = list(input, 'areaServed', 'areaServed').flatMap((raw, i) => {
-    const item = record(raw, `areaServed[${i}]`);
-    const name = text(item, 'name', `areaServed[${i}].name`);
-    return sourced(item, `areaServed[${i}]`) ? [name] : [];
+  const areaServed = list(brief, 'areaServed', 'brief.areaServed').flatMap((raw, i) => {
+    const at = `brief.areaServed[${i}]`;
+    const item = strict(raw, at, ['name', ...SOURCED]);
+    const zone = text(item, 'name', `${at}.name`);
+    return confirmed(item, at) ? [zone] : [];
   });
 
-  // Every profile URL must be https, confirmed or not (FR-010): a bad URL fails instead of hiding.
-  const profiles = list(input, 'profiles', 'profiles').flatMap((raw, i) => {
-    const item = record(raw, `profiles[${i}]`);
-    const url = httpsUrl(field(item, 'url'), `profiles[${i}].url`);
-    return sourced(item, `profiles[${i}]`) ? [url] : [];
+  // Every profile URL must be https, confirmed or not: a bad URL fails instead of hiding.
+  const profiles = list(brief, 'profiles', 'brief.profiles').flatMap((raw, i) => {
+    const at = `brief.profiles[${i}]`;
+    const item = strict(raw, at, ['url', ...SOURCED]);
+    const url = httpsUrl(field(item, 'url'), `${at}.url`);
+    return confirmed(item, at) ? [url] : [];
   });
 
-  const faq = list(input, 'faq', 'faq').flatMap((raw, i) => {
-    const item = record(raw, `faq[${i}]`);
-    const question = text(item, 'question', `faq[${i}].question`);
-    const answer = text(item, 'answer', `faq[${i}].answer`);
-    return sourced(item, `faq[${i}]`) ? [{ question, answer }] : [];
+  const faq = list(brief, 'faq', 'brief.faq').flatMap((raw, i) => {
+    const at = `brief.faq[${i}]`;
+    const item = strict(raw, at, ['question', 'answer', ...SOURCED]);
+    const question = text(item, 'question', `${at}.question`);
+    const answer = text(item, 'answer', `${at}.answer`);
+    return confirmed(item, at) ? [{ question, answer }] : [];
   });
+
+  const image = strict(field(brief, 'image'), 'brief.image', ['alt']);
 
   const site: Site = {
-    url: siteUrl(field(settings, 'url')),
+    url: siteUrl(field(settings, 'url'), 'brief.site.url'),
     aiCrawlers: policy,
-    name: text(input, 'name', 'name'),
-    tagline: text(input, 'tagline', 'tagline'),
-    about: text(input, 'about', 'about'),
-    phone: { display, e164, whatsapp },
-    email: emailAddress,
+    name,
+    tagline,
+    about,
+    contact,
     hours,
     areaServed,
     profiles,
     faq,
-    image: { alt: text(record(field(input, 'image'), 'image'), 'alt', 'image.alt') },
-    allowedOrigins: list(input, 'allowedOrigins', 'allowedOrigins').map(parseAllowedOrigin),
+    sections: parseSections(brief),
+    image: { alt: text(image, 'alt', 'brief.image.alt') },
+    allowedOrigins: list(brief, 'allowedOrigins', 'brief.allowedOrigins').map(parseAllowedOrigin),
   };
-  const address = parseAddress(field(input, 'address'));
+  const address = parseAddress(field(brief, 'address'));
   if (address) site.address = address;
-  const notice = optionalText(input, 'exampleNotice', 'exampleNotice');
+  const geo = parseGeo(field(brief, 'geo'));
+  if (geo) site.geo = geo;
+  const maps = parseMapsUrl(field(brief, 'mapsUrl'));
+  if (maps) site.mapsUrl = maps;
+  const logo = parseLogo(field(brief, 'logo'), root);
+  if (logo) site.logo = logo;
+  const notice = optionalText(brief, 'exampleNotice', 'brief.exampleNotice');
   if (notice !== undefined) site.exampleNotice = notice;
   return site;
+}
+
+/** Reads and validates a relevamiento.json file; a missing or malformed file fails naming it (FR-001). */
+export function loadRelevamiento(file: string, root: string): Site {
+  let raw: string;
+  try {
+    raw = readFileSync(file, 'utf8');
+  } catch (error) {
+    throw new Error(`relevamiento: cannot read ${file}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch (error) {
+    throw new Error(
+      `relevamiento: ${file} is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  return parseRelevamiento(json, { root });
 }
 
 /** "07:00" -> "7:00". */
@@ -272,12 +505,27 @@ export function addressText(address: Address): string {
     .join(', ');
 }
 
-/** "Cómo llegar": a Google Maps search built only from the confirmed address (ADR-0035), never Places data. */
+/** A Google Maps search built only from the confirmed address (ADR-0035), never Places data. */
 export function mapsUrl(address: Address): string {
   const url = new URL('https://www.google.com/maps/search/');
   url.searchParams.set('api', '1');
   url.searchParams.set('query', addressText(address));
   return url.href;
+}
+
+/** "Cómo llegar" (FR-009): the confirmed Maps link if there is one, else the address search; only with an address. */
+export function directionsUrl(site: Pick<Site, 'address' | 'mapsUrl'>): string | undefined {
+  if (!site.address) return undefined;
+  return site.mapsUrl ?? mapsUrl(site.address);
+}
+
+/** The hours and location section: "Horarios" with hours, "Ubicación" with only a location, none without both. */
+export function locationSection(
+  site: Pick<Site, 'hours' | 'address' | 'areaServed'>,
+): { id: 'horarios' | 'ubicacion'; title: string } | undefined {
+  if (site.hours.length > 0) return { id: 'horarios', title: 'Horarios' };
+  if (site.address || site.areaServed.length > 0) return { id: 'ubicacion', title: 'Ubicación' };
+  return undefined;
 }
 
 /** Absolute URL of a path of the site. */

@@ -5,16 +5,14 @@ import assert from 'node:assert/strict';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import address from '../src/data/examples/address.ts';
 import { buildHead } from '../src/lib/head.ts';
-import { parseSite } from '../src/lib/site.ts';
-import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
+import { FIXTURES, readPages, siteOf, VARIANTS } from './lib/build.mjs';
 import { metas, tags, titles } from './lib/html.mjs';
 
 const MAX_BYTES = 250 * 1000;
 
 describe('buildHead', () => {
-  const site = parseSite(address);
+  const site = siteOf(VARIANTS.address.data);
   const head = buildHead(site, {
     path: '/',
     title: 'Título',

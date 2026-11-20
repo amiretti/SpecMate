@@ -1,20 +1,29 @@
 ---
-// The content page. Reading order (FR-008): who the business is and what it offers, then hours and location,
-// then contact. Every value comes from the validated site data (FR-004).
+// The content page. Reading order (FR-008): who the business is and what it offers (with the free sections of the
+// brief, US-14 FR-007), then hours and location, then contact. Every value comes from the validated relevamiento
+// and Astro escapes it (FR-012); a section without confirmed data is not rendered (FR-006).
 import { Picture } from 'astro:assets';
 import vidriera from '../assets/vidriera.jpg';
 import { ogImage } from '../data/og-image.ts';
 import { site } from '../data/site.ts';
 import Base from '../layouts/Base.astro';
 import { buildSchema } from '../lib/schema.ts';
-import { addressText, hoursText, mapsUrl, pageUrl } from '../lib/site.ts';
+import { addressText, directionsUrl, hoursText, locationSection, pageUrl } from '../lib/site.ts';
 
 const schema = buildSchema(site, pageUrl(site, ogImage.src));
+const location = locationSection(site);
+const directions = directionsUrl(site);
+const { phone, whatsapp, email } = site.contact;
 
 // Phone link text must not wrap mid-number: non-breaking spaces (U+00A0) and hyphens (U+2011).
 const noBreak = (text: string) => text.replaceAll(' ', ' ').replaceAll('-', '‑');
 const whatsappText = encodeURIComponent(`Hola, quiero hacer un pedido a ${site.name}.`);
-const whatsappNumber = site.phone.e164.replace(/\D/g, '');
+// Phone and WhatsApp are separate channels (US-14 FR-005): the WhatsApp button shows its number only when there
+// is no phone number to read it from.
+const whatsappLabel =
+  whatsapp && (!phone || phone.e164 !== whatsapp.e164)
+    ? noBreak(`Escribir por WhatsApp al ${whatsapp.display}`)
+    : 'Escribir por WhatsApp';
 ---
 
 <Base title={site.name} description={site.tagline} path="/" jsonLd={schema}>
@@ -45,62 +54,87 @@ const whatsappNumber = site.phone.e164.replace(/\D/g, '');
     </div>
   </section>
 
-  <section id="horarios" aria-labelledby="titulo-horarios">
-    <div class="container">
-      <h2 id="titulo-horarios">Horarios</h2>
-      <dl class="hours">
-        {
-          site.hours.map((h) => (
-            <div class="hours-row">
-              <dt>{h.label}</dt>
-              <dd>{hoursText(h)}</dd>
-            </div>
-          ))
-        }
-      </dl>
-      {
-        site.address && (
-          <>
-            <h3>Dirección</h3>
-            <address>{addressText(site.address)}</address>
-            <p>
-              <a href={mapsUrl(site.address)} rel="noopener noreferrer">
-                Cómo llegar
-              </a>
-            </p>
-          </>
-        )
-      }
-      {
-        site.areaServed.length > 0 && (
-          <>
-            <h3>Zona de atención</h3>
+  {
+    site.sections.map((section) => (
+      <section id={section.id} aria-labelledby={`titulo-${section.id}`}>
+        <div class="container">
+          <h2 id={`titulo-${section.id}`}>{section.title}</h2>
+          {'body' in section ? (
+            <p>{section.body}</p>
+          ) : (
             <ul>
-              {site.areaServed.map((zone) => (
-                <li>{zone}</li>
+              {section.items.map((item) => (
+                <li>{item}</li>
               ))}
             </ul>
-          </>
-        )
-      }
-    </div>
-  </section>
+          )}
+        </div>
+      </section>
+    ))
+  }
+
+  {
+    location && (
+      <section id={location.id} aria-labelledby={`titulo-${location.id}`}>
+        <div class="container">
+          <h2 id={`titulo-${location.id}`}>{location.title}</h2>
+          {site.hours.length > 0 && (
+            <dl class="hours">
+              {site.hours.map((h) => (
+                <div class="hours-row">
+                  <dt>{h.label}</dt>
+                  <dd>{hoursText(h)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {site.address && (
+            <>
+              <h3>Dirección</h3>
+              <address>{addressText(site.address)}</address>
+              {directions && (
+                <p>
+                  <a href={directions} rel="noopener noreferrer">
+                    Cómo llegar
+                  </a>
+                </p>
+              )}
+            </>
+          )}
+          {site.areaServed.length > 0 && (
+            <>
+              <h3>Zona de atención</h3>
+              <ul>
+                {site.areaServed.map((zone) => (
+                  <li>{zone}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </section>
+    )
+  }
 
   <section id="contacto" aria-labelledby="titulo-contacto">
     <div class="container">
       <h2 id="titulo-contacto">Contacto</h2>
       <ul class="contact-list">
-        <li><a class="button" href={`tel:${site.phone.e164}`}>{noBreak(`Llamar al ${site.phone.display}`)}</a></li>
+        {phone && <li><a class="button" href={`tel:${phone.e164}`}>{noBreak(`Llamar al ${phone.display}`)}</a></li>}
         {
-          site.phone.whatsapp && (
+          whatsapp && (
             <li>
-              <a class="button" href={`https://wa.me/${whatsappNumber}?text=${whatsappText}`} rel="noopener noreferrer">
-                Escribir por WhatsApp
+              <a
+                class="button"
+                href={`https://wa.me/${whatsapp.e164.replace(/\D/g, '')}?text=${whatsappText}`}
+                rel="noopener noreferrer"
+              >
+                {whatsappLabel}
               </a>
             </li>
           )
         }
-        <li><a class="button" href={`mailto:${site.email}`}>Enviar un correo a {site.email}</a></li>
+        {email && <li><a class="button" href={`mailto:${email}`}>Enviar un correo a {email}</a></li>}
       </ul>
       {
         site.profiles.length > 0 && (

@@ -73,9 +73,9 @@ original se conserva literal y se delega por referencia, nunca parafraseado.
 ### XI. Nada se publica sin fuente
 Todo dato del negocio que llega a un sitio (nombre, dirección, horarios, teléfono,
 precios, servicios) lleva su fuente y la confirmación del cliente. Ningún testimonio,
-reseña, cifra, logo de cliente ni imagen se inventa. Google Maps pre-llena y cruza
-datos, pero no es fuente publicable: sus políticas prohíben guardar su contenido
-(ADR-0029).
+reseña, cifra, logo de cliente ni imagen se inventa. Google Maps no es fuente
+publicable y el producto no integra Places (ADR-0040): la dirección, las coordenadas o
+el link de Maps se cargan a mano y se confirman como cualquier dato.
 
 ### XII. Agnóstico al cliente
 El producto no conoce a ningún cliente. Ningún nombre, dato, material ni regla de un
@@ -156,6 +156,7 @@ Cada baranda declara **qué la impone**. Sin test, analizador o gate, se marca
 | 1.0.0 | 2026-10-28 | Ratificada por Andy | — |
 | 1.1.0 | 2026-10-28 | Stack del MVP concreto, regla de módulos nativos y excepción de licencia del Agent SDK; aprobada por Andy | ADR-0028 |
 | 2.1.0 | 2026-11-12 | Principio II: Clean Architecture por defecto con exclusiones explícitas. Principio IX: todo loop es acotado. Aprobada por Andy por delegación | ADR-0033, ADR-0034 |
+| 2.4.0 | 2026-11-20 | Principio XI: Google Maps deja de pre-llenar; el producto no integra Places y la dirección, las coordenadas o el link de Maps se cargan a mano y se confirman. Ratificada por Andy con la spec de US-14 | ADR-0040 |
 | 2.3.1 | 2026-11-16 | Licencias: excepciones por paquete, con motivo, para lo que solo corre al construir. Aprobada por Andy al aceptar ADR-0038 | ADR-0038 |
 | 2.3.0 | 2026-11-15 | Stack: guías de la plataforma web de Chrome, fijadas y envueltas en la skill `web-guidance`. Aprobada por Andy al aceptar ADR-0036 | ADR-0036 |
 | 2.2.1 | 2026-11-12 | Licencias: suma 0BSD (más permisiva que MIT; la trae `tslib`). Aprobada por Andy con el plan de US-11 | — |
@@ -168,4 +169,4 @@ La constitución se cambia con una enmienda que declara motivo, alcance y versi�
 enmienda cambia una decisión de arquitectura, va con su ADR. Un agente propone
 enmiendas, **nunca las ratifica**. Guía operativa: `project-guard` y `AGENTS.md`.
 
-**Versión**: 2.3.1 | **Ratificada**: 2026-11-15 por Andy | **Última enmienda**: 2026-11-16
+**Versión**: 2.4.0 | **Ratificada**: 2026-11-15 por Andy | **Última enmienda**: 2026-11-20

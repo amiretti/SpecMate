@@ -180,3 +180,15 @@ h3 {
 address {
   font-style: normal;
 }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.brand-logo img {
+  display: block;
+  width: auto;
+  height: var(--space-4);
+}
