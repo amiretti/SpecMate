@@ -11,4 +11,4 @@
 | U5 | `check:origins` lee `brief.allowedOrigins` | FR-010 · AC-10 | `test/controls-browser.test.mjs` | hecho |
 | U6 | Sitio chico con los 7 controles (`test/small-site.test.mjs`) y `specmate new` | AC-6, AC-11 | el test del CLI en rojo hasta commitear la plantilla (`new` copia lo de `HEAD`) | hecho; AC-11 verde tras el commit |
 
-Pendiente: revisión `security` (zona crítica) antes del PR.
+Revisión `security` (2026-11-22): no bloquea. Dos rondas de filtro de SVG activo dejaron bypasses (XSLT embebido, entre otros); el developer decidió rasterizar también los SVG a AVIF y WebP, así que nunca se publica un SVG (`test/logo.test.mjs`). El symlink del logo resuelve dentro del repo y en su propio `src/assets/brand/` (`test/site.test.mjs`, "logo location"). La lista de hosts de `mapsUrl` quedó en #74.

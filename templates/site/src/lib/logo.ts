@@ -1,8 +1,10 @@
 // The logo files a site publishes (US-14 FR-008; security review of US-14): only the paths of a confirmed logo,
 // already validated by parseRelevamiento (images directly under src/assets/brand/, inside the repo). They are read
 // from disk here, not through astro:assets, so nothing else of src/assets/ and no unconfirmed logo reaches dist/.
-// An SVG is published as is; a PNG, JPEG or WebP is converted with sharp to AVIF and WebP at twice the header height,
-// and the original raster is never published (developer, 2026-11-20). Names carry a content hash.
+// Every logo, SVG included, is converted with sharp to AVIF and WebP at twice the header height and the original is
+// never published (developer, 2026-11-20). An SVG comes from the client's material and may carry scripts, handlers,
+// stylesheets or links, so it is rasterized instead of filtered (security review of US-14, developer 2026-11-22);
+// it is rendered at the target height, not upscaled from a small raster. Names carry a content hash.
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -40,13 +42,15 @@ function published(variant: LogoVariant['variant'], bytes: Uint8Array, ext: stri
 
 async function build(variant: LogoVariant['variant'], rel: string, root: string): Promise<LogoVariant> {
   const source = readFileSync(path.resolve(root, ...rel.split('/')));
-  const image = sharp(source);
-  if (path.posix.extname(rel).toLowerCase() === '.svg') {
-    const { width, height } = await image.metadata();
-    if (!width || !height) throw new Error(`relevamiento: "brief.logo.${variant}" has no readable size: ${rel}`);
-    return { variant, files: [published(variant, source, 'svg', 'image/svg+xml')], width, height };
+  const vector = path.posix.extname(rel).toLowerCase() === '.svg';
+  let image = sharp(source);
+  if (vector) {
+    const { height } = await image.metadata();
+    if (!height) throw new Error(`relevamiento: "brief.logo.${variant}" has no readable size: ${rel}`);
+    // sharp renders an SVG at 72 dpi by default; this density renders it LOGO_HEIGHT px high.
+    image = sharp(source, { density: Math.min(100_000, Math.max(1, (72 * LOGO_HEIGHT) / height)) });
   }
-  const resized = image.resize({ height: LOGO_HEIGHT, withoutEnlargement: true });
+  const resized = image.resize({ height: LOGO_HEIGHT, withoutEnlargement: !vector });
   const avif = await resized.clone().avif({ quality: 60 }).toBuffer();
   const { data: webp, info } = await resized.clone().webp({ quality: 80 }).toBuffer({ resolveWithObject: true });
   return {

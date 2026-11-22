@@ -127,10 +127,11 @@ describe('free sections and logo (FR-007, FR-008, FR-012, AC-7)', () => {
     assert.ok(img, 'an <img> in the header');
     assert.equal(img.alt, CONTENT.logo.alt);
     assert.ok(img.width && img.height, 'width and height');
-    assert.match(img.src, /^\/brand\/logo-light\.[0-9a-f]{8}\.svg$/);
+    // The fixture's logos are SVG: published only as AVIF and WebP (security review of US-14), the WebP as fallback.
+    assert.match(img.src, /^\/brand\/logo-light\.[0-9a-f]{8}\.webp$/);
     const source = tags(header, 'source')[0];
     assert.equal(source?.media, '(prefers-color-scheme: dark)');
-    assert.match(source?.srcset ?? '', /^\/brand\/logo-dark\.[0-9a-f]{8}\.svg$/);
+    assert.match(source?.srcset ?? '', /^\/brand\/logo-dark\.[0-9a-f]{8}\.avif$/);
   });
 
   it('without a logo there is no image in the header', async () => {

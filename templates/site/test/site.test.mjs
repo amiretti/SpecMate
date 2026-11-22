@@ -3,7 +3,7 @@
 // without them fails naming its full path; an unconfirmed optional one is dropped; an unknown key fails naming it.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, it } from 'node:test';
@@ -480,6 +480,74 @@ describe('logo formats (US-14, developer 2026-11-20)', () => {
     d.brief.logo = { light, dark, alt: 'Logo', source: 's', confirmedBy: CONFIRMED };
     assert.deepEqual(parse(d).logo, { light, dark, alt: 'Logo' });
   });
+});
+
+// Security review of US-14: a logo that is a symlink, or whose src/assets/brand/ is a link, must resolve inside the
+// repo's src/assets/brand/: not outside the repo, nor to another folder of it. (Active SVG content is covered by
+// test/logo.test.mjs: an SVG logo is never published as SVG.)
+describe('logo location (security review of US-14)', () => {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="28"/></svg>';
+  const withLogo = (light) => {
+    const d = base();
+    d.brief.logo = { light, alt: 'Logo', source: 's', confirmedBy: CONFIRMED };
+    return d;
+  };
+  /** A scratch dir with `repo/src/assets/`; `run(dir, repo)`; removed after. */
+  async function withScratch(run) {
+    const dir = await mkdtemp(path.join(tmpdir(), 'site-logo-link-'));
+    try {
+      const repo = path.join(dir, 'repo');
+      await mkdir(path.join(repo, 'src', 'assets'), { recursive: true });
+      await run(dir, repo);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }
+
+  it('a logo symlink that resolves outside src/assets/brand/ fails naming the field', (t) =>
+    withScratch(async (_dir, repo) => {
+      await mkdir(path.join(repo, 'src', 'assets', 'brand'));
+      await writeFile(path.join(repo, 'src', 'assets', 'otra.svg'), svg);
+      try {
+        await symlink(
+          path.join(repo, 'src', 'assets', 'otra.svg'),
+          path.join(repo, 'src', 'assets', 'brand', 'logo.svg'),
+        );
+      } catch (error) {
+        if (error.code === 'EPERM') return t.skip('creating file symlinks needs Developer Mode or admin on Windows');
+        throw error;
+      }
+      assert.throws(
+        () => parseRelevamiento(withLogo('src/assets/brand/logo.svg'), { root: repo }),
+        /"brief\.logo\.light" must not leave src\/assets\/brand\//,
+      );
+    }));
+
+  // Junctions need no privileges on Windows, so these cases always run.
+  it('a logo whose src/assets/brand/ is a link to a folder outside the repo fails naming the field', () =>
+    withScratch(async (dir, repo) => {
+      const outside = path.join(dir, 'outside');
+      await mkdir(outside);
+      await writeFile(path.join(outside, 'logo.svg'), svg);
+      await symlink(outside, path.join(repo, 'src', 'assets', 'brand'), 'junction');
+      assert.throws(
+        () => parseRelevamiento(withLogo('src/assets/brand/logo.svg'), { root: repo }),
+        /"brief\.logo\.light" must not leave the repo/,
+      );
+    }));
+
+  it('a logo whose src/assets/brand/ is a link to another folder of the repo fails naming the field', () =>
+    withScratch(async (_dir, repo) => {
+      const other = path.join(repo, 'src', 'other');
+      await mkdir(other);
+      await writeFile(path.join(other, 'logo.svg'), svg);
+      await symlink(other, path.join(repo, 'src', 'assets', 'brand'), 'junction');
+      assert.throws(
+        () => parseRelevamiento(withLogo('src/assets/brand/logo.svg'), { root: repo }),
+        /"brief\.logo\.light" must not leave src\/assets\/brand\//,
+      );
+    }));
 });
 
 describe('coordinates and Maps link (FR-009)', () => {

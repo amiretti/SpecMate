@@ -61,7 +61,9 @@ describe('dist/ holds only the images the site shows', () => {
   });
 
   it('a confirmed logo -> its files are in dist (the check above can see them)', async () => {
-    assert.equal((await logoFiles(FIXTURES.content.out)).length, 2);
+    // The fixture's light and dark logos are SVG: each published as AVIF and WebP, never as SVG.
+    const exts = (await logoFiles(FIXTURES.content.out)).map((f) => path.extname(f)).sort();
+    assert.deepEqual(exts, ['.avif', '.avif', '.webp', '.webp']);
   });
 
   describe('unconfirmed logo', { concurrency: false }, () => {

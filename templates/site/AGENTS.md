@@ -24,9 +24,11 @@ monorepo.
   WhatsApp no genera "Llamar"). Opcionales: horarios, dirección, zona, `geo`, `mapsUrl`, perfiles, FAQ, `sections`
   (contenido libre: texto o lista) y `logo` (claro y oscuro, SVG, PNG, JPEG o WebP directamente en `src/assets/brand/`, nunca fuera del repo).
   El logo se lee de la ruta validada y se procesa con `sharp` directamente (`src/lib/logo.ts`), no con
-  `astro:assets`, para que solo el archivo confirmado llegue a `dist/` (`src/pages/brand/[file].ts`): el SVG tal
-  cual; un raster pasa a AVIF y WebP al doble del alto del header y el original no se publica. Otro formato rompe el
-  build.
+  `astro:assets`, para que solo el archivo confirmado llegue a `dist/` (`src/pages/brand/[file].ts`): todo logo,
+  SVG incluido, pasa a AVIF y WebP al doble del alto del header y el original no se publica. El SVG viene del
+  material del cliente y puede traer scripts, handlers, hojas de estilo o enlaces: se rasteriza en vez de filtrarse
+  (revisión de seguridad de US-14), dibujado a ese alto. Otro formato rompe el build. Un logo o un
+  `src/assets/brand/` que sea symlink tiene que resolver dentro del repo y en su propio `src/assets/brand/`.
   `SITE_DATA` elige otro archivo (las variantes y los fixtures de los tests); los ejemplos son
   `src/data/examples/*.relevamiento.json`, inventados y marcados.
 - **Todo el contenido sale del brief confirmado** y se renderiza escapado. Nada de

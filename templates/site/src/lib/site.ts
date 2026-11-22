@@ -359,11 +359,17 @@ function logoPath(item: Rec, key: string, at: string, root: string): string {
     if (error instanceof Error && error.message.startsWith('relevamiento:')) throw error;
     fail(at, `does not exist in the repo: ${value}`);
   }
+  // A symlink must resolve inside the repo (src/assets/brand/ itself may be a link out of it) and inside the repo's
+  // own src/assets/brand/ (not to another file or folder of the repo). An SVG's content is not filtered: it is never
+  // published as SVG (src/lib/logo.ts rasterizes it).
   const base = realpathSync(root);
-  // A symlink inside the repo must not point outside it.
-  if (path.relative(base, real).startsWith('..') || path.isAbsolute(path.relative(base, real))) {
-    fail(at, 'must not leave the repo (it resolves outside it)');
-  }
+  const within = (dir: string) => {
+    const rel = path.relative(dir, real);
+    return !rel.startsWith('..') && !path.isAbsolute(rel);
+  };
+  if (!within(base)) fail(at, 'must not leave the repo (it resolves outside it)');
+  if (!within(path.resolve(base, ...LOGO_DIR.split('/'))))
+    fail(at, `must not leave ${LOGO_DIR} (it resolves outside it)`);
   return value;
 }
 
