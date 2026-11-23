@@ -1,0 +1,24 @@
+---
+// The business logo in the header (US-14 FR-008, plan decision 6): the light version by default and the dark one
+// under prefers-color-scheme: dark; AVIF then WebP for every logo, SVG included (rasterized); width and height from the
+// published file. Rendered only for a confirmed logo; its files are published by src/pages/brand/[file].ts, so no
+// other image of the repo reaches dist/.
+import { logoVariants } from '../lib/logo.ts';
+import type { Logo } from '../lib/site.ts';
+
+interface Props {
+  logo: Logo;
+}
+
+const { logo } = Astro.props;
+const [light, dark] = await logoVariants(logo, __SITE_ROOT__);
+if (!light) throw new Error('relevamiento: "brief.logo.light" has no file');
+const fallback = light.files.at(-1);
+const DARK = '(prefers-color-scheme: dark)';
+---
+
+<picture class="brand-logo">
+  {dark?.files.map((file) => <source media={DARK} type={file.type} srcset={file.url} />)}
+  {light.files.map((file) => <source type={file.type} srcset={file.url} />)}
+  <img src={fallback?.url} alt={logo.alt} width={light.width} height={light.height} decoding="async" />
+</picture>

@@ -88,10 +88,13 @@ describe('specmate new <slug>', () => {
     expect(gitOut(repo, 'ls-files').split('\n').sort()).toEqual(expected);
   });
 
-  it('keeps the invented example client, marked as such (FR-003)', async () => {
+  it('leaves the relevamiento.json of the invented address example at the root, marked as such (FR-003, US-14 AC-11)', async () => {
     expect(specmate(['new', 'ejemplo'], work).status).toBe(0);
-    const data = await readFile(path.join(work, 'ejemplo', 'src', 'data', 'examples', 'address.ts'), 'utf8');
-    expect(data).toContain('Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.');
+    const data = JSON.parse(await readFile(path.join(work, 'ejemplo', 'relevamiento.json'), 'utf8'));
+    expect(data.$comment).toMatch(/FICTITIOUS/);
+    expect(data.brief.exampleNotice).toBe('Sitio de ejemplo de la plantilla: el negocio y sus datos son ficticios.');
+    expect(data.brief.site.url).toBe('https://horno-azul.example');
+    expect(data.brief.address).toBeDefined();
   });
 
   it.each(['Mayus', '-guion', 'guion-', 'con espacio', 'ñandu', 'a'.repeat(64)])(

@@ -7,9 +7,8 @@ import path from 'node:path';
 import { describe, it } from 'node:test';
 import { AI_CRAWLERS } from '../src/lib/ai-crawlers.ts';
 import { buildRobots } from '../src/lib/robots.ts';
-import { parseSite } from '../src/lib/site.ts';
 import { buildSitemap, contentRoutes } from '../src/lib/sitemap.ts';
-import { FIXTURES, readPages, VARIANTS } from './lib/build.mjs';
+import { FIXTURES, readPages, siteOf, VARIANTS } from './lib/build.mjs';
 import { element, metas, tags, titles } from './lib/html.mjs';
 import { checkJsonLd } from './lib/jsonld.mjs';
 
@@ -104,7 +103,7 @@ describe('sitemap helpers', () => {
 for (const [name, target] of Object.entries({ ...VARIANTS, ...FIXTURES })) {
   describe(`${name}: built sitemap, robots and 404`, () => {
     const read = (file) => readFile(path.join(target.out, file), 'utf8');
-    const data = async () => parseSite((await import(`file:///${target.data.replaceAll('\\', '/')}`)).default);
+    const data = async () => siteOf(target.data);
 
     it('sitemap.xml lists 100 % of the content pages, absolute, and 0 times the 404', async () => {
       const site = await data();

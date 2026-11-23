@@ -4,9 +4,11 @@
 import '@fontsource-variable/inter/wght.css';
 import '../styles/global.css';
 import JsonLd from '../components/JsonLd.astro';
+import Logo from '../components/Logo.astro';
 import { ogImage } from '../data/og-image.ts';
 import { site } from '../data/site.ts';
 import { buildHead } from '../lib/head.ts';
+import { locationSection } from '../lib/site.ts';
 
 interface Props {
   title: string;
@@ -21,9 +23,10 @@ interface Props {
 
 const { title, description, path, jsonLd, noindex = false } = Astro.props;
 const head = buildHead(site, { path, title, description, image: { src: ogImage.src, alt: site.image.alt } });
+const location = locationSection(site);
 const sections = [
   { href: '/#nosotros', label: 'Nosotros' },
-  { href: '/#horarios', label: 'Horarios' },
+  ...(location ? [{ href: `/#${location.id}`, label: location.title }] : []),
   { href: '/#contacto', label: 'Contacto' },
   ...(site.faq.length > 0 ? [{ href: '/#preguntas', label: 'Preguntas frecuentes' }] : []),
 ];
@@ -47,7 +50,7 @@ const sections = [
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <header class="site-header">
       <div class="container header-inner">
-        <a class="brand" href="/">{site.name}</a>
+        <a class="brand" href="/">{site.logo && <Logo logo={site.logo} />}<span>{site.name}</span></a>
         <nav aria-label="Secciones">
           <ul>
             {sections.map((s) => <li><a href={s.href}>{s.label}</a></li>)}

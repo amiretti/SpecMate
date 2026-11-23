@@ -7,18 +7,17 @@ import { rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run as a11y } from '../scripts/controls/a11y.mjs';
 import { run as behavior } from '../scripts/controls/behavior.mjs';
 import { run as lighthouse } from '../scripts/controls/lighthouse.mjs';
 import { run as origins } from '../scripts/controls/origins.mjs';
-import { VARIANTS } from './lib/build.mjs';
+import { readExample, VARIANTS } from './lib/build.mjs';
 import { mutant, removeBuild } from './lib/mutate.mjs';
 import { appendCss, BROWSER_MUTATIONS, editHome, OUTSIDER } from './lib/mutations-browser.mjs';
 
 const healthy = VARIANTS.address.out;
-const addressData = fileURLToPath(new URL('../src/data/examples/address.ts', import.meta.url));
-const onlineData = fileURLToPath(new URL('../src/data/examples/online.ts', import.meta.url));
+const addressData = VARIANTS.address.data;
+const onlineData = VARIANTS.online.data;
 
 const CONTROLS = { behavior, a11y, lighthouse, origins };
 
@@ -103,21 +102,19 @@ describe('check:behavior: sections, anchors and contact links', { concurrency: f
   });
 });
 
-describe('check:origins: allowlist from the data module (AC-3)', { concurrency: false }, () => {
+describe('check:origins: allowlist from the brief (US-12 AC-3, US-14 FR-010, AC-10)', { concurrency: false }, () => {
   const outsiderCss = BROWSER_MUTATIONS.find((r) => r.control === 'origins').mutation;
   let listed;
   before(async () => {
-    // An invented data module: the address example plus the outsider origin, with its reason.
-    listed = path.join(tmpdir(), `specmate-origins-data-${process.pid}.mjs`);
-    await writeFile(
-      listed,
-      `import address from ${JSON.stringify(pathToFileURL(addressData).href)};\n` +
-        `export default { ...address, allowedOrigins: [{ origin: ${JSON.stringify(OUTSIDER)}, reason: 'invented test CDN' }] };\n`,
-    );
+    // An invented relevamiento: the address example plus the outsider origin, with its reason, in the brief.
+    listed = path.join(tmpdir(), `specmate-origins-data-${process.pid}.json`);
+    const data = readExample('address');
+    data.brief.allowedOrigins = [{ origin: OUTSIDER, reason: 'invented test CDN' }];
+    await writeFile(listed, JSON.stringify(data));
   });
   after(() => rm(listed, { force: true }));
 
-  it('the same origin passes when the data module lists it', async () => {
+  it('the same origin passes when the brief lists it', async () => {
     const result = await onMutant(outsiderCss, (dir) => origins(dir, { data: listed }));
     assert.deepEqual(result.violations, []);
     assert.equal(result.ok, true);
@@ -133,7 +130,24 @@ describe('check:origins: allowlist from the data module (AC-3)', { concurrency: 
     assert.equal(result.ok, true);
   });
 
-  it('fails when the data module belongs to another site than the build', async () => {
+  it('a listed origin passes and one outside the list fails naming it (AC-10)', async () => {
+    const result = await onMutant(
+      (dir) =>
+        appendCss(
+          dir,
+          `body{background-image:url("${OUTSIDER}/a.png")} html{background-image:url("https://otro.example/x.png")}`,
+        ),
+      (dir) => origins(dir, { data: listed }),
+    );
+    assert.equal(result.ok, false);
+    assert.ok(
+      result.violations.every((v) => !v.includes(OUTSIDER)) &&
+        result.violations.some((v) => v.includes('https://otro.example')),
+      result.violations.join('\n'),
+    );
+  });
+
+  it('fails when the relevamiento belongs to another site than the build', async () => {
     const result = await origins(healthy, { data: onlineData });
     assert.equal(result.ok, false);
     assert.match(result.violations.join('\n'), /does not match the build/);

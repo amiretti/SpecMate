@@ -1,7 +1,8 @@
-// FICTITIOUS fixture: a confirmed profile served over http -> the build must fail (FR-010, AC-10).
-import address from '../../../src/data/examples/address.ts';
+// FICTITIOUS fixture: a confirmed profile served over http -> the build must fail naming it.
+import { readExample } from '../../lib/build.mjs';
 
-export default {
-  ...address,
-  profiles: [{ url: 'http://social-uno.example/hornoazul', source: 'fixture', confirmed: true }],
-};
+const data = readExample('address');
+data.brief.profiles = [
+  { url: 'http://social-uno.example/hornoazul', source: 'fixture', confirmedBy: 'fixture: inventado, 2026-01-01' },
+];
+export default data;
