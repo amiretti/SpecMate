@@ -7,7 +7,7 @@ analisis: no requerido (el lead lo analizó inline: ADR-0031, ADR-0040, #60, inf
 depende_de: [US-14]
 revisa: developer (Andy, spec aprobada 2026-11-23: "sí, aprobada"); revisión `security` obligatoria antes del PR (entrada no confiable, principio V)
 zona_critica: no está en project-guard §5, pero procesa material del cliente, que es entrada no confiable
-estimacion: ~150k tok · ~4 h de agente · nivel máximo por entrada no confiable · a revisar tras el plan
+estimacion: ~120k tok · ~3-4 h · el lead escribe inline (plan) y `security` verifica en nivel máximo
 ---
 
 # Inventariar la carpeta del cliente
