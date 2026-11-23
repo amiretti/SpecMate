@@ -242,6 +242,14 @@ describe('specmate inventory, failures', () => {
     expect(res.err).toContain(path.join(clients, 'otro-cliente'));
   });
 
+  it('fails with the guided message when the site folder does not exist', async () => {
+    await rm(path.join(sites, SLUG), { recursive: true });
+    const res = specmate(['inventory', SLUG, '--clients', clients], sites);
+    expect(res.status).toBe(1);
+    expect(res.err).toContain(path.join(sites, SLUG, 'relevamiento.json'));
+    expect(res.err).toContain('run specmate inventory from the folder that holds the site created by specmate new');
+  });
+
   it('fails naming relevamiento.json when the site has none', async () => {
     await rm(relevamiento);
     const res = specmate(['inventory', SLUG, '--clients', clients], sites);

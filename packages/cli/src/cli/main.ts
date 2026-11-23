@@ -89,13 +89,19 @@ export function formatInventory({ inventory, clientDir, file }: InventoryResult)
   ].join('\n');
 }
 
-async function run(io: Io, command: string, task: () => Promise<string>): Promise<number> {
+// Only inventory errors can carry a client file name; `new` keeps its messages as they were (git stderr included).
+async function run(
+  io: Io,
+  command: string,
+  task: () => Promise<string>,
+  shown = (text: string) => text,
+): Promise<number> {
   try {
     io.out(await task());
     return 0;
   } catch (error) {
     io.err(
-      `specmate ${command}: ${printable(error instanceof SpecmateError ? error.message : `unexpected error: ${(error as Error).message}`)}`,
+      `specmate ${command}: ${shown(error instanceof SpecmateError ? error.message : `unexpected error: ${(error as Error).message}`)}`,
     );
     return 1;
   }
@@ -142,13 +148,18 @@ export async function main(argv: readonly string[], io: Io, deps: CliDeps): Prom
   const clients = parsed.values.clients || io.env[CLIENTS_ENV];
   if (!clients)
     return usageError(io, `inventory needs the root of the client folders: pass --clients <dir> or set ${CLIENTS_ENV}`);
-  return run(io, 'inventory', async () => {
-    const slug = parseSlug(slugArg);
-    const clientsRoot = path.resolve(io.cwd, clients);
-    const result = await inventoryClientFolder(
-      { clientsRoot, clientDir: path.join(clientsRoot, slug), siteDir: path.resolve(io.cwd, slug) },
-      deps,
-    );
-    return formatInventory(result);
-  });
+  return run(
+    io,
+    'inventory',
+    async () => {
+      const slug = parseSlug(slugArg);
+      const clientsRoot = path.resolve(io.cwd, clients);
+      const result = await inventoryClientFolder(
+        { clientsRoot, clientDir: path.join(clientsRoot, slug), siteDir: path.resolve(io.cwd, slug) },
+        deps,
+      );
+      return formatInventory(result);
+    },
+    printable,
+  );
 }

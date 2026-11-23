@@ -142,9 +142,10 @@ const MAX_TAG = 4096;
 const PIXELS = /^(\d{1,9}(?:\.\d{1,9})?)(?:px)?$/;
 
 function svgTag(text: string): string | undefined {
-  const lower = text.toLowerCase();
-  let at = lower.indexOf('<svg');
-  while (at !== -1 && !/[\s>/]/.test(lower.charAt(at + 4))) at = lower.indexOf('<svg', at + 4);
+  // Indices stay on the original text: lowercasing can change the length of some characters.
+  const opensSvg = (i: number) => text.slice(i + 1, i + 4).toLowerCase() === 'svg' && /[\s>/]/.test(text.charAt(i + 4));
+  let at = text.indexOf('<');
+  while (at !== -1 && !opensSvg(at)) at = text.indexOf('<', at + 1);
   if (at === -1) return undefined;
   const end = text.indexOf('>', at);
   return end === -1 || end - at > MAX_TAG ? undefined : text.slice(at, end + 1);

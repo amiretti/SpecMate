@@ -124,7 +124,11 @@ export async function inventoryClientFolder(request: InventoryRequest, deps: Inv
   const clientDir = await folder.realPath(request.clientDir);
   refuseInside('the client folder', request.clientDir, clientDir);
   // The inventory names and hashes the client's files: it must not land in SpecMate either (spec §7, principle XII).
-  const siteDir = await folder.realPath(request.siteDir);
+  const siteDir = await folder.realPath(request.siteDir).catch(() => {
+    throw new SpecmateError(
+      `${relevamiento.file(request.siteDir)} not found: run specmate inventory from the folder that holds the site created by specmate new`,
+    );
+  });
   refuseInside('the site', request.siteDir, siteDir);
   const saved = await relevamiento.readInventory(siteDir);
   const inventory = mergeInventory(saved, await scanClientFolder(folder, clientDir));
