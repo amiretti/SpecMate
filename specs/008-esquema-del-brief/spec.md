@@ -1,7 +1,7 @@
 ---
 id: US-14 (#66)
 titulo: Construir cada sitio desde un relevamiento.json validado, donde cada dato publicable dice de dónde salió y quién lo confirmó
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/66
 analisis: no requerido (el lead lo analizó inline con lo medido en el spike: §1, §6 y §7)
 depende_de: []
