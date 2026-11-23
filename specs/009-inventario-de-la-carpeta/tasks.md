@@ -8,7 +8,7 @@ Ninguna tarea lleva `[P]`: cada una usa el contrato de la anterior (dominio → 
 Todas van con test primero (constitución IV): el rojo se observa antes de escribir el código.
 Runner: `npm test -w packages/cli` (vitest).
 
-- [ ] T001 [US1] Dimensiones desde la cabecera (PNG, JPEG, WebP, GIF, SVG, AVIF), ilegible y > 100 MP — `packages/cli/src/domain/image-header.ts`, `test/image-header.test.ts` · cierra: AC-2 (dimensiones), AC-10 (imagen rota) · nivel: estándar · est: 20k · 35 min
+- [x] T001 [US1] Dimensiones desde la cabecera (PNG, JPEG, WebP, GIF, SVG, AVIF), ilegible y > 100 MP — `packages/cli/src/domain/image-header.ts`, `test/image-header.test.ts` · cierra: AC-2 (dimensiones), AC-10 (imagen rota) · nivel: estándar · est: 20k · 35 min
 - [ ] T002 [US1] Clasificación por tabla, normalización de nombres, avisos de resolución, secretos e ignorados — `packages/cli/src/domain/inventory.ts`, `test/inventory.test.ts` · cierra: AC-1, AC-2 (avisos), AC-4, AC-7 · nivel: estándar · est: 20k · 35 min
 - [ ] T003 [US3] Recorrido seguro: puerto `ClientFolder` y adaptador con `lstat`, sin seguir links, topes de archivos, niveles y tamaño, hash — `src/application/ports.ts`, `src/infrastructure/node-client-folder.ts`, `test/node-client-folder.test.ts` · cierra: AC-9, AC-10, AC-11, AC-12 · nivel: estándar · est: 25k · 45 min
 - [ ] T004 [US3] Raíces y comando: `specmate inventory <slug> [--clients]`, `SPECMATE_CLIENTS_DIR`, raíz dentro de SpecMate, salida encontré · falta · avisos, ayuda y `packages/cli/AGENTS.md` (fila de `inventory`; se va `--carpeta --maps`) — `src/application/inventory-client-folder.ts`, `src/cli/main.ts`, `test/inventory.integration.test.ts` · cierra: AC-3, AC-8 · nivel: estándar · est: 25k · 45 min
