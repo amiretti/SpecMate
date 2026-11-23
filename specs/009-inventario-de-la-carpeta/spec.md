@@ -1,11 +1,11 @@
 ---
 id: US-15 (#67)
 titulo: Inventariar la carpeta del cliente para no preguntar lo que ya está
-estado: borrador          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/67
 analisis: no requerido (el lead lo analizó inline: ADR-0031, ADR-0040, #60, informe del spike y packages/cli/AGENTS.md)
 depende_de: [US-14]
-revisa: developer (Andy); revisión `security` obligatoria antes del PR (entrada no confiable, principio V)
+revisa: developer (Andy, spec aprobada 2026-11-23: "sí, aprobada"); revisión `security` obligatoria antes del PR (entrada no confiable, principio V)
 zona_critica: no está en project-guard §5, pero procesa material del cliente, que es entrada no confiable
 estimacion: ~150k tok · ~4 h de agente · nivel máximo por entrada no confiable · a revisar tras el plan
 ---
@@ -36,7 +36,7 @@ textos, precios, tokens) y qué falta, y solo pregunta lo que falta.
 ## §3 Requisitos funcionales
 
 - **FR-001**: El sistema DEBE recorrer la carpeta del cliente y clasificar cada archivo en una de estas clases: manual de marca, logo, foto, texto, precios, archivo de tokens o **sin clasificar**. La clasificación sale del nombre, la extensión y los metadatos del archivo.
-- **FR-002**: Para cada imagen, el inventario DEBE registrar su ancho y alto en píxeles y marcar las que no alcanzan la resolución mínima [NEEDS CLARIFICATION: ¿qué resolución mínima? Propuesta: 1600 px de ancho para usarla de portada y 800 px para el resto; debajo de eso se avisa, no se descarta].
+- **FR-002**: Para cada imagen, el inventario DEBE registrar su ancho y alto en píxeles y avisar cuando no alcanza la resolución mínima: 1600 px de ancho para usarla de portada y 800 px para el resto. Debajo de eso se avisa, no se descarta (decisión del developer, 2026-11-23).
 - **FR-003**: El inventario DEBE mostrarse completo, agrupado en **encontré** (archivos por clase) y **falta** (clases sin ningún archivo), con la ruta relativa a la carpeta de cada archivo, para que Harvi lo revise.
 - **FR-004**: Harvi DEBE poder corregir la clase de un archivo. Al volver a correr el inventario, una corrección manual DEBE conservarse y ganarle a la detección.
 - **FR-005**: El inventario DEBE guardarse en `relevamiento.json`, en el estado de los pasos (ADR-0031 punto 6), y volver a correrlo DEBE sumar los archivos nuevos y marcar los que ya no están, sin repetir lo resuelto.
@@ -106,12 +106,12 @@ textos, precios, tokens) y qué falta, y solo pregunta lo que falta.
 
 ## §7 Riesgos y decisiones abiertas
 
-- **Resolución mínima de las fotos** (FR-002): la decide el developer en el gate. Bloquea AC-2.
-- **Contradicción entre fuentes** (reportada, no arbitrada):
+- **Resolución mínima de las fotos** (FR-002): 1600 px de ancho para portada y 800 px para el resto (developer, 2026-11-23).
+- **Contradicción entre fuentes** (reportada, no arbitrada; resuelta por el developer el 2026-11-23):
 
-| Contradicción | Fuente A dice | Fuente B dice | Propuesta |
+| Contradicción | Fuente A dice | Fuente B dice | Resolución |
 |---|---|---|---|
-| Dónde se corre el inventario | `packages/cli/AGENTS.md`: `specmate new … --carpeta <ruta> --maps <url>` | ADR-0031 punto 6 y ADR-0040: se retoma en otra sesión; Places fuera del MVP | Paso propio, repetible y sin `--maps`; actualizar `packages/cli/AGENTS.md` |
+| Dónde se corre el inventario | `packages/cli/AGENTS.md`: `specmate new … --carpeta <ruta> --maps <url>` | ADR-0031 punto 6 y ADR-0040: se retoma en otra sesión; Places fuera del MVP | Paso propio, repetible y sin `--maps`; se actualiza `packages/cli/AGENTS.md` (decisión del developer) |
 
 - **Decodificar imágenes del cliente** para leer sus dimensiones es superficie de ataque (imágenes malformadas, bombas de descompresión): tope de píxeles y revisión `security` antes del PR.
 - **Rutas del cliente en `relevamiento.json`**: quedan en el repo del sitio del cliente, nunca en el de SpecMate (principio XII); los tests usan carpetas inventadas en un directorio temporal.
