@@ -1,6 +1,6 @@
 # Plan de implementación: US-15, inventario de la carpeta del cliente
 
-**Rama**: `067-inventario-de-la-carpeta` | **Fecha**: 2026-11-23 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-23) | **Plan**: borrador
+**Rama**: `067-inventario-de-la-carpeta` | **Fecha**: 2026-11-23 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-23) | **Plan**: aprobado (2026-11-23, Andy: "si")
 **Artefactos**: este plan y [data-model.md](./data-model.md) (forma de `steps.inventory`). Sin `research.md`: no hay
 aclaraciones técnicas abiertas y la única alternativa (cómo leer dimensiones) se resuelve acá. Sin `contracts/`: la
 interfaz es el comando, descrito abajo. Sin `quickstart.md`: no hay AC `manual`.
