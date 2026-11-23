@@ -45,6 +45,7 @@ function fakeFolder(entries: FolderEntry[], files: Record<string, Uint8Array> = 
   return {
     reads,
     realPath: async (dir) => dir,
+    isInside: () => false,
     async *walk(_root, skipDirectory) {
       for (const entry of entries) {
         const name = entry.path.slice(entry.path.lastIndexOf('/') + 1);

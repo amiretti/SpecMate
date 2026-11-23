@@ -137,3 +137,87 @@ export interface Omitted {
 }
 
 export const byPath = <T extends { path: string }>(a: T, b: T) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+
+/** What one walk of the folder found, before it is merged with the saved inventory. */
+export interface Scan {
+  entries: InventoryEntry[];
+  omitted: Omitted[];
+  /** Hidden and system files, plus hidden folders, skipped and counted (FR-010). */
+  ignored: number;
+}
+
+/** `steps.inventory` in relevamiento.json (data-model.md). */
+export interface Inventory {
+  version: 1;
+  summary: { files: number; ignored: number; omitted: number };
+  missing: Kind[];
+  entries: InventoryEntry[];
+  omitted: Omitted[];
+}
+
+export class InvalidInventoryError extends SpecmateError {}
+
+const KINDS: readonly Kind[] = [...EXPECTED_KINDS, 'secret', 'unclassified'];
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+interface Previous {
+  path: string;
+  kind: Kind;
+  detectedKind: Kind;
+  manual: boolean;
+}
+
+/** The parts of a saved inventory a new run uses: path, kind and whether Harvi corrected it. Fails naming the field. */
+function previousEntries(saved: unknown): Previous[] {
+  if (saved === undefined) return [];
+  const fail = (at: string, problem: string) => new InvalidInventoryError(`steps.inventory${at} ${problem}`);
+  if (!isRecord(saved)) throw fail('', 'must be an object');
+  if (saved.version !== 1) throw fail('.version', 'must be 1');
+  if (!Array.isArray(saved.entries)) throw fail('.entries', 'must be a list');
+  const kindAt = (value: unknown, at: string): Kind => {
+    if (typeof value === 'string' && (KINDS as readonly string[]).includes(value)) return value as Kind;
+    throw fail(at, `${JSON.stringify(value)} is not one of: ${KINDS.join(', ')}`);
+  };
+  return saved.entries.map((item: unknown, i: number) => {
+    const at = `.entries[${i}]`;
+    if (!isRecord(item)) throw fail(at, 'must be an object');
+    if (typeof item.path !== 'string' || item.path === '') throw fail(`${at}.path`, 'must be text');
+    const kind = kindAt(item.kind, `${at}.kind`);
+    const detectedKind = kindAt(item.detectedKind, `${at}.detectedKind`);
+    return { path: item.path, kind, detectedKind, manual: item.correctedBy === 'manual' || kind !== detectedKind };
+  });
+}
+
+/**
+ * Merges a new scan with the saved inventory (FR-004, FR-005): a kind corrected by hand wins over detection, a file
+ * that is no longer there stays as "gone", and the result is sorted and dated nowhere, so equal runs give equal JSON.
+ */
+export function mergeInventory(saved: unknown, scan: Scan): Inventory {
+  const before = new Map(previousEntries(saved).map((entry) => [entry.path, entry]));
+  const entries: InventoryEntry[] = scan.entries.map((entry) => {
+    const previous = before.get(entry.path);
+    before.delete(entry.path);
+    return previous?.manual && previous.kind !== entry.detectedKind
+      ? { ...entry, kind: previous.kind, correctedBy: 'manual' }
+      : entry;
+  });
+  for (const gone of before.values()) {
+    entries.push({
+      path: gone.path,
+      kind: gone.kind,
+      detectedKind: gone.detectedKind,
+      ...(gone.manual && gone.kind !== gone.detectedKind ? { correctedBy: 'manual' as const } : {}),
+      notices: [],
+      status: 'gone',
+    });
+  }
+  const present = new Set(entries.filter((entry) => entry.status !== 'gone').map((entry) => entry.kind));
+  return {
+    version: 1,
+    summary: { files: scan.entries.length, ignored: scan.ignored, omitted: scan.omitted.length },
+    missing: EXPECTED_KINDS.filter((kind) => !present.has(kind)),
+    entries: entries.sort(byPath),
+    omitted: [...scan.omitted].sort(byPath),
+  };
+}

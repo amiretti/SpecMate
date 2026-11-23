@@ -1,30 +1,29 @@
 // Inventory of a client folder (US-15). The folder is data, never instructions (principle V): files are classified by
 // name (domain/inventory.ts), images give only the size in their header, every other read is a hash, and a possible
 // secret is never opened.
+import { SpecmateError } from '../domain/errors.ts';
 import { HEADER_BYTES, readImageSize } from '../domain/image-header.ts';
 import {
   byPath,
   classify,
   extension,
+  type Inventory,
   type InventoryEntry,
   imageNotices,
   isIgnoredDirectory,
   isIgnoredFile,
   isImagePath,
   LIMITS,
+  mergeInventory,
   type Omitted,
+  type Scan,
   tooBig,
   tooDeep,
   tooManyFiles,
 } from '../domain/inventory.ts';
-import type { ClientFolder } from './ports.ts';
+import type { ClientFolder, RelevamientoStore } from './ports.ts';
 
-export interface Scan {
-  entries: InventoryEntry[];
-  omitted: Omitted[];
-  /** Hidden and system files, plus hidden folders, skipped and counted (FR-010). */
-  ignored: number;
-}
+export type { Scan };
 
 async function describeFile(folder: ClientFolder, root: string, path: string, size: number): Promise<InventoryEntry> {
   const kind = classify(path);
@@ -83,4 +82,49 @@ export async function scanClientFolder(folder: ClientFolder, root: string): Prom
     }
   }
   return { entries: entries.sort(byPath), omitted: omitted.sort(byPath), ignored };
+}
+
+export class InsideSpecmateError extends SpecmateError {}
+
+export interface InventoryRequest {
+  /** Root of the client folders (--clients or SPECMATE_CLIENTS_DIR). */
+  clientsRoot: string;
+  /** `<clientsRoot>/<slug>`. */
+  clientDir: string;
+  /** The client site repo, holding relevamiento.json. */
+  siteDir: string;
+}
+
+export interface InventoryDeps {
+  folder: ClientFolder;
+  relevamiento: RelevamientoStore;
+  /** Root of the SpecMate repo: no client folder may live inside it (principle XII). */
+  specmateRoot: () => Promise<string>;
+}
+
+export interface InventoryResult {
+  inventory: Inventory;
+  /** Real path of the folder that was walked. */
+  clientDir: string;
+  /** relevamiento.json that holds the result. */
+  file: string;
+}
+
+/** Inventories a client folder into steps.inventory of the site's relevamiento.json (US-15). */
+export async function inventoryClientFolder(request: InventoryRequest, deps: InventoryDeps): Promise<InventoryResult> {
+  const { folder, relevamiento } = deps;
+  const specmate = await folder.realPath(await deps.specmateRoot());
+  const refuseInside = (label: string, given: string, real: string) => {
+    if (folder.isInside(specmate, real))
+      throw new InsideSpecmateError(
+        `${label} ${given} is inside the SpecMate repo (${specmate}): client material never enters it; keep it elsewhere`,
+      );
+  };
+  refuseInside('the clients root', request.clientsRoot, await folder.realPath(request.clientsRoot));
+  const clientDir = await folder.realPath(request.clientDir);
+  refuseInside('the client folder', request.clientDir, clientDir);
+  const saved = await relevamiento.readInventory(request.siteDir);
+  const inventory = mergeInventory(saved, await scanClientFolder(folder, clientDir));
+  await relevamiento.writeInventory(request.siteDir, inventory);
+  return { inventory, clientDir, file: relevamiento.file(request.siteDir) };
 }

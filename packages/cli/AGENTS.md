@@ -6,7 +6,7 @@ publicación. Comandos previstos:
 | Comando | Qué hace | Épica |
 |---|---|---|
 | `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de lo que git versiona en `templates/site` (sin artefactos) y el `relevamiento.json` del cliente de ejemplo inventado, con dirección (US-13, US-14) | E1 |
-| `specmate new … --carpeta <ruta> --maps <url> [--ref <url>…]` | Inventaría el material del cliente | E2 |
+| `specmate inventory <slug> [--clients <dir>]` | Inventaría `<raíz>/<slug>` (raíz: `--clients` o `SPECMATE_CLIENTS_DIR`, fuera del repo de SpecMate) en modo solo lectura y lo guarda en `steps.inventory` de `./<slug>/relevamiento.json`; repetible, conserva las correcciones a mano (US-15) | E2 |
 | `specmate brief` | Arma el brief verificable y lo valida contra su esquema | E2 |
 | `specmate verify` | Corre todos los controles de ADR-0030 y escribe el informe de verificación | E5 |
 | `specmate publish` | Publica en Cloudflare, solo con `verify` en verde y aprobación humana | E5 |
@@ -33,6 +33,10 @@ publicación. Comandos previstos:
   violaciones inventadas en `test/fixtures/arch/`.
 - **Solo sintaxis borrable** (constitución): nada de `enum`, `namespace` ni parameter
   properties; los tests de integración corren `src/cli/index.ts` con Node sin compilar.
+- **El inventario no lee contenido** (US-15): clasifica por nombre y extensión (`src/domain/inventory.ts`), lee
+  solo la cabecera de las imágenes sin decodificarlas (`src/domain/image-header.ts`) y el hash de cada archivo;
+  un posible secreto no se abre. No sigue links ni junctions, tiene topes (5000 archivos, 10 niveles, 50 MB) y no
+  escribe nada en la carpeta del cliente. Los nombres de archivo se muestran con los caracteres de control escapados.
 - **`new` es atómico:** se arma en `.<slug>.tmp-*` junto al destino y se publica con un
   `rename`; ante cualquier falla se borra el temporal. Un destino existente no se toca.
 - **`new` copia solo lo versionado** (#53): la lista sale de lo commiteado en `templates/site`

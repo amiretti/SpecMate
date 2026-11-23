@@ -1,5 +1,6 @@
 // Ports of the use cases (ADR-0034): everything external enters through these. Paths are opaque strings here;
 // only infrastructure builds them with node:path.
+import type { Inventory } from '../domain/inventory.ts';
 
 /** The folder where a client repo is assembled and then published. */
 export interface RepoWorkspace {
@@ -49,6 +50,8 @@ export type FolderEntry =
 export interface ClientFolder {
   /** Real path of `dir` with every link resolved; fails with a SpecmateError if it does not exist or is not a folder. */
   realPath(dir: string): Promise<string>;
+  /** Whether `child` is `parent` or lies below it; both are real paths. */
+  isInside(parent: string, child: string): boolean;
   /**
    * Walks `root` depth first, children sorted by name, without following any link. Stopping the iteration stops the
    * walk. Fails with a SpecmateError if `root` itself cannot be read.
@@ -58,4 +61,14 @@ export interface ClientFolder {
   readHead(root: string, file: string, bytes: number): Promise<Uint8Array>;
   /** SHA-256 in hex of a file, reading at most `maxBytes`. */
   sha256(root: string, file: string, maxBytes: number): Promise<string>;
+}
+
+/** `relevamiento.json` at the root of a client site (US-14), seen only through `steps.inventory` (US-15). */
+export interface RelevamientoStore {
+  /** Path of the file in `siteDir`, for messages. */
+  file(siteDir: string): string;
+  /** `steps.inventory` as saved (unvalidated), or undefined; fails naming the file if it is missing or not JSON. */
+  readInventory(siteDir: string): Promise<unknown>;
+  /** Replaces `steps.inventory` and keeps every other byte of meaning; the file is replaced atomically. */
+  writeInventory(siteDir: string, inventory: Inventory): Promise<void>;
 }

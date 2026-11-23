@@ -61,6 +61,12 @@ export const nodeClientFolder: ClientFolder = {
     }
   },
 
+  isInside(parent, child) {
+    const fold = (p: string) => (process.platform === 'win32' ? p.toLowerCase() : p);
+    const rel = path.relative(fold(parent), fold(child));
+    return rel.split(path.sep)[0] !== '..' && !path.isAbsolute(rel);
+  },
+
   async *walk(root, skipDirectory) {
     try {
       if (!(await stat(root)).isDirectory()) throw new SpecmateError(`the client folder ${root} is not a folder`);
