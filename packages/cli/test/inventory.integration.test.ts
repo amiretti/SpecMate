@@ -209,6 +209,32 @@ describe('specmate inventory, the clients root (AC-8, FR-007)', () => {
   });
 });
 
+describe('specmate inventory, the site (security review of US-15)', () => {
+  it('fails when the site is inside the SpecMate repo, writing nothing there', async () => {
+    const { symlink } = await import('node:fs/promises');
+    const inside = path.join(specmateRepo, 'templates', 'site', 'relevamiento.json');
+    const before = await readFile(inside, 'utf8');
+    await symlink(path.join(specmateRepo, 'templates', 'site'), path.join(sites, 'site'), 'junction');
+    await mkdir(path.join(clients, 'site'));
+    const res = specmate(['inventory', 'site', '--clients', clients], sites);
+    expect(res.status).toBe(1);
+    expect(res.err).toContain('the site');
+    expect(res.err).toContain('inside the SpecMate repo');
+    expect(await readFile(inside, 'utf8')).toBe(before);
+  });
+
+  it('escapes a client file name in an error message too', async () => {
+    const rlo = String.fromCharCode(0x202e);
+    const deep = Array.from({ length: 11 }, (_, i) => `n${i}${rlo}`);
+    await mkdir(path.join(folder, ...deep), { recursive: true });
+    const res = specmate(['inventory', SLUG, '--clients', clients], sites);
+    expect(res.status).toBe(1);
+    expect(res.err).toContain('deeper than 10 levels');
+    expect(res.err).toContain('n0\\u202e');
+    expect(res.err).not.toContain(rlo);
+  });
+});
+
 describe('specmate inventory, failures', () => {
   it('fails naming the client folder when it does not exist', () => {
     const res = specmate(['inventory', 'otro-cliente', '--clients', clients], sites);

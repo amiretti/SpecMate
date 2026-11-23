@@ -37,9 +37,16 @@ const usageError = (io: Io, problem: string) => {
   return 2;
 };
 
-// A file name comes from the client: control and bidi characters are shown escaped, never sent to the terminal.
+// A file name comes from the client: control, bidi and invisible characters are shown escaped, never sent to the
+// terminal, both in the inventory and in error messages (which can name a file).
 const isUnsafe = (code: number) =>
   code < 0x20 ||
+  code === 0x061c ||
+  (code >= 0x200b && code <= 0x200d) ||
+  code === 0x2028 ||
+  code === 0x2029 ||
+  code === 0x2060 ||
+  code === 0xfeff ||
   (code >= 0x7f && code <= 0x9f) ||
   code === 0x200e ||
   code === 0x200f ||
@@ -88,7 +95,7 @@ async function run(io: Io, command: string, task: () => Promise<string>): Promis
     return 0;
   } catch (error) {
     io.err(
-      `specmate ${command}: ${error instanceof SpecmateError ? error.message : `unexpected error: ${(error as Error).message}`}`,
+      `specmate ${command}: ${printable(error instanceof SpecmateError ? error.message : `unexpected error: ${(error as Error).message}`)}`,
     );
     return 1;
   }

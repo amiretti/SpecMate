@@ -123,8 +123,11 @@ export async function inventoryClientFolder(request: InventoryRequest, deps: Inv
   refuseInside('the clients root', request.clientsRoot, await folder.realPath(request.clientsRoot));
   const clientDir = await folder.realPath(request.clientDir);
   refuseInside('the client folder', request.clientDir, clientDir);
-  const saved = await relevamiento.readInventory(request.siteDir);
+  // The inventory names and hashes the client's files: it must not land in SpecMate either (spec §7, principle XII).
+  const siteDir = await folder.realPath(request.siteDir);
+  refuseInside('the site', request.siteDir, siteDir);
+  const saved = await relevamiento.readInventory(siteDir);
   const inventory = mergeInventory(saved, await scanClientFolder(folder, clientDir));
-  await relevamiento.writeInventory(request.siteDir, inventory);
-  return { inventory, clientDir, file: relevamiento.file(request.siteDir) };
+  await relevamiento.writeInventory(siteDir, inventory);
+  return { inventory, clientDir, file: relevamiento.file(siteDir) };
 }

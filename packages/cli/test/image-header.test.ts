@@ -138,6 +138,24 @@ describe('readImageSize, broken or hostile headers', () => {
   });
 });
 
+describe('readImageSize, cost of a hostile SVG (security review of US-15)', () => {
+  const quick = (head: Uint8Array) => {
+    const start = performance.now();
+    const size = readImageSize(head);
+    return { size, ms: performance.now() - start };
+  };
+
+  it.each([
+    ['a size followed by a quarter million spaces', `<svg width="1${' '.repeat(HEADER_BYTES - 40)}x" height="1">`],
+    ['"<svg " repeated with no closing bracket', '<svg '.repeat(HEADER_BYTES / 5)],
+    ['one open tag as long as the header', `<svg ${'a'.repeat(HEADER_BYTES - 10)}`],
+  ])('%s is unreadable in well under a second', (_, text) => {
+    const { size, ms } = quick(svg(text));
+    expect(size).toBeUndefined();
+    expect(ms).toBeLessThan(200);
+  });
+});
+
 describe('pixel cap', () => {
   it('is 100 MP and the header read is bounded', () => {
     expect(MAX_PIXELS).toBe(100_000_000);

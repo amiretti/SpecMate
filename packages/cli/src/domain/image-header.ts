@@ -135,9 +135,20 @@ function avif(b: Uint8Array): ImageSize | undefined {
   return best;
 }
 
-// SVG: only the attributes of the root <svg> tag are read; nothing is parsed, resolved or run.
-const SVG_TAG = /<svg(?=[\s>/])[^>]*>/i;
-const PIXELS = /^\s*(\d+(?:\.\d+)?)\s*(?:px)?\s*$/;
+// SVG: only the attributes of the root <svg> tag are read; nothing is parsed, resolved or run. The tag is found with
+// indexOf and capped in length, and every regex below runs on that short tag or on a trimmed value, so a hostile file
+// cannot make matching backtrack over the whole header (security review of US-15).
+const MAX_TAG = 4096;
+const PIXELS = /^(\d{1,9}(?:\.\d{1,9})?)(?:px)?$/;
+
+function svgTag(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  let at = lower.indexOf('<svg');
+  while (at !== -1 && !/[\s>/]/.test(lower.charAt(at + 4))) at = lower.indexOf('<svg', at + 4);
+  if (at === -1) return undefined;
+  const end = text.indexOf('>', at);
+  return end === -1 || end - at > MAX_TAG ? undefined : text.slice(at, end + 1);
+}
 
 const ATTRIBUTES = {
   width: /\swidth\s*=\s*(?:"([^"]*)"|'([^']*)')/i,
@@ -152,10 +163,10 @@ function attribute(tag: string, name: keyof typeof ATTRIBUTES): string | undefin
 
 function svg(b: Uint8Array): ImageSize | undefined {
   const text = new TextDecoder('utf-8', { fatal: false }).decode(b);
-  const tag = SVG_TAG.exec(text)?.[0];
+  const tag = svgTag(text);
   if (!tag) return undefined;
-  const width = PIXELS.exec(attribute(tag, 'width') ?? '')?.[1];
-  const height = PIXELS.exec(attribute(tag, 'height') ?? '')?.[1];
+  const width = PIXELS.exec((attribute(tag, 'width') ?? '').trim())?.[1];
+  const height = PIXELS.exec((attribute(tag, 'height') ?? '').trim())?.[1];
   if (width && height) return { type: 'svg', width: Math.round(Number(width)), height: Math.round(Number(height)) };
   const box = attribute(tag, 'viewBox')
     ?.trim()

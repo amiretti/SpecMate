@@ -57,7 +57,7 @@ export const nodeClientFolder: ClientFolder = {
       return real;
     } catch (error) {
       if (error instanceof SpecmateError) throw error;
-      throw new SpecmateError(`cannot read the client folder ${dir} (${errorCode(error)})`);
+      throw new SpecmateError(`cannot read the folder ${dir} (${errorCode(error)})`);
     }
   },
 
