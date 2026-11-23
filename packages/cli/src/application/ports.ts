@@ -31,3 +31,31 @@ export interface TemplateSource {
   /** Path of `templates/site`; fails if it cannot be found. */
   locate(): Promise<string>;
 }
+
+/** One entry met while walking a client folder; `path` is relative to the folder, separated by "/". */
+export type FolderEntry =
+  | { type: 'file'; path: string; depth: number; size: number }
+  | { type: 'directory'; path: string; depth: number }
+  /** A folder `skipDirectory` refused: neither walked nor listed. */
+  | { type: 'skipped'; path: string; depth: number }
+  /** A symlink or a Windows junction, wherever it points: never followed (US-15 FR-009). */
+  | { type: 'link'; path: string; depth: number }
+  /** A socket, a device or anything that is not a file, a folder or a link. */
+  | { type: 'other'; path: string; depth: number }
+  /** A folder below the root that could not be listed. */
+  | { type: 'unreadable'; path: string; depth: number };
+
+/** The client folder, read only (US-15 FR-008): nothing here writes, moves or deletes. */
+export interface ClientFolder {
+  /** Real path of `dir` with every link resolved; fails with a SpecmateError if it does not exist or is not a folder. */
+  realPath(dir: string): Promise<string>;
+  /**
+   * Walks `root` depth first, children sorted by name, without following any link. Stopping the iteration stops the
+   * walk. Fails with a SpecmateError if `root` itself cannot be read.
+   */
+  walk(root: string, skipDirectory: (name: string) => boolean): AsyncIterable<FolderEntry>;
+  /** Up to `bytes` leading bytes of a file. */
+  readHead(root: string, file: string, bytes: number): Promise<Uint8Array>;
+  /** SHA-256 in hex of a file, reading at most `maxBytes`. */
+  sha256(root: string, file: string, maxBytes: number): Promise<string>;
+}

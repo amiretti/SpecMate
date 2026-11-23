@@ -1,7 +1,8 @@
 // Inventory of a client folder (US-15; plan decision 2). Every rule here works on the file NAME and its extension:
 // the content of a client file never takes part, so a file cannot instruct the inventory (principle V). The table is
 // heuristic on purpose; Harvi corrects a wrong kind by hand (FR-004).
-import { exceedsPixelCap } from './image-header.ts';
+import { SpecmateError } from './errors.ts';
+import { exceedsPixelCap, type ImageType } from './image-header.ts';
 
 export type Kind = 'brand-manual' | 'logo' | 'photo' | 'text' | 'prices' | 'tokens' | 'secret' | 'unclassified';
 export type Notice =
@@ -96,3 +97,43 @@ export function imageNotices(kind: Kind, size: { width: number; height: number }
   if (size.width < COVER_MIN_WIDTH) return ['low-resolution-cover'];
   return [];
 }
+
+/** Limits of a walk (FR-012; plan decision 4). Going past any of them fails the inventory, naming it. */
+export const LIMITS = { files: 5000, depth: 10, fileBytes: 50 * 1024 * 1024 } as const;
+
+export class InventoryLimitError extends SpecmateError {}
+
+const megabytes = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+export const tooManyFiles = (count: number) =>
+  new InventoryLimitError(`the client folder has more than ${LIMITS.files} files (stopped counting at ${count})`);
+export const tooDeep = (path: string) =>
+  new InventoryLimitError(`the client folder nests deeper than ${LIMITS.depth} levels, at ${path}`);
+export const tooBig = (path: string, size: number) =>
+  new InventoryLimitError(
+    `${path} weighs ${megabytes(size)}, over the limit of ${LIMITS.fileBytes / (1024 * 1024)} MB per file`,
+  );
+
+/** One file of the inventory (data-model.md). Nothing from the content of a file is ever kept (FR-006). */
+export interface InventoryEntry {
+  path: string;
+  kind: Kind;
+  detectedKind: Kind;
+  correctedBy?: 'manual';
+  size?: number;
+  type?: ImageType | string;
+  width?: number;
+  height?: number;
+  sha256?: string;
+  notices: Notice[];
+  status?: 'gone';
+}
+
+export type OmittedReason = 'link' | 'not-a-file' | 'unreadable';
+
+export interface Omitted {
+  path: string;
+  reason: OmittedReason;
+}
+
+export const byPath = <T extends { path: string }>(a: T, b: T) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
