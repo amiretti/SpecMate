@@ -8,6 +8,7 @@ publicación. Comandos previstos:
 | `specmate new <slug>` | Crea `./<slug>`: repo git con un commit, copia de lo que git versiona en `templates/site` (sin artefactos) y el `relevamiento.json` del cliente de ejemplo inventado, con dirección (US-13, US-14) | E1 |
 | `specmate inventory <slug> [--clients <dir>]` | Inventaría `<raíz>/<slug>` (raíz: `--clients` o `SPECMATE_CLIENTS_DIR`, fuera del repo de SpecMate) en modo solo lectura y lo guarda en `steps.inventory` de `./<slug>/relevamiento.json`; repetible, conserva las correcciones a mano (US-15) | E2 |
 | `specmate tokens <slug> [--clients <dir>] [--file <ruta>] [--confirm]` | Traduce el archivo de tokens que encontró el inventario al contrato del sitio (DTCG 2025.10 directo; otro formato, por el mapeo de `steps.tokens`), verifica el contraste WCAG 2.2 AA y escribe `./<slug>/src/data/tokens.json` solo con el mapeo confirmado para ese archivo, completo y con todas las parejas aprobadas (US-16) | E2 |
+| `specmate profile <slug> [propose] [--clients <dir>]` · `profile <slug> set <campo> <valor>` · `confirm <campo>` · `pick <campo>` | Pasos 2 a 4 (negocio, objetivo, tono) en `steps.profile`: muestra encontré · inferí · falta; `propose` lee por stdin (tope 64 KB) la propuesta del agente de la sesión, la valida entera y verifica las citas contra los archivos `.txt`/`.md`; `set`, `confirm` y `pick` ("no sé, elegí vos", delegado) los confirma Harvi. Acción y tono sugeridos salen de la tabla de rubros, sin modelo (US-17, ADR-0041) | E2 |
 | `specmate brief` | Arma el brief verificable y lo valida contra su esquema | E2 |
 | `specmate verify` | Corre todos los controles de ADR-0030 y escribe el informe de verificación | E5 |
 | `specmate publish` | Publica en Cloudflare, solo con `verify` en verde y aprobación humana | E5 |
@@ -42,6 +43,12 @@ publicación. Comandos previstos:
   `src/lib/tokens.ts` del repo del sitio (`TOKEN_PATHS` y `buildTokensCss`); el CLI no tiene copia de la lista. Un
   token sin valor, un valor que no convierte o un contraste bajo el umbral bloquean la escritura: nunca se completa con
   un valor por defecto. El archivo del cliente se lee entero solo si cabe en 1 MB y ninguna parte de su ruta es un link.
+- **El CLI no llama a ningún modelo** (US-17, ADR-0041): la propuesta del negocio la arma el agente de la sesión
+  (subagente `client-reader`, solo lectura) y llega por stdin como dato; `src/domain/business-profile.ts` la valida
+  entera (campos y valores cerrados, largos, `source` del inventario) antes de guardar nada, y lo inferido nunca queda
+  `confirmed` sin una acción de Harvi. `goal.action` y `tone.choice` salen de la tabla de rubros, no de la propuesta.
+  Un dato `found` cuya cita no está en el archivo (o que no es `.txt`/`.md`) se guarda `inferred`. Lo impone
+  `test/no-model.test.ts`: sin SDK de modelos, sin claves de proveedor y con `client-reader` en `capabilities: [read]`.
 - **`new` es atómico:** se arma en `.<slug>.tmp-*` junto al destino y se publica con un
   `rename`; ante cualquier falla se borra el temporal. Un destino existente no se toca.
 - **`new` copia solo lo versionado** (#53): la lista sale de lo commiteado en `templates/site`

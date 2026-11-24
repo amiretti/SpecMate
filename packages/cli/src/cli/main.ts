@@ -3,12 +3,21 @@
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { applyClientTokens, type TokensDeps, type TokensResult } from '../application/apply-client-tokens.ts';
+import {
+  type ChangeRequest,
+  changeProfile,
+  type ProfileDeps,
+  type ProfileResult,
+  proposeProfile,
+  showProfile,
+} from '../application/business-profile-step.ts';
 import { type CreateClientRepoDeps, createClientRepo } from '../application/create-client-repo.ts';
 import {
   type InventoryDeps,
   type InventoryResult,
   inventoryClientFolder,
 } from '../application/inventory-client-folder.ts';
+import { FIELD_NAMES, type FieldName, isFieldName, STEPS, TONES } from '../domain/business-profile.ts';
 import { SpecmateError } from '../domain/errors.ts';
 import { EXPECTED_KINDS, type InventoryEntry, type Kind } from '../domain/inventory.ts';
 import { parseSlug } from '../domain/slug.ts';
@@ -18,6 +27,8 @@ export const CLIENTS_ENV = 'SPECMATE_CLIENTS_DIR';
 export const USAGE = `Usage: specmate new <slug>
        specmate inventory <slug> [--clients <dir>]
        specmate tokens <slug> [--clients <dir>] [--file <path>] [--confirm]
+       specmate profile <slug> [propose] [--clients <dir>]
+       specmate profile <slug> set <field> <value> | confirm <field> | pick <field>
 
 new        Creates ./<slug>: a git repo with the SpecMate site template and its invented example client.
 inventory  Lists what the client folder <clients>/<slug> holds and what is missing, read only, and saves it in
@@ -29,6 +40,14 @@ tokens     Translates the client's tokens file found by inventory to the site's 
            confirmed, complete and every pair passes. Same --clients as inventory.
            --file <path>  the tokens file, as the inventory lists it, when there is more than one
            --confirm      confirm the mapping as it is now in steps.tokens
+profile    Steps 2 to 4 of the intake: the business, the main action and the tone, saved in steps.profile of
+           ./<slug>/relevamiento.json. Without a subcommand it shows what was found, inferred and what is missing.
+           propose   reads a proposal as JSON from stdin (at most 64 KB), validates it whole and saves it as found or
+                     inferred; it needs --clients (default: $${CLIENTS_ENV}) to check the quotes against the files
+           set       Harvi's own value for a field, confirmed
+           confirm   confirms what was found or inferred, as it is
+           pick      "no sé, elegí vos": takes the suggestion, confirmed and marked as delegated
+           fields: ${FIELD_NAMES.join(', ')}
 <slug>: lowercase letters, digits and hyphens, not starting or ending with a hyphen, at most 63 characters.`;
 
 export interface Io {
@@ -36,9 +55,11 @@ export interface Io {
   env: Readonly<Record<string, string | undefined>>;
   out: (line: string) => void;
   err: (line: string) => void;
+  /** All of stdin, as text; fails if it is larger than the limit of a proposal. */
+  stdin: () => Promise<string>;
 }
 
-export type CliDeps = CreateClientRepoDeps & InventoryDeps & TokensDeps;
+export type CliDeps = CreateClientRepoDeps & InventoryDeps & TokensDeps & ProfileDeps;
 
 const usageError = (io: Io, problem: string) => {
   io.err(`specmate: ${problem}\n${USAGE}`);
@@ -131,6 +152,49 @@ export function formatTokens({ step, total, notices, clientDir, file, tokensFile
     .join('\n');
 }
 
+export function formatProfile({ profile, notices, file, saved }: ProfileResult): string {
+  const lines: string[] = [];
+  const missing: FieldName[] = [];
+  const toConfirm: FieldName[] = [];
+  for (const step of STEPS) {
+    lines.push(`Step ${step.number} · ${step.title}`);
+    for (const name of step.fields) {
+      const field = profile.fields[name];
+      if (!field) {
+        missing.push(name);
+        lines.push(`  missing: ${name}`);
+        continue;
+      }
+      if (field.state !== 'confirmed') toConfirm.push(name);
+      const where = [
+        field.source,
+        field.state === 'confirmed' && field.delegated ? 'delegated' : undefined,
+        field.quote === undefined ? undefined : `"${field.quote}"`,
+      ].filter(Boolean);
+      lines.push(`  ${field.state}: ${name} = ${field.value}${where.length ? ` (${where.join(', ')})` : ''}`);
+    }
+    if (step.title === 'tone') {
+      if (!profile.samples) lines.push('  samples: none yet');
+      else {
+        lines.push('  samples (the same sentence, written by the agent):');
+        const chosen = profile.fields['tone.choice']?.value;
+        for (const tone of TONES)
+          lines.push(`    ${tone}: ${profile.samples[tone]}${tone === chosen ? ' (suggested)' : ''}`);
+      }
+    }
+  }
+  return [
+    `Profile in ${file}`,
+    ...lines,
+    ...notices.map((notice) => `Notice: ${notice}`),
+    `To confirm: ${toConfirm.length ? toConfirm.join(', ') : 'nothing'}`,
+    `Ask about: ${missing.length ? missing.join(', ') : 'nothing'}`,
+    ...(saved ? [`Saved in ${file}`] : []),
+  ]
+    .map(printable)
+    .join('\n');
+}
+
 // Only inventory errors can carry a client file name; `new` keeps its messages as they were (git stderr included).
 async function run(
   io: Io,
@@ -148,6 +212,74 @@ async function run(
     );
     return 1;
   }
+}
+
+/** `specmate profile <slug> [propose | set <field> <value> | confirm <field> | pick <field>]` (US-17). */
+async function profileCommand(
+  io: Io,
+  deps: CliDeps,
+  rest: readonly string[],
+  slugArg: string,
+  clientsOption: string | undefined,
+): Promise<number> {
+  const [, sub, fieldArg, valueArg, ...more] = rest;
+  const clients = clientsOption || io.env[CLIENTS_ENV];
+  const siteDir = path.resolve(io.cwd, slugArg);
+  const clientFolder = () => {
+    const root = path.resolve(io.cwd, clients as string);
+    return { clientsRoot: root, clientDir: path.join(root, parseSlug(slugArg)) };
+  };
+  if (sub === undefined || sub === 'propose') {
+    if (fieldArg !== undefined) return usageError(io, `unexpected arguments: ${rest.join(' ')}`);
+    if (sub === 'propose' && !clients)
+      return usageError(
+        io,
+        `profile propose needs the root of the client folders: pass --clients <dir> or set ${CLIENTS_ENV}`,
+      );
+    return run(
+      io,
+      'profile',
+      async () => {
+        parseSlug(slugArg);
+        const result =
+          sub === 'propose'
+            ? await proposeProfile({ ...clientFolder(), siteDir, proposalText: await io.stdin() }, deps)
+            : await showProfile({ siteDir, ...(clients ? { client: clientFolder() } : {}) }, deps);
+        return formatProfile(result);
+      },
+      printable,
+    );
+  }
+  if (sub !== 'set' && sub !== 'confirm' && sub !== 'pick')
+    return usageError(io, `unknown profile subcommand: ${sub} (use propose, set, confirm or pick)`);
+  if (clientsOption !== undefined) return usageError(io, `profile ${sub} does not take --clients`);
+  if (fieldArg === undefined || !isFieldName(fieldArg))
+    return usageError(
+      io,
+      fieldArg === undefined
+        ? `profile ${sub} needs a field: ${FIELD_NAMES.join(', ')}`
+        : `unknown field ${printable(JSON.stringify(fieldArg))}: ${FIELD_NAMES.join(', ')}`,
+    );
+  if (sub === 'set' ? valueArg === undefined || more.length > 0 : valueArg !== undefined)
+    return usageError(
+      io,
+      sub === 'set' ? 'profile set needs one field and one value' : `profile ${sub} takes only a field`,
+    );
+  const request: ChangeRequest = {
+    siteDir,
+    action: sub,
+    field: fieldArg,
+    ...(valueArg === undefined ? {} : { value: valueArg }),
+  };
+  return run(
+    io,
+    'profile',
+    async () => {
+      parseSlug(slugArg);
+      return formatProfile(await changeProfile(request, deps));
+    },
+    printable,
+  );
 }
 
 export async function main(argv: readonly string[], io: Io, deps: CliDeps): Promise<number> {
@@ -183,8 +315,11 @@ export async function main(argv: readonly string[], io: Io, deps: CliDeps): Prom
     io.out(USAGE);
     return 0;
   }
-  const slugArg = rest.length === 1 ? rest[0] : undefined;
-  if ((command !== 'new' && command !== 'inventory' && command !== 'tokens') || slugArg === undefined) {
+  const slugArg = command === 'profile' ? rest[0] : rest.length === 1 ? rest[0] : undefined;
+  if (
+    (command !== 'new' && command !== 'inventory' && command !== 'tokens' && command !== 'profile') ||
+    slugArg === undefined
+  ) {
     return usageError(
       io,
       command === undefined ? 'missing command' : `unexpected arguments: ${parsed.positionals.join(' ')}`,
@@ -201,6 +336,7 @@ export async function main(argv: readonly string[], io: Io, deps: CliDeps): Prom
       return `Created ${dir}\nNext: cd ${slug} && npm ci && npm test`;
     });
   }
+  if (command === 'profile') return profileCommand(io, deps, rest, slugArg, clientsOption);
   const clients = clientsOption || io.env[CLIENTS_ENV];
   if (!clients)
     return usageError(

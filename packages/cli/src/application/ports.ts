@@ -77,7 +77,7 @@ export interface RelevamientoStore {
   writeStep(siteDir: string, name: StepName, value: unknown): Promise<void>;
 }
 
-export type StepName = 'inventory' | 'tokens';
+export type StepName = 'inventory' | 'tokens' | 'profile';
 
 /** The token contract of a client site, taken from the site's own `src/lib/tokens.ts` (US-16 plan decision 1). */
 export interface SiteContract {

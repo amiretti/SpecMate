@@ -110,31 +110,51 @@ export interface InventoryResult {
   file: string;
 }
 
-/** Real paths of the client folder and the site, refusing any of them (or the clients root) inside SpecMate. */
-export async function resolveClientAndSite(
-  request: { clientsRoot: string; clientDir: string; siteDir: string },
-  deps: Pick<InventoryDeps, 'folder' | 'relevamiento' | 'specmateRoot'>,
-  command: 'inventory' | 'tokens',
-): Promise<{ clientDir: string; siteDir: string }> {
-  const { folder, relevamiento } = deps;
-  const specmate = await folder.realPath(await deps.specmateRoot());
-  const refuseInside = (label: string, given: string, real: string) => {
-    if (folder.isInside(specmate, real))
+type ResolveDeps = Pick<InventoryDeps, 'folder' | 'relevamiento' | 'specmateRoot'>;
+type SiteCommand = 'inventory' | 'tokens' | 'profile';
+
+async function guardInside(deps: ResolveDeps) {
+  const specmate = await deps.folder.realPath(await deps.specmateRoot());
+  return (label: string, given: string, real: string) => {
+    if (deps.folder.isInside(specmate, real))
       throw new InsideSpecmateError(
         `${label} ${given} is inside the SpecMate repo (${specmate}): client material never enters it; keep it elsewhere`,
       );
   };
-  refuseInside('the clients root', request.clientsRoot, await folder.realPath(request.clientsRoot));
-  const clientDir = await folder.realPath(request.clientDir);
-  refuseInside('the client folder', request.clientDir, clientDir);
+}
+
+async function realSite(
+  siteDir: string,
+  deps: ResolveDeps,
+  command: SiteCommand,
+  refuseInside: Awaited<ReturnType<typeof guardInside>>,
+) {
   // What the steps save names the client's files: it must not land in SpecMate either (US-15 spec §7, principle XII).
-  const siteDir = await folder.realPath(request.siteDir).catch(() => {
+  const real = await deps.folder.realPath(siteDir).catch(() => {
     throw new SpecmateError(
-      `${relevamiento.file(request.siteDir)} not found: run specmate ${command} from the folder that holds the site created by specmate new`,
+      `${deps.relevamiento.file(siteDir)} not found: run specmate ${command} from the folder that holds the site created by specmate new`,
     );
   });
-  refuseInside('the site', request.siteDir, siteDir);
-  return { clientDir, siteDir };
+  refuseInside('the site', siteDir, real);
+  return real;
+}
+
+/** Real paths of the client folder and the site, refusing any of them (or the clients root) inside SpecMate. */
+export async function resolveClientAndSite(
+  request: { clientsRoot: string; clientDir: string; siteDir: string },
+  deps: ResolveDeps,
+  command: SiteCommand,
+): Promise<{ clientDir: string; siteDir: string }> {
+  const refuseInside = await guardInside(deps);
+  refuseInside('the clients root', request.clientsRoot, await deps.folder.realPath(request.clientsRoot));
+  const clientDir = await deps.folder.realPath(request.clientDir);
+  refuseInside('the client folder', request.clientDir, clientDir);
+  return { clientDir, siteDir: await realSite(request.siteDir, deps, command, refuseInside) };
+}
+
+/** Real path of the site alone, for the commands that never open the client folder (US-17 set, confirm, pick). */
+export async function resolveSite(siteDir: string, deps: ResolveDeps, command: SiteCommand): Promise<string> {
+  return realSite(siteDir, deps, command, await guardInside(deps));
 }
 
 /** Inventories a client folder into steps.inventory of the site's relevamiento.json (US-15). */
