@@ -30,7 +30,7 @@ cambia** que el rubro, el diferencial, el público, la acción principal y el to
 cada uno, y él solo confirma, corrige o completa lo que falta.
 
 - **SC-001**: Sobre una carpeta inventada con textos del negocio, una propuesta válida deja los tres pasos con cada campo en **encontré**, **inferí** o **falta**, y el paso pregunta solo por los que faltan.
-- **SC-002**: Una propuesta con un campo de más, un valor fuera de catálogo, un texto demasiado largo, una fuente que no es del inventario o una cita que no está en el archivo se rechaza nombrando el campo, y no cambia nada guardado.
+- **SC-002**: Una propuesta con un campo de más, un valor fuera de catálogo, un texto demasiado largo, o una fuente que no es del inventario se rechaza nombrando el campo, y no cambia nada guardado; un dato "encontré" cuya cita no está en el archivo queda como inferí (FR-004; decisión del developer, 2026-11-24).
 - **SC-003**: Ningún dato inferido queda como confirmado sin una acción de Harvi.
 
 ## §3 Requisitos funcionales
@@ -66,7 +66,7 @@ cada uno, y él solo confirma, corrige o completa lo que falta.
 | AC | Dado / Cuando / Entonces | Verificación |
 |---|---|---|
 | AC-1 | **Dado** una carpeta inventada y una propuesta válida con un dato encontrado (con cita) y otro inferido **cuando** se carga **entonces** cada paso muestra encontré · inferí · falta y solo pregunta lo que falta | test |
-| AC-2 | **Dado** propuestas con un campo de más, un rubro fuera de catálogo, un texto de más del largo, una fuente fuera del inventario y una cita que no está en el archivo **cuando** se cargan **entonces** cada una se rechaza nombrando el campo y no cambia nada guardado | test |
+| AC-2 | **Dado** propuestas con un campo de más, un rubro fuera de catálogo, un texto de más del largo y una fuente fuera del inventario **cuando** se cargan **entonces** cada una se rechaza nombrando el campo y no cambia nada guardado; **y dado** un dato "encontré" cuya cita no está en el archivo **entonces** queda como inferí | test |
 | AC-3 | **Dado** un dato "encontré" cuya fuente es un PDF **cuando** se carga **entonces** queda como inferí | test |
 
 ### US2 — Se confirma, se delega o se vuelve atrás (Prioridad: P1)
