@@ -1,7 +1,7 @@
 ---
 id: US-15 (#67)
 titulo: Inventariar la carpeta del cliente para no preguntar lo que ya está
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/67
 analisis: no requerido (el lead lo analizó inline: ADR-0031, ADR-0040, #60, informe del spike y packages/cli/AGENTS.md)
 depende_de: [US-14]
