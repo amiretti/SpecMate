@@ -21,6 +21,7 @@ import { FIELD_NAMES, type FieldName, isFieldName, STEPS, TONES } from '../domai
 import { SpecmateError } from '../domain/errors.ts';
 import { EXPECTED_KINDS, type InventoryEntry, type Kind } from '../domain/inventory.ts';
 import { parseSlug } from '../domain/slug.ts';
+import { isUnsafe } from '../domain/text-safety.ts';
 
 export const CLIENTS_ENV = 'SPECMATE_CLIENTS_DIR';
 
@@ -68,19 +69,6 @@ const usageError = (io: Io, problem: string) => {
 
 // A file name comes from the client: control, bidi and invisible characters are shown escaped, never sent to the
 // terminal, both in the inventory and in error messages (which can name a file).
-const isUnsafe = (code: number) =>
-  code < 0x20 ||
-  code === 0x061c ||
-  (code >= 0x200b && code <= 0x200d) ||
-  code === 0x2028 ||
-  code === 0x2029 ||
-  code === 0x2060 ||
-  code === 0xfeff ||
-  (code >= 0x7f && code <= 0x9f) ||
-  code === 0x200e ||
-  code === 0x200f ||
-  (code >= 0x202a && code <= 0x202e) ||
-  (code >= 0x2066 && code <= 0x2069);
 const printable = (text: string) =>
   [...text]
     .map((ch) => {

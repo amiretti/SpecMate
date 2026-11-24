@@ -4,13 +4,16 @@
 /** A saved quote is at most this long. */
 export const MAX_QUOTE = 300;
 
+/** A quote shorter than this, once normalized, proves nothing: a common word is in any text. */
+export const MIN_QUOTE = 12;
+
 export function normalizeQuote(text: string): string {
   const bare = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text; // a BOM is not part of the text
   return bare.normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
-/** Whether `quote` is in `text`; an empty quote is never found. */
+/** Whether `quote` is in `text`; an empty or too short quote is never found. */
 export function quoteIn(text: string, quote: string): boolean {
   const wanted = normalizeQuote(quote);
-  return wanted !== '' && normalizeQuote(text).includes(wanted);
+  return [...wanted].length >= MIN_QUOTE && normalizeQuote(text).includes(wanted);
 }

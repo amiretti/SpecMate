@@ -4,6 +4,7 @@
 // confirmed without an action of Harvi (principle XI).
 import { SpecmateError } from './errors.ts';
 import { MAX_QUOTE } from './quote.ts';
+import { hasUnsafeCharacters, looksLikeSecret } from './text-safety.ts';
 
 export type Action = 'call' | 'whatsapp' | 'book' | 'visit' | 'quote';
 export type Tone = 'close' | 'professional' | 'energetic';
@@ -109,10 +110,20 @@ const rowOf = (category: string | undefined) => CATEGORIES.find((candidate) => c
 
 const OTHER = 'other:';
 
+/** Text that is saved or shown must carry no hidden characters and nothing shaped like a secret. */
+const textProblem = (text: string): string | undefined =>
+  hasUnsafeCharacters(text)
+    ? 'has control or invisible characters'
+    : looksLikeSecret(text)
+      ? 'looks like a secret: it is not saved'
+      : undefined;
+
 /** Why `value` is not valid for `name`, or undefined when it is. */
 function valueProblem(name: FieldName, value: unknown): string | undefined {
   if (typeof value !== 'string') return 'must be text';
   const text = value.trim();
+  const hidden = textProblem(text);
+  if (hidden) return hidden;
   switch (name) {
     case 'business.category': {
       if (rowOf(text)) return undefined;
@@ -210,6 +221,8 @@ export function parseProposal(input: unknown, sources: ReadonlySet<string>): Pro
       const text = input.samples[tone];
       if (typeof text !== 'string' || text.trim() === '') throw fail(`.samples.${tone}`, 'must be text');
       if (length(text.trim()) > SAMPLE_MAX) throw fail(`.samples.${tone}`, `is longer than ${SAMPLE_MAX} characters`);
+      const problem = textProblem(text.trim());
+      if (problem) throw fail(`.samples.${tone}`, problem);
       samples[tone] = text.trim();
     }
     proposal.samples = samples;

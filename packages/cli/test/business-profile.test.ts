@@ -340,3 +340,62 @@ describe('parseProfileStep (plan decision 5)', () => {
     expect(() => parseProfileStep(saved)).toThrow(naming);
   });
 });
+
+// Security review of US-17: a value that looks like a secret, or has control or invisible characters, is never saved.
+const SECRETS = [
+  ['a PEM header', '-----BEGIN PRIVATE KEY-----'],
+  ['an AWS key id', 'AKIAIOSFODNN7EXAMPLE'],
+  ['an sk- key', 'usa sk-proj-abc123 para entrar'],
+  ['a GitHub token', 'ghp_abcdefghijklmnop'],
+  ['a GitHub fine-grained token', 'github_pat_11ABCDEFG'],
+  ['a Slack token', 'xoxb-1234-abcd'],
+  ['24 characters of base64', 'QUJDREVGR0hJSktMTU5PUFFSU1RVVldY'],
+  ['a long hex string', 'deadbeefdeadbeefdeadbeef'],
+] as const;
+const UNSAFE = [
+  ['an escape', `corte${String.fromCharCode(27)}[31m`],
+  ['a bidi override', `corte${String.fromCharCode(0x202e)}rojo`],
+  ['a line break', 'corte\nrojo'],
+  ['a zero width space', `corte${String.fromCharCode(0x200b)}rojo`],
+] as const;
+
+describe('values that look like a secret or hide characters', () => {
+  it.each(SECRETS)('set rejects %s, naming the field', (_name, value) => {
+    expect(() => setField(emptyProfile(), 'business.audience', value, BY)).toThrow(InvalidValueError);
+    expect(() => setField(emptyProfile(), 'business.audience', value, BY)).toThrow(
+      'business.audience: looks like a secret: it is not saved',
+    );
+  });
+  it.each(SECRETS)('a proposal field with %s is rejected, naming the field', (_name, value) =>
+    reject(
+      { fields: { 'business.differentiator': field({ value, kind: 'inferred', quote: undefined }) } },
+      '["business.differentiator"].value looks like a secret: it is not saved',
+    ),
+  );
+  it.each(SECRETS)('a sample with %s is rejected, naming the tone', (_name, value) =>
+    reject({ samples: { ...sample, professional: value } }, 'proposal.samples.professional looks like a secret'),
+  );
+  it.each(UNSAFE)('set rejects %s, naming the field', (_name, value) => {
+    expect(() => setField(emptyProfile(), 'business.audience', value, BY)).toThrow(
+      'business.audience: has control or invisible characters',
+    );
+  });
+  it.each(UNSAFE)('a proposal field with %s is rejected, naming the field', (_name, value) =>
+    reject(
+      { fields: { 'business.audience': field({ value, kind: 'inferred', quote: undefined }) } },
+      '["business.audience"].value has control or invisible characters',
+    ),
+  );
+  it.each(UNSAFE)('a sample with %s is rejected, naming the tone', (_name, value) =>
+    reject(
+      { samples: { ...sample, energetic: value } },
+      'proposal.samples.energetic has control or invisible characters',
+    ),
+  );
+  it('keeps accepting an ordinary sentence with accents and punctuation', () => {
+    const text = 'Atendemos a familias del barrio, con turno o sin él: ¡venite!';
+    expect(setField(emptyProfile(), 'business.audience', text, BY).profile.fields['business.audience']?.value).toBe(
+      text,
+    );
+  });
+});

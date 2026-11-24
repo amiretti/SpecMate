@@ -27,3 +27,13 @@ describe('quote', () => {
     expect(MAX_QUOTE).toBe(300);
   });
 });
+
+describe('minimum quote (security review of US-17)', () => {
+  it('does not count a quote under 12 characters once normalized, even when it is in the text', () => {
+    expect(quoteIn('Somos una peluquería', 'peluquería')).toBe(false);
+    expect(quoteIn('Somos una peluquería', '  Somos   una  ')).toBe(false);
+  });
+  it('counts one of exactly 12', () => {
+    expect(quoteIn('Somos una peluquería', 'somos una pe')).toBe(true);
+  });
+});

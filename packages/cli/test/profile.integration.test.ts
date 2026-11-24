@@ -216,18 +216,66 @@ describe('proposing (FR-001, FR-003, FR-004, FR-010, AC-1, AC-3)', () => {
     expect(fields['business.category'].state).toBe('found');
   });
 
-  it('shows text from the proposal with control and bidi characters escaped (FR-010)', async () => {
+  it('shows what is saved with control and bidi characters escaped (FR-010)', async () => {
     const esc = String.fromCharCode(27);
     const rlo = String.fromCharCode(0x202e);
+    const saved = await json();
+    saved.steps.profile = {
+      version: 1,
+      fields: { 'business.audience': { state: 'inferred', value: 'familias', source: `a${esc}[31m${rlo}b.txt` } },
+    };
+    await writeFile(relevamiento(), JSON.stringify(saved));
+    const res = show();
+    expect(res.status).toBe(0);
+    expect(res.out).toContain('a\\u001b[31m\\u202eb.txt');
+    expect(res.out).not.toContain(esc);
+    expect(res.out).not.toContain(rlo);
+  });
+
+  it('rejects a value that looks like a secret or hides characters, and saves nothing (security review)', async () => {
+    const before = await raw();
+    const secret = propose({
+      fields: { 'business.differentiator': { value: 'AKIAIOSFODNN7EXAMPLE', kind: 'inferred', source: 'precios.txt' } },
+    });
+    expect(secret.status).toBe(1);
+    expect(secret.err).toContain('["business.differentiator"].value looks like a secret: it is not saved');
+    const hidden = propose({
+      fields: {
+        'business.audience': { value: `a${String.fromCharCode(0x202e)}b`, kind: 'inferred', source: 'precios.txt' },
+      },
+    });
+    expect(hidden.status).toBe(1);
+    expect(hidden.err).toContain('["business.audience"].value has control or invisible characters');
+    const sample = propose({ samples: { ...VALID.samples, close: '-----BEGIN PRIVATE KEY-----' } });
+    expect(sample.status).toBe(1);
+    expect(sample.err).toContain('proposal.samples.close looks like a secret');
+    expect(await raw()).toBe(before);
+  });
+
+  it('set rejects a secret, naming the field, and saves nothing', async () => {
+    const before = await raw();
+    const res = change('set', 'business.differentiator', 'ghp_abcdefghijklmnop');
+    expect(res.status).toBe(1);
+    expect(res.err).toContain('business.differentiator: looks like a secret: it is not saved');
+    expect(await raw()).toBe(before);
+  });
+
+  it('a quote under 12 characters does not count: the value is saved as inferred, like an absent quote', async () => {
     const res = propose({
       fields: {
-        'business.differentiator': { value: `corte${esc}[31m${rlo}rojo`, kind: 'inferred', source: 'precios.txt' },
+        'business.category': {
+          value: 'peluqueria',
+          kind: 'found',
+          source: 'textos/quienes-somos.txt',
+          quote: 'peluquería',
+        },
       },
     });
     expect(res.status).toBe(0);
-    expect(res.out).toContain('business.differentiator = corte\\u001b[31m\\u202erojo');
-    expect(res.out).not.toContain(esc);
-    expect(res.out).not.toContain(rlo);
+    expect(res.out).toContain(
+      'Notice: business.category: the quote is not in textos/quienes-somos.txt; saved as inferred',
+    );
+    expect((await profile()).fields['business.category'].state).toBe('inferred');
   });
 });
 
@@ -357,9 +405,11 @@ describe('confirming, correcting and delegating (FR-007, FR-008, AC-4, AC-5)', (
     expect(fields['business.category']).toMatchObject({ state: 'confirmed', value: 'gimnasio' });
   });
 
-  it('shows an error with escaped control and bidi characters from the value', async () => {
+  it('shows an error with escaped control and bidi characters from the source', async () => {
     const rlo = String.fromCharCode(0x202e);
-    const res = change('set', 'business.category', `abogado${rlo}`);
+    const res = propose({
+      fields: { 'business.category': { value: 'peluqueria', kind: 'inferred', source: `x${rlo}.txt` } },
+    });
     expect(res.status).toBe(1);
     expect(res.err).toContain('\\u202e');
     expect(res.err).not.toContain(rlo);
