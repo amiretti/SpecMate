@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, it } from 'node:test';
-import { buildTokensCss } from '../src/lib/tokens.ts';
+import { buildTokensCss, TOKEN_PATHS } from '../src/lib/tokens.ts';
 import { findLiterals } from './lib/css-literals.mjs';
 import { distDir, srcDir } from './lib/paths.mjs';
 import { listFiles } from './lib/scan.mjs';
@@ -178,4 +178,41 @@ describe('dist/ loads tokens as an external stylesheet', () => {
       assert.doesNotMatch(await readFile(file, 'utf8'), /--color-bg\s*:/, path.basename(file));
     }
   });
+});
+
+// Rule (US-16 plan decision 1): the CLI reads the list of contract tokens from here, so it names every token
+// buildTokensCss requires, in the order of the example tokens.json, and nothing else.
+describe('TOKEN_PATHS', () => {
+  const leaves = (node, prefix = '') =>
+    Object.entries(node).flatMap(([key, value]) => {
+      if (key === '$comment') return [];
+      const here = prefix ? `${prefix}.${key}` : key;
+      return typeof value === 'object' && value !== null ? leaves(value, here) : [here];
+    });
+
+  it('lists the 28 leaves of the contract, in the order of the example tokens.json', () => {
+    assert.equal(TOKEN_PATHS.length, 28);
+    assert.deepEqual([...TOKEN_PATHS], leaves(tokens));
+  });
+
+  it('each one is required: dropping it fails naming it', () => {
+    for (const tokenPath of TOKEN_PATHS) {
+      const copy = clone();
+      const keys = tokenPath.split('.');
+      const last = keys.pop();
+      delete keys.reduce((node, key) => node[key], copy)[last];
+      assert.throws(() => buildTokensCss(copy), { message: `tokens.json: token "${tokenPath}" is missing` });
+    }
+  });
+});
+
+// Rule (security review of US-16): a CSS comment inside clamp() would swallow the rest of the generated CSS.
+describe('tokens with a CSS comment', () => {
+  for (const value of ['clamp(1rem/*, 2rem)', 'clamp(1rem*/, 2rem)']) {
+    it(`refuses ${value}`, () => {
+      const copy = clone();
+      copy.font.size.h1 = value;
+      assert.throws(() => buildTokensCss(copy), /token "font\.size\.h1" is invalid/);
+    });
+  }
 });

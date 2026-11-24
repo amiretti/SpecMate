@@ -1,6 +1,5 @@
 // Ports of the use cases (ADR-0034): everything external enters through these. Paths are opaque strings here;
 // only infrastructure builds them with node:path.
-import type { Inventory } from '../domain/inventory.ts';
 
 /** The folder where a client repo is assembled and then published. */
 export interface RepoWorkspace {
@@ -61,14 +60,38 @@ export interface ClientFolder {
   readHead(root: string, file: string, bytes: number): Promise<Uint8Array>;
   /** SHA-256 in hex of a file, reading at most `maxBytes`. */
   sha256(root: string, file: string, maxBytes: number): Promise<string>;
+  /**
+   * A whole small file and its SHA-256 (US-16). Fails with a SpecmateError if it is larger than `maxBytes`, if any
+   * part of its path is a link, or if it lies outside `root` (a real path).
+   */
+  readFile(root: string, file: string, maxBytes: number): Promise<{ bytes: Uint8Array; sha256: string }>;
 }
 
-/** `relevamiento.json` at the root of a client site (US-14), seen only through `steps.inventory` (US-15). */
+/** `relevamiento.json` at the root of a client site (US-14), seen only through its steps (`steps.<name>`, ADR-0031). */
 export interface RelevamientoStore {
   /** Path of the file in `siteDir`, for messages. */
   file(siteDir: string): string;
-  /** `steps.inventory` as saved (unvalidated), or undefined; fails naming the file if it is missing or not JSON. */
-  readInventory(siteDir: string): Promise<unknown>;
-  /** Replaces `steps.inventory` and keeps every other byte of meaning; the file is replaced atomically. */
-  writeInventory(siteDir: string, inventory: Inventory): Promise<void>;
+  /** `steps.<name>` as saved (unvalidated), or undefined; fails naming the file if it is missing or not JSON. */
+  readStep(siteDir: string, name: StepName): Promise<unknown>;
+  /** Replaces `steps.<name>` and keeps every other byte of meaning; the file is replaced atomically. */
+  writeStep(siteDir: string, name: StepName, value: unknown): Promise<void>;
+}
+
+export type StepName = 'inventory' | 'tokens';
+
+/** The token contract of a client site, taken from the site's own `src/lib/tokens.ts` (US-16 plan decision 1). */
+export interface SiteContract {
+  /** Every token the contract requires, by dotted path, in contract order. */
+  paths: readonly string[];
+  /** The site's own check of a whole tokens.json; throws naming the offending token. */
+  check(tokens: unknown): void;
+}
+
+export interface SiteTokens {
+  /** Loads the contract from `siteDir`; fails with a SpecmateError if the site does not have it. */
+  contract(siteDir: string): Promise<SiteContract>;
+  /** Path of the site's `src/data/tokens.json`, for messages. */
+  file(siteDir: string): string;
+  /** Replaces the site's `src/data/tokens.json` atomically. */
+  write(siteDir: string, tokens: unknown): Promise<void>;
 }

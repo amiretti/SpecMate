@@ -79,7 +79,7 @@ export function classify(path: string): Kind {
   const ext = extension(path);
   const name = baseName(path);
   const words = normalizeName(ext ? name.slice(0, -(ext.length + 1)) : name);
-  if (ext === 'json' && /\btokens\b/.test(words)) return 'tokens';
+  if (ext === 'tokens' || (ext === 'json' && /\btokens\b/.test(words))) return 'tokens';
   if (ext === 'pdf' && /manual|brand|identidad|guia de marca/.test(words)) return 'brand-manual';
   if ((IMAGE.has(ext) || VECTOR.has(ext)) && /logo|isotipo/.test(words)) return 'logo';
   if ((TEXT.has(ext) || SHEET.has(ext)) && /precio|tarifa/.test(words)) return 'prices';
@@ -166,6 +166,7 @@ interface Previous {
   kind: Kind;
   detectedKind: Kind;
   manual: boolean;
+  gone: boolean;
 }
 
 /** The parts of a saved inventory a new run uses: path, kind and whether Harvi corrected it. Fails naming the field. */
@@ -185,8 +186,21 @@ function previousEntries(saved: unknown): Previous[] {
     if (typeof item.path !== 'string' || item.path === '') throw fail(`${at}.path`, 'must be text');
     const kind = kindAt(item.kind, `${at}.kind`);
     const detectedKind = kindAt(item.detectedKind, `${at}.detectedKind`);
-    return { path: item.path, kind, detectedKind, manual: item.correctedBy === 'manual' || kind !== detectedKind };
+    return {
+      path: item.path,
+      kind,
+      detectedKind,
+      manual: item.correctedBy === 'manual' || kind !== detectedKind,
+      gone: item.status === 'gone',
+    };
   });
+}
+
+/** Paths of the saved inventory's files of `kind` that are still there (US-16 FR-001); fails naming a bad field. */
+export function filesOfKind(saved: unknown, kind: Kind): string[] {
+  return previousEntries(saved)
+    .filter((entry) => entry.kind === kind && !entry.gone)
+    .map((entry) => entry.path);
 }
 
 /**

@@ -4,6 +4,7 @@ import { gitCli } from '../infrastructure/git-cli.ts';
 import { nodeClientFolder } from '../infrastructure/node-client-folder.ts';
 import { nodeFileSystem } from '../infrastructure/node-file-system.ts';
 import { nodeRelevamientoStore } from '../infrastructure/node-relevamiento-store.ts';
+import { nodeSiteTokens } from '../infrastructure/node-site-tokens.ts';
 import { templateSourceFrom } from '../infrastructure/template-source.ts';
 import { main } from './main.ts';
 
@@ -18,6 +19,7 @@ process.exitCode = await main(
     template,
     folder: nodeClientFolder,
     relevamiento: nodeRelevamientoStore,
+    siteTokens: nodeSiteTokens,
     // templates/site lives two levels below the SpecMate repo root.
     specmateRoot: async () => path.resolve(await template.locate(), '..', '..'),
   },

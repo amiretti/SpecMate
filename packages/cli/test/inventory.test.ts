@@ -34,6 +34,7 @@ describe('classify, one file of each kind (AC-1)', () => {
     ['design.tokens.json', 'tokens'],
     ['tokens-marca.json', 'tokens'],
     ['design-tokens.json', 'tokens'],
+    ['marca/brand.tokens', 'tokens'], // the extension DTCG 2025.10 recommends (US-16 plan decision 9)
   ])('%s is %s', (path, kind) => {
     expect(classify(path)).toBe(kind);
   });
