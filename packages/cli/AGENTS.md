@@ -44,6 +44,9 @@ publicación. Comandos previstos:
   generado) nunca llega al repo de un cliente, y un symlink o un submódulo hacen fallar la copia.
 - **Todo loop es acotado** (ADR-0033): la generación y corrección de opciones tiene
   tope de intentos y de tokens, y detecta estancamiento.
+- **Caracteres de control, bidi o invisibles en el código** (pitfall repetido en US-14 y US-15): se escriben con la
+  herramienta Edit o se arman con `String.fromCharCode`/rangos de `charCodeAt`, nunca por heredoc de shell con
+  Python o Node, que deja escapes crudos o caracteres literales y rompe biome (`noControlCharactersInRegex`).
 - Zonas críticas: los controles de `verify`, el esquema del brief y `publish`
   (`project-guard` §5).
 
