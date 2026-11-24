@@ -1,7 +1,7 @@
 ---
 id: US-16 (#68)
 titulo: Usar el archivo de tokens del cliente para no traducir su marca a mano
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/68
 analisis: no requerido (el lead lo analizó inline: ADR-0030, ADR-0040 puntos 3 y 4, templates/site/src/lib/tokens.ts, US-15)
 depende_de: [US-14, US-15]
