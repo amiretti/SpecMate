@@ -101,4 +101,38 @@ export const nodeClientFolder: ClientFolder = {
       await handle.close();
     }
   },
+
+  async readFile(root, file, maxBytes) {
+    const target = onDisk(root, file);
+    // With `root` real, the target's real path equals its plain path only if no part of it is a link or a junction.
+    const fold = (p: string) => (process.platform === 'win32' ? p.toLowerCase() : p);
+    let real: string;
+    try {
+      real = await realpath(target);
+    } catch (error) {
+      throw new SpecmateError(`cannot read ${file} in the client folder (${errorCode(error)})`);
+    }
+    if (fold(real) !== fold(path.resolve(target)) || !this.isInside(root, real))
+      throw new SpecmateError(`${file} is a link or lies outside the client folder: it is not read`);
+    let handle: Awaited<ReturnType<typeof open>>;
+    try {
+      handle = await open(target, READ_ONLY);
+    } catch (error) {
+      throw new SpecmateError(`cannot read ${file} in the client folder (${errorCode(error)})`);
+    }
+    try {
+      const buffer = new Uint8Array(maxBytes + 1);
+      let size = 0;
+      while (size < buffer.length) {
+        const { bytesRead } = await handle.read(buffer, size, buffer.length - size, size);
+        if (bytesRead === 0) break;
+        size += bytesRead;
+      }
+      if (size > maxBytes) throw new SpecmateError(`${file} is larger than ${maxBytes} bytes: it is not read`);
+      const bytes = buffer.subarray(0, size);
+      return { bytes, sha256: createHash('sha256').update(bytes).digest('hex') };
+    } finally {
+      await handle.close();
+    }
+  },
 };

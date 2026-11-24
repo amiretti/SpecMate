@@ -110,8 +110,12 @@ export interface InventoryResult {
   file: string;
 }
 
-/** Inventories a client folder into steps.inventory of the site's relevamiento.json (US-15). */
-export async function inventoryClientFolder(request: InventoryRequest, deps: InventoryDeps): Promise<InventoryResult> {
+/** Real paths of the client folder and the site, refusing any of them (or the clients root) inside SpecMate. */
+export async function resolveClientAndSite(
+  request: { clientsRoot: string; clientDir: string; siteDir: string },
+  deps: Pick<InventoryDeps, 'folder' | 'relevamiento' | 'specmateRoot'>,
+  command: 'inventory' | 'tokens',
+): Promise<{ clientDir: string; siteDir: string }> {
   const { folder, relevamiento } = deps;
   const specmate = await folder.realPath(await deps.specmateRoot());
   const refuseInside = (label: string, given: string, real: string) => {
@@ -123,15 +127,22 @@ export async function inventoryClientFolder(request: InventoryRequest, deps: Inv
   refuseInside('the clients root', request.clientsRoot, await folder.realPath(request.clientsRoot));
   const clientDir = await folder.realPath(request.clientDir);
   refuseInside('the client folder', request.clientDir, clientDir);
-  // The inventory names and hashes the client's files: it must not land in SpecMate either (spec §7, principle XII).
+  // What the steps save names the client's files: it must not land in SpecMate either (US-15 spec §7, principle XII).
   const siteDir = await folder.realPath(request.siteDir).catch(() => {
     throw new SpecmateError(
-      `${relevamiento.file(request.siteDir)} not found: run specmate inventory from the folder that holds the site created by specmate new`,
+      `${relevamiento.file(request.siteDir)} not found: run specmate ${command} from the folder that holds the site created by specmate new`,
     );
   });
   refuseInside('the site', request.siteDir, siteDir);
-  const saved = await relevamiento.readInventory(siteDir);
+  return { clientDir, siteDir };
+}
+
+/** Inventories a client folder into steps.inventory of the site's relevamiento.json (US-15). */
+export async function inventoryClientFolder(request: InventoryRequest, deps: InventoryDeps): Promise<InventoryResult> {
+  const { folder, relevamiento } = deps;
+  const { clientDir, siteDir } = await resolveClientAndSite(request, deps, 'inventory');
+  const saved = await relevamiento.readStep(siteDir, 'inventory');
   const inventory = mergeInventory(saved, await scanClientFolder(folder, clientDir));
-  await relevamiento.writeInventory(siteDir, inventory);
+  await relevamiento.writeStep(siteDir, 'inventory', inventory);
   return { inventory, clientDir, file: relevamiento.file(siteDir) };
 }

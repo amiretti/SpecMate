@@ -113,6 +113,7 @@ describe('convertToken, to the template contract (plan decision 4)', () => {
       '"Inter Variable", system-ui, sans-serif',
     ],
     ['font.family', { type: 'fontFamily', value: 'Georgia' }, 'Georgia'],
+    ['font.family', { value: ' "Inter Variable", system-ui, sans-serif ' }, '"Inter Variable", system-ui, sans-serif'],
     ['font.lineHeight', { type: 'number', value: 1.6 }, 1.6],
   ])('%s from %j is %j', (path, token, expected) => {
     expect(convertToken(path, token)).toEqual({ value: expected });
@@ -145,6 +146,7 @@ describe('convertToken, to the template contract (plan decision 4)', () => {
       { type: 'fontFamily', value: ['Inter;}body{x'] },
       'a font name has characters that are not allowed',
     ],
+    ['font.family', { value: '"Inter", x;}body{color:red' }, 'a font name has characters that are not allowed'],
     ['font.lineHeight', { type: 'number', value: 0 }, 'expected a positive number'],
     ['font.lineHeight', { value: '1.6' }, 'expected a positive number'],
   ])('%s from %j is a problem: %s', (path, token, reason) => {

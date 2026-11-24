@@ -143,3 +143,42 @@ describe('nodeClientFolder reads', () => {
     expect(await hashTree(client)).toEqual(before);
   });
 });
+
+// Rule (US-16 FR-010; plan decision 7): the tokens file is read whole only if it fits the cap, lies inside the
+// client folder and no part of its path is a link or a junction.
+describe('nodeClientFolder.readFile', () => {
+  it('returns the bytes and their SHA-256', async () => {
+    const root = await nodeClientFolder.realPath(client);
+    const { bytes, sha256 } = await nodeClientFolder.readFile(root, 'fotos/vidriera.jpg', 10);
+    expect(new TextDecoder().decode(bytes)).toBe('x'.repeat(10));
+    expect(sha256).toBe(createHash('sha256').update('x'.repeat(10)).digest('hex'));
+  });
+
+  it('refuses a file larger than the cap', async () => {
+    const root = await nodeClientFolder.realPath(client);
+    await expect(nodeClientFolder.readFile(root, 'fotos/vidriera.jpg', 9)).rejects.toThrow(
+      new SpecmateError('fotos/vidriera.jpg is larger than 9 bytes: it is not read'),
+    );
+  });
+
+  it('refuses a path that goes through a junction, inside or outside the folder', async () => {
+    const outside = path.join(work, 'afuera');
+    await mkdir(outside);
+    await writeFile(path.join(outside, 'tokens.json'), '{}');
+    await symlink(outside, path.join(client, 'atajo'), 'junction');
+    await symlink(path.join(client, 'fotos'), path.join(client, 'otra-vez'), 'junction');
+    const root = await nodeClientFolder.realPath(client);
+    for (const file of ['atajo/tokens.json', 'otra-vez/vidriera.jpg'])
+      await expect(nodeClientFolder.readFile(root, file, 100)).rejects.toThrow(
+        new SpecmateError(`${file} is a link or lies outside the client folder: it is not read`),
+      );
+  });
+
+  it('refuses a path that climbs out of the folder', async () => {
+    await writeFile(path.join(work, 'secreto.json'), '{}');
+    const root = await nodeClientFolder.realPath(client);
+    await expect(nodeClientFolder.readFile(root, '../secreto.json', 100)).rejects.toThrow(
+      new SpecmateError('../secreto.json is a link or lies outside the client folder: it is not read'),
+    );
+  });
+});

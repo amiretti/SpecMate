@@ -90,7 +90,7 @@ function readCustom(node: Record<string, unknown>, path: string[], file: TokensF
 }
 
 interface RawToken {
-  type?: string;
+  type: string | undefined;
   value: unknown;
 }
 
@@ -103,7 +103,7 @@ function readDtcg(root: Record<string, unknown>, file: TokensFile): void {
     const type = typeof node.$type === 'string' ? node.$type : inherited;
     if ('$value' in node) {
       if (raw.size >= TOKEN_LIMITS.tokens) throw new TokensFileError(`has more than ${TOKEN_LIMITS.tokens} tokens`);
-      raw.set(name, { type: typeof node.$type === 'string' ? node.$type : inherited, value: node.$value });
+      raw.set(name, { type, value: node.$value });
       return;
     }
     for (const [key, value] of Object.entries(node)) {
@@ -130,7 +130,12 @@ function readDtcg(root: Record<string, unknown>, file: TokensFile): void {
   for (const [path, token] of raw) {
     const resolved = resolve(path, [path]);
     if ('reason' in resolved) file.problems.push({ source: path, value: token.value, reason: resolved.reason });
-    else add(file, path, resolved.type === undefined ? { value: resolved.value } : resolved);
+    else
+      add(
+        file,
+        path,
+        resolved.type === undefined ? { value: resolved.value } : { type: resolved.type, value: resolved.value },
+      );
   }
 }
 
@@ -151,6 +156,7 @@ const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const LENGTH = /^(0|\d*\.?\d+(rem|em|px|vw|vh|ch|%))$/;
 const CLAMP = /^clamp\([0-9a-z.+\-*/%, ]+\)$/;
 const FONT_NAME = /^[A-Za-z0-9 _-]+$/;
+const FONT_STACK = /^[A-Za-z0-9 ,'"_-]+$/;
 const GENERIC_FAMILIES = [
   'serif',
   'sans-serif',
@@ -212,6 +218,11 @@ function length(value: unknown): Result {
 }
 
 function family(value: unknown): Result {
+  // A string that is already a CSS font stack (the template's own format) is kept as is if it has only allowed characters.
+  if (typeof value === 'string' && /[,'"]/.test(value))
+    return FONT_STACK.test(value.trim())
+      ? { value: value.trim() }
+      : { reason: 'a font name has characters that are not allowed' };
   const names = typeof value === 'string' ? [value] : value;
   if (!Array.isArray(names) || names.length === 0 || !names.every((n) => typeof n === 'string' && n.trim() !== ''))
     return { reason: 'expected a font name or a list of font names' };
