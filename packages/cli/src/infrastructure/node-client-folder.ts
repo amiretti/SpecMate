@@ -121,6 +121,9 @@ export const nodeClientFolder: ClientFolder = {
       throw new SpecmateError(`cannot read ${file} in the client folder (${errorCode(error)})`);
     }
     try {
+      // realpath cannot tell a hard link from a plain file: one with several links may be a file from outside the folder.
+      if ((await handle.stat()).nlink > 1)
+        throw new SpecmateError(`${file} has more than one hard link: it is not read`);
       const buffer = new Uint8Array(maxBytes + 1);
       let size = 0;
       while (size < buffer.length) {

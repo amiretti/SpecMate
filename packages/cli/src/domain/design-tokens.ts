@@ -117,18 +117,46 @@ function readDtcg(root: Record<string, unknown>, file: TokensFile): void {
   };
   walk(root, [], undefined);
 
-  const resolve = (path: string, chain: string[]): RawToken | TokenProblem => {
-    const token = raw.get(path);
-    if (!token) return { reason: `refers to ${path}, which does not exist` };
-    const target = typeof token.value === 'string' ? REFERENCE.exec(token.value)?.[1] : undefined;
-    if (target === undefined) return token;
-    if (chain.includes(target)) throw new TokensFileError(`circular reference: ${[...chain, target].join(' -> ')}`);
-    if (!raw.has(target)) return { reason: `refers to ${target}, which does not exist` };
-    const resolved = resolve(target, [...chain, target]);
-    return 'reason' in resolved ? resolved : { type: token.type ?? resolved.type, value: resolved.value };
+  // Each token is resolved once and remembered, and a chain longer than the depth cap is refused, so a file of
+  // chained references costs linear time instead of hanging (security review of US-16).
+  const done = new Map<string, { result: RawToken | TokenProblem; depth: number }>();
+  const resolve = (start: string): RawToken | TokenProblem => {
+    const chain = [start];
+    const seen = new Set(chain);
+    let token = raw.get(start);
+    let type = token?.type;
+    let result: RawToken | TokenProblem | undefined;
+    let hops: number | undefined;
+    while (result === undefined) {
+      const target = typeof token?.value === 'string' ? REFERENCE.exec(token.value)?.[1] : undefined;
+      if (token === undefined || target === undefined) {
+        result = token ? { type: type ?? token.type, value: token.value } : { reason: 'does not exist' };
+        break;
+      }
+      if (seen.has(target)) throw new TokensFileError(`circular reference: ${[...chain, target].join(' -> ')}`);
+      const known = done.get(target);
+      if (chain.length + (known?.depth ?? 0) > TOKEN_LIMITS.depth)
+        throw new TokensFileError(`a reference chain is deeper than ${TOKEN_LIMITS.depth} links`);
+      if (known) {
+        hops = known.depth + chain.length;
+        result =
+          'reason' in known.result ? known.result : { type: type ?? known.result.type, value: known.result.value };
+        break;
+      }
+      if (!raw.has(target)) {
+        result = { reason: `refers to ${target}, which does not exist` };
+        break;
+      }
+      chain.push(target);
+      seen.add(target);
+      token = raw.get(target);
+      type ??= token?.type;
+    }
+    done.set(start, { result, depth: hops ?? chain.length - 1 });
+    return result;
   };
   for (const [path, token] of raw) {
-    const resolved = resolve(path, [path]);
+    const resolved = resolve(path);
     if ('reason' in resolved) file.problems.push({ source: path, value: token.value, reason: resolved.reason });
     else
       add(
@@ -156,7 +184,7 @@ const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const LENGTH = /^(0|\d*\.?\d+(rem|em|px|vw|vh|ch|%))$/;
 const CLAMP = /^clamp\([0-9a-z.+\-*/%, ]+\)$/;
 const FONT_NAME = /^[A-Za-z0-9 _-]+$/;
-const FONT_STACK = /^[A-Za-z0-9 ,'"_-]+$/;
+const COMMENT = /\/\*|\*\//;
 const GENERIC_FAMILIES = [
   'serif',
   'sans-serif',
@@ -213,17 +241,17 @@ function length(value: unknown): Result {
     if (value.value < 0) return { reason: 'a negative length is not supported' };
     return { value: `${value.value}${value.unit}` };
   }
-  if (typeof value === 'string' && (LENGTH.test(value) || CLAMP.test(value))) return { value };
+  // A CSS comment inside clamp() would swallow the rest of the generated CSS (security review of US-16).
+  if (typeof value === 'string' && (LENGTH.test(value) || (CLAMP.test(value) && !COMMENT.test(value))))
+    return { value };
   return { reason: 'expected a length with its unit' };
 }
 
 function family(value: unknown): Result {
-  // A string that is already a CSS font stack (the template's own format) is kept as is if it has only allowed characters.
-  if (typeof value === 'string' && /[,'"]/.test(value))
-    return FONT_STACK.test(value.trim())
-      ? { value: value.trim() }
-      : { reason: 'a font name has characters that are not allowed' };
-  const names = typeof value === 'string' ? [value] : value;
+  // A string that is already a CSS font stack (the template's own format) is split and quoted again: quotes from the
+  // client never reach the CSS, so an unclosed one cannot break it (security review of US-16).
+  const unquote = (name: string) => name.trim().replace(/^(["'])(.*)\1$/, '$2');
+  const names = typeof value === 'string' ? value.split(',').map(unquote) : value;
   if (!Array.isArray(names) || names.length === 0 || !names.every((n) => typeof n === 'string' && n.trim() !== ''))
     return { reason: 'expected a font name or a list of font names' };
   const trimmed = names.map((n: string) => n.trim());

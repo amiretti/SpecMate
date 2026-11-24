@@ -153,3 +153,34 @@ describe('convertToken, to the template contract (plan decision 4)', () => {
     expect(convertToken(path, token)).toEqual({ reason });
   });
 });
+
+describe('hostile values found by the security review of US-16', () => {
+  it.each([
+    ['font.size.h1', { value: 'clamp(1rem/*, 2rem)' }, 'expected a length with its unit'],
+    ['font.size.h2', { value: 'clamp(1rem*/, 2rem)' }, 'expected a length with its unit'],
+    ['font.family', { value: 'Arial, "x' }, 'a font name has characters that are not allowed'],
+    ['font.family', { value: "Arial, 'x" }, 'a font name has characters that are not allowed'],
+  ])('%s from %j is a problem', (path, token, reason) => {
+    expect(convertToken(path, token)).toEqual({ reason });
+  });
+
+  it('a quoted stack is split and quoted again, so the quotes are always balanced', () => {
+    expect(convertToken('font.family', { value: "'Inter Variable', system-ui" })).toEqual({
+      value: '"Inter Variable", system-ui',
+    });
+  });
+
+  it('a long chain of references resolves quickly, and one deeper than the cap is refused', () => {
+    const chain = (links: number) => {
+      const tokens: Record<string, unknown> = { t0: { $type: 'number', $value: 1 } };
+      for (let i = 1; i <= links; i += 1) tokens[`t${i}`] = { $value: `{t${i - 1}}` };
+      return tokens;
+    };
+    const start = performance.now();
+    expect(read(chain(TOKEN_LIMITS.depth)).tokens.get(`t${TOKEN_LIMITS.depth}`)).toEqual({ type: 'number', value: 1 });
+    expect(() => read(chain(5000))).toThrow(
+      new TokensFileError(`a reference chain is deeper than ${TOKEN_LIMITS.depth} links`),
+    );
+    expect(performance.now() - start).toBeLessThan(2000);
+  });
+});

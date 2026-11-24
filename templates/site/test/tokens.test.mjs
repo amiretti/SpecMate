@@ -205,3 +205,14 @@ describe('TOKEN_PATHS', () => {
     }
   });
 });
+
+// Rule (security review of US-16): a CSS comment inside clamp() would swallow the rest of the generated CSS.
+describe('tokens with a CSS comment', () => {
+  for (const value of ['clamp(1rem/*, 2rem)', 'clamp(1rem*/, 2rem)']) {
+    it(`refuses ${value}`, () => {
+      const copy = clone();
+      copy.font.size.h1 = value;
+      assert.throws(() => buildTokensCss(copy), /token "font\.size\.h1" is invalid/);
+    });
+  }
+});

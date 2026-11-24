@@ -9,7 +9,9 @@ const FAMILY = /^[A-Za-z0-9 ,'"_-]+$/;
 type Check = (value: unknown) => boolean;
 const isColor: Check = (v) => typeof v === 'string' && HEX_COLOR.test(v);
 const isLength: Check = (v) => typeof v === 'string' && LENGTH.test(v);
-const isSize: Check = (v) => typeof v === 'string' && (LENGTH.test(v) || (CLAMP.test(v) && balanced(v)));
+// A CSS comment inside clamp() would swallow the rest of the generated CSS (security review of US-16).
+const isSize: Check = (v) =>
+  typeof v === 'string' && (LENGTH.test(v) || (CLAMP.test(v) && balanced(v) && !/\/\*|\*\//.test(v)));
 const isFamily: Check = (v) => typeof v === 'string' && FAMILY.test(v.trim()) && v.trim().length > 0;
 const isLineHeight: Check = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
 

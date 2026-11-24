@@ -3,7 +3,7 @@
 // The folders are invented clients in the system temp dir.
 import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
-import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { link, mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -179,6 +179,18 @@ describe('nodeClientFolder.readFile', () => {
     const root = await nodeClientFolder.realPath(client);
     await expect(nodeClientFolder.readFile(root, '../secreto.json', 100)).rejects.toThrow(
       new SpecmateError('../secreto.json is a link or lies outside the client folder: it is not read'),
+    );
+  });
+});
+
+describe('nodeClientFolder.readFile and hard links (security review of US-16)', () => {
+  it('refuses a file with more than one hard link, which may be a file from outside the folder', async () => {
+    const outside = path.join(work, 'afuera.json');
+    await writeFile(outside, '{}');
+    await link(outside, path.join(client, 'tokens.json'));
+    const root = await nodeClientFolder.realPath(client);
+    await expect(nodeClientFolder.readFile(root, 'tokens.json', 100)).rejects.toThrow(
+      new SpecmateError('tokens.json has more than one hard link: it is not read'),
     );
   });
 });
