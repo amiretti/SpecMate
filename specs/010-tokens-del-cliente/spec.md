@@ -1,11 +1,11 @@
 ---
 id: US-16 (#68)
 titulo: Usar el archivo de tokens del cliente para no traducir su marca a mano
-estado: borrador          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/68
 analisis: no requerido (el lead lo analizó inline: ADR-0030, ADR-0040 puntos 3 y 4, templates/site/src/lib/tokens.ts, US-15)
 depende_de: [US-14, US-15]
-revisa: developer (gate de spec); revisión `security` antes del PR (el archivo del cliente es entrada no confiable y termina en el CSS del sitio)
+revisa: developer (Andy, spec aprobada 2026-11-24: "sí", con las dos decisiones de §7); revisión `security` antes del PR (el archivo del cliente es entrada no confiable y termina en el CSS del sitio)
 zona_critica: no está en project-guard §5, pero su salida alimenta el CSS de la plantilla (zona "escape de contenido")
 estimacion: ~100k tok · ~3 h · el lead escribe inline y `security` verifica en nivel máximo
 ---
