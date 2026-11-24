@@ -242,3 +242,139 @@ export function convertToken(contractPath: string, token: SourceToken): Result {
     };
   return CONVERT[wants](token.value);
 }
+
+// --- Mapping, merge with the saved step and translation (FR-003 to FR-005, FR-009; plan decision 8) ---------------
+
+/** Contract path -> path in the client's file, or null when nothing is mapped yet. */
+export type TokenMapping = Record<string, string | null>;
+
+export interface TokensSource {
+  path: string;
+  sha256: string;
+}
+
+/** A saved `steps.tokens` that does not have the expected shape; the message names the field. */
+export class InvalidTokensStepError extends SpecmateError {}
+
+/** Only exact path matches are proposed: nothing is guessed by likeness (FR-003). */
+export function proposeMapping(contract: readonly string[], file: TokensFile): TokenMapping {
+  return Object.fromEntries(contract.map((path) => [path, file.tokens.has(path) ? path : null]));
+}
+
+interface SavedStep {
+  source: TokensSource;
+  mapping: TokenMapping;
+  confirmed: boolean;
+}
+
+function savedStep(saved: unknown, contract: readonly string[]): SavedStep {
+  const bad = (field: string, problem: string): never => {
+    throw new InvalidTokensStepError(`steps.tokens${field} ${problem}`);
+  };
+  if (!isRecord(saved)) return bad('', 'must be an object');
+  const source = saved.source;
+  if (!isRecord(source)) return bad('.source', 'must be an object');
+  if (typeof source.path !== 'string') bad('.source.path', 'must be a string');
+  if (typeof source.sha256 !== 'string') bad('.source.sha256', 'must be a string');
+  if (!isRecord(saved.mapping)) return bad('.mapping', 'must be an object');
+  for (const [token, path] of Object.entries(saved.mapping)) {
+    const field = `.mapping[${JSON.stringify(token)}]`;
+    if (!contract.includes(token)) bad(field, 'is not a token of the template contract');
+    if (path !== null && typeof path !== 'string') bad(field, 'must be a path or null');
+  }
+  if (typeof saved.confirmed !== 'boolean') bad('.confirmed', 'must be true or false');
+  return saved as unknown as SavedStep;
+}
+
+export interface MergedMapping {
+  mapping: TokenMapping;
+  confirmed: boolean;
+  notices: string[];
+}
+
+export function mergeMapping(
+  saved: unknown,
+  {
+    contract,
+    proposed,
+    source,
+    confirm,
+  }: {
+    contract: readonly string[];
+    proposed: TokenMapping;
+    source: TokensSource;
+    confirm: boolean;
+  },
+): MergedMapping {
+  if (saved === undefined) return { mapping: proposed, confirmed: confirm, notices: [] };
+  const previous = savedStep(saved, contract);
+  if (previous.source.path !== source.path)
+    return {
+      mapping: proposed,
+      confirmed: confirm,
+      notices: [`the tokens file is now ${source.path} (was ${previous.source.path}): the mapping was proposed again`],
+    };
+  const mapping = Object.fromEntries(
+    contract.map((path) => [
+      path,
+      path in previous.mapping ? (previous.mapping[path] ?? null) : (proposed[path] ?? null),
+    ]),
+  );
+  const changed = previous.source.sha256 !== source.sha256;
+  const notices =
+    changed && previous.confirmed && !confirm
+      ? ['the tokens file changed since the mapping was confirmed: review it and run again with --confirm']
+      : [];
+  return { mapping, confirmed: confirm || (previous.confirmed && !changed), notices };
+}
+
+export interface Translation {
+  values: Map<string, ConvertedValue>;
+  missing: string[];
+  problems: TokenProblem[];
+}
+
+/** Every contract token gets its converted value, or is missing (null), or is a problem: never a default (FR-005). */
+export function translate(contract: readonly string[], mapping: TokenMapping, file: TokensFile): Translation {
+  const result: Translation = { values: new Map(), missing: [], problems: [...file.problems] };
+  for (const token of contract) {
+    const source = mapping[token] ?? null;
+    if (source === null) {
+      result.missing.push(token);
+      continue;
+    }
+    const found = file.tokens.get(source);
+    if (!found) {
+      result.problems.push({ token, source, reason: `${source} is not in the tokens file` });
+      continue;
+    }
+    const converted = convertToken(token, found);
+    if ('value' in converted) result.values.set(token, converted.value);
+    else result.problems.push({ token, source, value: found.value, reason: converted.reason });
+  }
+  return result;
+}
+
+/** The site's `tokens.json`: values nested by contract path, in contract order. */
+export function buildContractTokens(
+  contract: readonly string[],
+  values: ReadonlyMap<string, ConvertedValue>,
+  sourcePath: string,
+): Record<string, unknown> {
+  const tokens: Record<string, unknown> = {
+    $comment: `From the client's tokens file ${sourcePath}, mapped and confirmed in steps.tokens of relevamiento.json.`,
+  };
+  for (const path of contract) {
+    const value = values.get(path);
+    if (value === undefined) continue;
+    const keys = path.split('.');
+    const last = keys.pop() ?? path;
+    let node = tokens;
+    for (const key of keys) {
+      if (!isRecord(node[key])) node[key] = {};
+      node = node[key] as Record<string, unknown>;
+    }
+    node[last] = value;
+  }
+  return tokens;
+}
