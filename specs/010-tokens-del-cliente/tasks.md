@@ -2,7 +2,7 @@
 
 **Spec**: [spec.md](./spec.md) · **Plan**: [plan.md](./plan.md)
 **Escribe**: el lead, inline (cadena acoplada, plan "Quién escribe") · **Verifica**: `security`, nivel máximo
-**Estimación total**: ~100k tok · ~3 h · **Estado**: derivadas del plan aprobado (2026-11-24)
+**Estimación total**: ~100k tok · ~3 h · **Estado**: hechas (2026-11-24)
 
 Ninguna tarea lleva `[P]`: cada una usa el contrato de la anterior (dominio → puertos → caso de uso → comando).
 Todas van con test primero (constitución IV). Runner: `npm test -w packages/cli` (vitest) y, para T004,
@@ -13,8 +13,21 @@ Todas van con test primero (constitución IV). Runner: `npm test -w packages/cli
 - [x] T003 [US2] Mapeo: propuesta exacta, fusión con `steps.tokens` guardado, confirmación atada al hash, faltantes y problemas, validación de la forma guardada — `src/domain/design-tokens.ts`, `test/tokens-mapping.test.ts` · cierra: AC-3, AC-5 (dominio) · nivel: estándar · est: 15k · 30 min
 - [x] T004 [US1] `TOKEN_PATHS` exportado por la plantilla; puerto `SiteTokens` que lo importa del sitio, valida con `buildTokensCss` y escribe atómico — `templates/site/src/lib/tokens.ts` y su test, `src/application/ports.ts`, `src/infrastructure/node-site-tokens.ts`, `test/node-site-tokens.test.ts` · cierra: AC-1 (contrato) · nivel: estándar · est: 10k · 20 min
 - [x] T005 [US1-US3] Caso de uso y comando `specmate tokens <slug> [--clients] [--file] [--confirm]`, `ClientFolder.readFile`, paso por nombre en `RelevamientoStore`, `.tokens` en el inventario, ayuda y `packages/cli/AGENTS.md` — `src/application/apply-client-tokens.ts`, `src/cli/*`, `src/infrastructure/*`, `src/domain/inventory.ts`, `test/tokens.integration.test.ts` · cierra: AC-1, AC-3, AC-4, AC-5 · nivel: estándar · est: 25k · 50 min
-- [ ] T006 Revisión `security` sobre el diff entero (entrada no confiable que termina en CSS; módulo del sitio ejecutado por el CLI) · cierra: AC-7 (verificación independiente) · nivel: máximo · est: 10k · 20 min
-- [ ] T007 Verificación: `npm run lint`, `npm run build`, diferencial de `new` e `inventory` contra `main` y la suite entera (`npm test`) una vez, por el lead · cierra: AC-1 a AC-7 · est: 5k · 10 min
+- [x] T006 Revisión `security` sobre el diff entero (entrada no confiable que termina en CSS; módulo del sitio ejecutado por el CLI) · cierra: AC-7 (verificación independiente) · nivel: máximo · est: 10k · 20 min
+- [x] T007 Verificación: `npm run lint`, `npm run build`, diferencial de `new` e `inventory` contra `main` y la suite entera (`npm test`) una vez, por el lead · cierra: AC-1 a AC-7 · est: 5k · 10 min
 
 **AC sin tarea:** ninguno. **AC `manual`:** ninguno.
 **Desvío del preset:** la verificación final la hace el lead, no `qa`, como en US-15: `security` ya es el verificador independiente.
+
+## Verificación (2026-11-24)
+
+- **`security` (máximo), primera vuelta: cambios pedidos.** Medio: un comentario CSS en `clamp()` (`/*`) pasaba el CLI y
+  la plantilla y anulaba el resto del CSS generado. Medio-Bajo: una comilla sin cerrar en la familia. Bajos: una cadena
+  de referencias colgaba el CLI (2000 eslabones = 12,9 s) y un hardlink se leía como archivo propio. Arreglado en
+  `bcda112`, con un test por hallazgo que dio rojo antes del arreglo (la cadena tardaba 107 s).
+- **Seguimiento: aprobado**, sin regresiones. Informativo: un archivo con hardlinks legítimos se rechaza (falla cerrado).
+- **Diferencial contra `main`:** `inventory` con entrada válida, `new` con slug inválido e `inventory` sin carpeta dan
+  lo mismo. Difieren la ayuda (documenta `tokens`) y el mensaje de `new --confirm` / `inventory --file`: antes
+  "Unknown option", ahora "does not take --file or --confirm", con la misma salida 2.
+- **Suite entera:** CLI 303 pasan y 2 salteados; plantilla 701, 700 pasan, 0 fallan, 1 salteado; 403 s. Lint y build
+  en verde; el CLI compilado carga el contrato del sitio.
