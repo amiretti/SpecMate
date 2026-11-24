@@ -1,4 +1,4 @@
-// RelevamientoStore over node:fs (US-15 FR-005; plan decision 5). Only steps.inventory changes: the rest of the file is
+// RelevamientoStore over node:fs (US-15 FR-005; plan decision 5). Only the given step changes: the rest of the file is
 // parsed and written back as is (2-space JSON, LF, trailing newline, like the template's example), through a temp
 // file in the same folder and a rename, so a failure never leaves half a relevamiento.json.
 import { randomBytes } from 'node:crypto';
@@ -39,15 +39,15 @@ export const nodeRelevamientoStore: RelevamientoStore = {
     return path.join(siteDir, FILE);
   },
 
-  async readInventory(siteDir) {
-    return (await load(path.join(siteDir, FILE))).steps?.inventory;
+  async readStep(siteDir, name) {
+    return (await load(path.join(siteDir, FILE))).steps?.[name];
   },
 
-  async writeInventory(siteDir, inventory) {
+  async writeStep(siteDir, name, value) {
     const file = path.join(siteDir, FILE);
     const { json, steps } = await load(file);
-    if (steps) steps.inventory = inventory;
-    else json.steps = { inventory };
+    if (steps) steps[name] = value;
+    else json.steps = { [name]: value };
     const temp = path.join(siteDir, `.${FILE}.tmp-${randomBytes(6).toString('hex')}`);
     try {
       await writeFile(temp, `${JSON.stringify(json, null, 2)}\n`, { flag: 'wx' });

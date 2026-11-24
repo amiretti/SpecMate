@@ -56,6 +56,9 @@ function fakeFolder(entries: FolderEntry[], files: Record<string, Uint8Array> = 
     },
     readHead: async (_root, file, bytes) => bytesOf(file).subarray(0, bytes),
     sha256: async (_root, file) => `hash-of-${new TextDecoder().decode(bytesOf(file)).length}-${file}`,
+    readFile: async () => {
+      throw new Error('the inventory never reads a whole file');
+    },
   };
 }
 const file = (path: string, size = 100): FolderEntry => ({ type: 'file', path, depth: path.split('/').length, size });

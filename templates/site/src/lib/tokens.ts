@@ -27,6 +27,18 @@ const COLORS = ['bg', 'surface', 'text', 'text-muted', 'accent', 'on-accent', 'f
 const SIZES = ['base', 'small', 'h1', 'h2'] as const;
 const STEPS = ['1', '2', '3', '4', '5'] as const;
 
+/** Every token the contract requires, by dotted path, in the order of the example tokens.json (US-16: the CLI reads it). */
+export const TOKEN_PATHS: readonly string[] = [
+  ...(['light', 'dark'] as const).flatMap((mode) => COLORS.map((name) => `color.${mode}.${name}`)),
+  'font.family',
+  ...SIZES.map((name) => `font.size.${name}`),
+  'font.lineHeight',
+  ...STEPS.map((step) => `space.${step}`),
+  'radius',
+  'contentWidth',
+  'focusWidth',
+];
+
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 function fail(path: string, problem: string): never {
