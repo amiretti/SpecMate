@@ -8,7 +8,7 @@ Ninguna tarea lleva `[P]`: cada una usa el contrato de la anterior (dominio → 
 Todas van con test primero (constitución IV). Runner: `npm test -w packages/cli` (vitest) y, para T004,
 `npm test` en `templates/site`.
 
-- [ ] T001 [US3] Contraste WCAG 2.2 y las parejas de la decisión 6 — `packages/cli/src/domain/contrast.ts`, `test/contrast.test.ts` · cierra: AC-6 · nivel: estándar · est: 10k · 20 min
+- [x] T001 [US3] Contraste WCAG 2.2 y las parejas de la decisión 6 — `packages/cli/src/domain/contrast.ts`, `test/contrast.test.ts` · cierra: AC-6 · nivel: estándar · est: 10k · 20 min
 - [ ] T002 [US1] Lectura DTCG (tipo heredado, referencias, ciclos, topes, `$ref`/`$extends` no soportados) y formato propio; conversión de valores — `src/domain/design-tokens.ts`, `test/design-tokens.test.ts` · cierra: AC-1, AC-2, AC-7 (dominio) · nivel: estándar · est: 25k · 50 min
 - [ ] T003 [US2] Mapeo: propuesta exacta, fusión con `steps.tokens` guardado, confirmación atada al hash, faltantes y problemas, validación de la forma guardada — `src/domain/design-tokens.ts`, `test/tokens-mapping.test.ts` · cierra: AC-3, AC-5 (dominio) · nivel: estándar · est: 15k · 30 min
 - [ ] T004 [US1] `TOKEN_PATHS` exportado por la plantilla; puerto `SiteTokens` que lo importa del sitio, valida con `buildTokensCss` y escribe atómico — `templates/site/src/lib/tokens.ts` y su test, `src/application/ports.ts`, `src/infrastructure/node-site-tokens.ts`, `test/node-site-tokens.test.ts` · cierra: AC-1 (contrato) · nivel: estándar · est: 10k · 20 min
