@@ -1,11 +1,11 @@
 ---
 id: US-17 (#69)
 titulo: Inferir el negocio, el objetivo y el tono desde la carpeta para confirmar en vez de responder todo
-estado: borrador          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/69
 analisis: no requerido (el lead lo analizó inline: ADR-0031 pasos 2 a 4, ADR-0041, ADR-0033, US-14, US-15)
 depende_de: [US-15]
-revisa: developer (gate de spec); revisión `security` antes del PR (texto del cliente leído por un modelo, OWASP LLM01)
+revisa: developer (Andy, spec aprobada 2026-11-24: "sí, perfecto", con los tres tonos de §7); revisión `security` antes del PR (texto del cliente leído por un modelo, OWASP LLM01)
 zona_critica: no está en project-guard §5; no toca el esquema del brief
 estimacion: ~150k tok · ~5 h · el lead escribe inline y `security` verifica en nivel máximo
 ---
