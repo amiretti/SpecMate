@@ -1,6 +1,6 @@
 # Plan de implementación: US-16, tokens del cliente
 
-**Rama**: `068-tokens-del-cliente` | **Fecha**: 2026-11-24 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-24) | **Plan**: borrador
+**Rama**: `068-tokens-del-cliente` | **Fecha**: 2026-11-24 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-24) | **Plan**: aprobado (2026-11-24, Andy: "sí")
 **Artefactos**: este plan, con la forma de `steps.tokens` abajo. Sin `research.md`: el formato DTCG 2025.10 se leyó en
 <https://www.designtokens.org/tr/2025.10/format/> y lo que importa está en "Lectura de DTCG". Sin `contracts/`: la
 interfaz es el comando. Sin `quickstart.md`: no hay AC `manual`.
