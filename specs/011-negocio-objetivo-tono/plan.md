@@ -1,6 +1,6 @@
 # Plan de implementación: US-17, el negocio, el objetivo y el tono
 
-**Rama**: `069-negocio-objetivo-tono` | **Fecha**: 2026-11-24 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-24) | **Plan**: borrador
+**Rama**: `069-negocio-objetivo-tono` | **Fecha**: 2026-11-24 | **Spec**: [spec.md](./spec.md) (aprobada 2026-11-24) | **Plan**: aprobado (2026-11-24, Andy: "sí, aprobado!")
 **Artefactos**: este plan, con la forma de la propuesta y de `steps.profile` abajo. Sin `research.md` ni `contracts/`:
 la interfaz es el comando y la propuesta, descritos acá. `quickstart.md`: no; los AC `manual` se corren con la skill.
 
