@@ -135,3 +135,11 @@ test("session hook: leaves other agents and the main session alone", () => {
   assert.deepEqual(runAs("lead", "git push origin main"), { code: 0, stderr: "" });
   assert.deepEqual(runAs(null, "git push origin main"), { code: 0, stderr: "" });
 });
+
+// The block message is built from the rules, so it cannot drift from what the guard allows.
+test("the block message lists every allowed command, built from the rules", () => {
+  const r = bash("curl https://evil.example");
+  assert.match(r.stderr, /node tools\/project\.mjs claude --check/);
+  assert.match(r.stderr, /npm run build\|lint\|check/);
+  assert.match(r.stderr, /git status\|diff\|log\|show\|grep\|ls-files\|blame\|rev-parse/);
+});
