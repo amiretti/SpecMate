@@ -5,11 +5,16 @@
       "read": ["Read", "Grep", "Glob"],
       "write": ["Write", "Edit"],
       "execute": ["Bash"],
+      "run-checks": ["Bash"],
       "skills": ["Skill"],
       "delegate": ["Agent", "SendMessage"],
       "network": ["WebFetch", "WebSearch"],
       "git-commit": [],
       "git-push": []
+    },
+    "guards": {
+      "$comment": "Capacidades que solo se proyectan con su guardia (OWASP AST03, AST10). run-checks: Bash limitado a los comandos de chequeo de tools/guard-bash.mjs, como hook PreToolUse de la sesión que recibe los roles a guardar.",
+      "run-checks": "node \"$CLAUDE_PROJECT_DIR/tools/guard-bash.mjs\""
     },
     "tiers": { "rápido": "haiku", "estándar": "sonnet", "máximo": "opus" }
   }

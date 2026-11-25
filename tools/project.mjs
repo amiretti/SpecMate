@@ -97,6 +97,22 @@ const toolsFor = (file, caps) => {
   }
   return [...tools];
 };
+// Capacidades con guardia (OWASP AST03, AST10): se proyectan solo junto con su guardia, como hook
+// PreToolUse de la sesión que recibe los roles a guardar (los hooks del frontmatter de un
+// subagente no corrieron en una prueba en vivo, 2026-11-25). Si el runtime no tiene guardia para
+// una, o el rol la combina con la versión sin guardia, falla en vez de proyectar el permiso suelto.
+// El hook termina en `|| exit 2`: Claude Code bloquea solo con salida 2, y una guardia que no
+// arranca (sin node, archivo movido) dejaría pasar el comando.
+const UNGUARDED = { "run-checks": "execute" };
+const guarded = new Map(); // capacidad -> roles
+function collectGuards(file, name, caps) {
+  for (const c of caps.filter((x) => x in UNGUARDED)) {
+    if (caps.includes(UNGUARDED[c])) throw new Error(`${file}: ${c} y ${UNGUARDED[c]} juntos dejan ${rt.capabilities[c].join(", ")} sin guardia`);
+    if (!rt.guards?.[c]) throw new Error(`${file}: ${target} no tiene guardia para "${c}"`);
+    if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`${file}: nombre de rol inválido para una guardia (va a un comando de shell)`);
+    guarded.set(c, [...(guarded.get(c) ?? []), name]);
+  }
+}
 const modelFor = (file, tier) => {
   const model = tiers[tier];
   if (!model) throw new Error(`${file}: nivel desconocido "${tier}"`);
@@ -118,6 +134,7 @@ for (const [name, r] of roles) {
   const out = [`name: ${name}`, ...(r.fm.get("description") ?? [])];
   out.push(`tools: ${toolsFor(r.file, caps).join(", ")}`, `model: ${modelFor(r.file, scalar(r.fm, "tier"))}`);
   if (skills.length) out.push("skills:", ...skills.map((s) => `  - ${s}`));
+  collectGuards(r.file, name, caps);
   const isMain = name === MAIN;
   const wanted = new Set(list(r.fm, "mcp"));
   const servers = enabledServers.filter(([n, s]) => wanted.has(n) || (isMain && s.main));
@@ -160,6 +177,9 @@ const settings = {
   agent: MAIN,
   hooks: { SessionStart: [{ hooks: [{ type: "command", command: "node tools/project.mjs claude --check" }] }] },
 };
+const preToolUse = [...guarded].flatMap(([c, names]) =>
+  rt.capabilities[c].map((tool) => ({ matcher: tool, hooks: [{ type: "command", command: `${rt.guards[c]} ${names.join(" ")} || exit 2` }] })));
+if (preToolUse.length) settings.hooks.PreToolUse = preToolUse;
 emit(".claude/settings.json", JSON.stringify(settings, null, 2) + "\n");
 
 // 2. Skills -> .claude/skills/  (metadata del estándar -> campos propios de Claude)
