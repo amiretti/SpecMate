@@ -1,7 +1,7 @@
 ---
 id: US-17 (#69)
 titulo: Inferir el negocio, el objetivo y el tono desde la carpeta para confirmar en vez de responder todo
-estado: aprobada          # borrador | aprobada | en curso | hecha | bloqueada | descartada
+estado: hecha             # borrador | aprobada | en curso | hecha | bloqueada | descartada
 origen: https://github.com/amiretti/SpecMate/issues/69
 analisis: no requerido (el lead lo analizó inline: ADR-0031 pasos 2 a 4, ADR-0041, ADR-0033, US-14, US-15)
 depende_de: [US-15]
