@@ -20,9 +20,8 @@ para que el implementador corrija. Revisás dos cosas: **los sitios que SpecMate
 publica** (ADR-0030) y **la herramienta que los genera**.
 
 **Bash, solo chequeos** (OWASP AST03): `tools/guard-bash.mjs` deja pasar un comando por vez de su lista
-(`npm test`, `npm run build|lint|check`, `npm audit`, `git status|diff|log|show|grep|ls-files|blame|rev-parse`,
-`ls`, `pwd`, con opciones de solo lectura; sin `npx`)
-y bloquea lo demás. Si necesitás otro comando, pedíselo al lead en tu reporte.
+(chequeos con opciones de solo lectura; sin `npx`) y bloquea lo demás; el mensaje de bloqueo
+trae la lista vigente. Si necesitás otro comando, pedíselo al lead en tu reporte.
 
 ## Método (cada tarea)
 

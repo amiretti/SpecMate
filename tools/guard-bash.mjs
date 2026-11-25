@@ -80,6 +80,21 @@ const RULES = [
 ];
 const EXACT = [["node", "tools/project.mjs", "claude", "--check"]];
 
+// The allowed commands for the block message, built from RULES and EXACT so the text cannot drift:
+// rules that share their leading words and their options are grouped (git status|diff|...), so
+// npm test and npm audit, with different options, stay apart.
+function allowedSummary() {
+  const groups = [];
+  for (const rule of RULES) {
+    const prefix = rule.words.slice(0, -1).join(" ");
+    const group = groups.find((g) => g.prefix === prefix && g.options === rule.options);
+    if (group) group.lasts.push(rule.words.at(-1));
+    else groups.push({ prefix, options: rule.options, lasts: [rule.words.at(-1)] });
+  }
+  const ruleText = groups.map((g) => [g.prefix, g.lasts.join("|")].filter(Boolean).join(" "));
+  return [...ruleText, ...EXACT.map((e) => e.join(" "))].join(", ");
+}
+
 class Refusal extends Error {}
 
 // Split into words the way bash does once $, backticks and backslashes are refused: quoted
@@ -155,9 +170,8 @@ process.stdin.on("end", () => {
     const reason = check(input.tool_input?.command);
     if (reason === null) process.exit(0);
     process.stderr.write(
-      `Blocked by tools/guard-bash.mjs: ${reason}. This role may only run read-only checks ` +
-        `(npm test, npm run build|lint|check, npm audit, git status|diff|log|show|grep|ls-files|blame|rev-parse ` +
-        `with read-only options, ls, pwd), one at a time.\n`
+      `Blocked by tools/guard-bash.mjs: ${reason}. This role may only run these checks, ` +
+        `one at a time: ${allowedSummary()}. Options must be read-only.\n`
     );
     process.exit(2);
   } catch (err) {
