@@ -81,14 +81,17 @@ const RULES = [
 const EXACT = [["node", "tools/project.mjs", "claude", "--check"]];
 
 // The allowed commands for the block message, built from RULES and EXACT so the text cannot drift:
-// rules that share their leading words are grouped (git status|diff|...).
+// rules that share their leading words and their options are grouped (git status|diff|...), so
+// npm test and npm audit, with different options, stay apart.
 function allowedSummary() {
-  const groups = new Map();
-  for (const { words: w } of RULES) {
-    const key = w.slice(0, -1).join(" ");
-    groups.set(key, [...(groups.get(key) ?? []), w.at(-1)]);
+  const groups = [];
+  for (const rule of RULES) {
+    const prefix = rule.words.slice(0, -1).join(" ");
+    const group = groups.find((g) => g.prefix === prefix && g.options === rule.options);
+    if (group) group.lasts.push(rule.words.at(-1));
+    else groups.push({ prefix, options: rule.options, lasts: [rule.words.at(-1)] });
   }
-  const ruleText = [...groups].flatMap(([key, lasts]) => (key ? [`${key} ${lasts.join("|")}`] : lasts));
+  const ruleText = groups.map((g) => [g.prefix, g.lasts.join("|")].filter(Boolean).join(" "));
   return [...ruleText, ...EXACT.map((e) => e.join(" "))].join(", ");
 }
 
@@ -168,7 +171,7 @@ process.stdin.on("end", () => {
     if (reason === null) process.exit(0);
     process.stderr.write(
       `Blocked by tools/guard-bash.mjs: ${reason}. This role may only run these checks, ` +
-        `with read-only options, one at a time: ${allowedSummary()}.\n`
+        `one at a time: ${allowedSummary()}. Options must be read-only.\n`
     );
     process.exit(2);
   } catch (err) {
