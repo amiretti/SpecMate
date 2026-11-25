@@ -26,3 +26,4 @@ son las del kit y el proceso; las del workspace general (019 a 026) quedan reemp
 | [038](ADR-0038-lighthouse-sin-lhci-y-licencias-por-excepcion.md) | Rendimiento con `lighthouse` sin LHCI, y licencias de las herramientas de verificación por excepción de paquete |
 | [039](ADR-0039-excepcion-temporal-por-aviso-en-check-deps.md) | `check:deps` admite una excepción temporal por aviso alto sin parche, con motivo y vencimiento (Descartada: el aviso se retiró) |
 | [040](ADR-0040-ajustes-tras-el-spike.md) | Ajustes tras el spike: Places fuera del MVP, topes de tokens por sitio, opciones por ejes y publicación |
+| [041](ADR-0041-quien-infiere-el-negocio.md) | El agente de la sesión propone el negocio, el objetivo y el tono; el CLI valida, guarda y nunca llama a un modelo |
